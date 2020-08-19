@@ -6,7 +6,7 @@ import (
 	"reflect"
 )
 
-type AuthDataAccessor interface {
+type Accessor interface {
 	// 계정 생성 메서드
 	CreateStudentAuth(*model.StudentAuth) (result *model.StudentAuth, err error)
 	CreateTeacherAuth(*model.TeacherAuth) (result *model.TeacherAuth, err error)
@@ -32,21 +32,21 @@ type AuthDataAccessor interface {
 	Rollback() *gorm.DB
 }
 
-type AuthDataTxManage struct {
+type AccessorTxManage struct {
 	db *gorm.DB
-	accessor AuthDataAccessor
+	accessor Accessor
 }
 
-func NewAuthDataTxManage(db *gorm.DB, accessor AuthDataAccessor) AuthDataTxManage {
-	return AuthDataTxManage{
+func NewAccessorTxManage(db *gorm.DB, accessor Accessor) AccessorTxManage {
+	return AccessorTxManage{
 		db:       db,
 		accessor: accessor,
 	}
 }
 
-func (atm AuthDataTxManage) BeginTx() (accessor AuthDataAccessor) {
+func (atm AccessorTxManage) BeginTx() (accessor Accessor) {
 	t := reflect.TypeOf(atm.accessor).Elem()
-	accessor = reflect.New(t).Elem().Interface().(AuthDataAccessor)
+	accessor = reflect.New(t).Elem().Interface().(Accessor)
 	//fmt.Println(reflect.TypeOf(accessor))
 	accessor.Begin(atm.db)
 	return

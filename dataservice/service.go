@@ -3,6 +3,7 @@ package dataservice
 import (
 	"auth/model"
 	"github.com/jinzhu/gorm"
+	"reflect"
 )
 
 type AuthDataAccessor interface {
@@ -41,4 +42,12 @@ func NewAuthDataTxManage(db *gorm.DB, accessor AuthDataAccessor) AuthDataTxManag
 		db:       db,
 		accessor: accessor,
 	}
+}
+
+func (atm AuthDataTxManage) BeginTx() (accessor AuthDataAccessor) {
+	t := reflect.TypeOf(atm.accessor).Elem()
+	accessor = reflect.New(t).Elem().Interface().(AuthDataAccessor)
+	//fmt.Println(reflect.TypeOf(accessor))
+	accessor.Begin(atm.db)
+	return
 }

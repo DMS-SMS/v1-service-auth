@@ -3,7 +3,6 @@ package dataservice
 import (
 	"auth/model"
 	"github.com/jinzhu/gorm"
-	"reflect"
 )
 
 type Accessor interface {
@@ -30,24 +29,4 @@ type Accessor interface {
 	Begin(db *gorm.DB)
 	Commit() *gorm.DB
 	Rollback() *gorm.DB
-}
-
-type AccessorTxManage struct {
-	db *gorm.DB
-	accessor Accessor
-}
-
-func NewAccessorTxManage(db *gorm.DB, accessor Accessor) AccessorTxManage {
-	return AccessorTxManage{
-		db:       db,
-		accessor: accessor,
-	}
-}
-
-func (atm AccessorTxManage) BeginTx() (accessor Accessor) {
-	t := reflect.TypeOf(atm.accessor).Elem()
-	accessor = reflect.New(t).Elem().Interface().(Accessor)
-	//fmt.Println(reflect.TypeOf(accessor))
-	accessor.Begin(atm.db)
-	return
 }

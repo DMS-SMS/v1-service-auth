@@ -26,6 +26,19 @@ type AuthDataAccessor interface {
 	ChangeTeacherAuthPw(tid string, pw string) error
 	ChangeParentAuthPw(pid string, pw string) error
 
+	Begin(db *gorm.DB)
 	Commit() *gorm.DB
 	Rollback() *gorm.DB
+}
+
+type AuthDataTxManage struct {
+	db *gorm.DB
+	accessor AuthDataAccessor
+}
+
+func NewAuthDataTxManage(db *gorm.DB, accessor AuthDataAccessor) AuthDataTxManage {
+	return AuthDataTxManage{
+		db:       db,
+		accessor: accessor,
+	}
 }

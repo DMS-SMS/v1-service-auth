@@ -1,5 +1,14 @@
 package adapter
 
+import (
+	"encoding/json"
+	"errors"
+	"github.com/go-playground/validator/v10"
+	"github.com/hashicorp/consul/api"
+	"github.com/jinzhu/gorm"
+	"strings"
+)
+
 type DBConfig struct {
 	Dialect string `json:"dialect" validate:"required"`
 	Host    string `json:"host" validate:"required"`
@@ -8,3 +17,23 @@ type DBConfig struct {
 	DB		string `json:"db" validate:"required"`
 }
 
+func ConnectDB(cli *api.Client) (db *gorm.DB, conf DBConfig, err error) {
+	kv, _, err := cli.KV().Get("db/auth", nil)
+	if err != nil {
+		return
+	}
+	if err := json.Unmarshal(kv.Value, &conf); err != nil {
+		return
+	}
+	if err := validator.New().Struct(&conf); err != nil {
+		return
+	}
+
+	switch strings.ToLower(conf.Dialect) {
+	case "mysql":
+		db, err = connectToMysql(conf)
+	default:
+		err = errors.New("지원하지 않는 DB입니다")
+	}
+	return
+}

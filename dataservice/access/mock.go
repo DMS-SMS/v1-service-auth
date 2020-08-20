@@ -11,9 +11,7 @@ type Mock struct {
 }
 
 func NewMock(mock *mock.Mock) Mock {
-	return Mock{
-		mock: mock,
-	}
+	return Mock{mock: mock}
 }
 
 // 계정 생성 메서드
@@ -50,36 +48,31 @@ func (m Mock) GetParentAuthWithID(id string) (*model.ParentAuth, error) {
 
 // 비밀번호 변경 메서드
 func (m Mock) ChangeStudentAuthPw(sid string, pw string) error {
-	args := m.mock.Called(sid, pw)
-	return args.Error(0)
+	return m.mock.Called(sid, pw).Error(0)
 }
 
 func (m Mock) ChangeTeacherAuthPw(tid string, pw string) error {
-	args := m.mock.Called(tid, pw)
-	return args.Error(0)
+	return m.mock.Called(tid, pw).Error(0)
 }
 
 func (m Mock) ChangeParentAuthPw(pid string, pw string) error {
-	args := m.mock.Called(pid, pw)
-	return args.Error(0)
+	return m.mock.Called(pid, pw).Error(0)
 }
 
 // 계성 삭제 메서드 (Soft Delete)
 func (m Mock) DeleteStudentAuth(sid uint) error {
-	args := m.mock.Called(sid)
-	return args.Error(0)
+	return m.mock.Called(sid).Error(0)
 }
 
 func (m Mock) DeleteTeacherAuth(tid string) error {
-	args := m.mock.Called(tid)
-	return args.Error(0)
+	return m.mock.Called(tid).Error(0)
 }
 
 func (m Mock) DeleteParentAuth(pid string) error {
-	args := m.mock.Called(pid)
-	return args.Error(0)
+	return m.mock.Called(pid).Error(0)
 }
 
+// ---
 
 // 사용자 정보 추가 메서드
 func (m Mock) CreateStudentInform(inform *model.StudentInform) (result *model.StudentInform, err error) {

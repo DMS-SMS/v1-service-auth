@@ -5,7 +5,7 @@ import "github.com/jinzhu/gorm"
 type ParentAuth struct {
 	gorm.Model
 	UUID     string `gorm:"PRIMARY_KEY;Type:char(19);INDEX"` // 형식 => 'parent-' + 12자리 랜덤 수 (19자)
-	ParentId string `gorm:"Type:varchar(20);NOT NULL"`  // 4~20자 사이
+	ParentId string `gorm:"Type:varchar(20);NOT NULL;UNIQUE"`  // 4~20자 사이
 	ParentPw string `gorm:"Type:varchar(100);NOT NULL"`
 }
 

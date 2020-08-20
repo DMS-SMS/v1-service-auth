@@ -39,9 +39,9 @@ type Accessor interface {
 	GetParentUUIDWithInform(*model.ParentInform) (pid []string, err error)
 
 	// 계정 UUID로 정보 조회 메서드
-	GetStudentInformWithUUID(sid string) ([]model.StudentInform, error)
-	GetTeacherInformWithUUID(tid string) ([]model.TeacherInform, error)
-	GetParentInformWithUUID(pid string) ([]model.ParentInform, error)
+	GetStudentInformWithUUID(sid string) (*model.StudentInform, error)
+	GetTeacherInformWithUUID(tid string) (*model.TeacherInform, error)
+	GetParentInformWithUUID(pid string) (*model.ParentInform, error)
 
 	// 사용자 정보 수정 메서드
 	ModifyStudentInform(sid string, modify *model.StudentInform) (result *model.StudentInform, err error)

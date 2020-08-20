@@ -46,7 +46,7 @@ type Accessor interface {
 	// 사용자 정보 수정 메서드
 	ModifyStudentInform(sid string, modify *model.StudentInform) (result *model.StudentInform, err error)
 	ModifyTeacherInform(tid string, modify *model.TeacherInform) (result *model.TeacherInform, err error)
-	ModifyParentInform(pid string, modify *model.StudentInform) (result *model.ParentInform, err error)
+	ModifyParentInform(pid string, modify *model.ParentInform) (result *model.ParentInform, err error)
 
 	// ---
 

@@ -20,7 +20,7 @@ type DBConfig struct {
 	DB		string `json:"db" validate:"required"`
 }
 
-func ConnectDB(cli *api.Client) (db *gorm.DB, conf DBConfig, err error) {
+func ConnectDBWithConsul(cli *api.Client) (db *gorm.DB, conf DBConfig, err error) {
 	kv, _, err := cli.KV().Get("db/auth", nil)
 	if err != nil {
 		return

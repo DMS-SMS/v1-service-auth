@@ -1,6 +1,9 @@
 package model
 
-import "github.com/jinzhu/gorm"
+import (
+	"auth/model/validate"
+	"github.com/jinzhu/gorm"
+)
 
 type StudentAuth struct {
 	gorm.Model
@@ -8,6 +11,10 @@ type StudentAuth struct {
 	StudentId  string `gorm:"Type:varchar(20);NOT NULL;UNIQUE"`  // 4~20자 사이
 	StudentPw  string `gorm:"Type:varchar(100);NOT NULL"`
 	ParentUUID string `gorm:"Type:char(19);"`	  // 형식 => 'parent-' + 12자리 랜덤 수 (19자) 만일의 경우를 대비해서 NOT NULL 삭제
+}
+
+func (sa *StudentAuth) BeforeCreate() (err error) {
+	return validate.DBValidator.Struct(sa)
 }
 
 type StudentInform struct {

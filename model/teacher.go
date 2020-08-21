@@ -1,7 +1,6 @@
 package model
 
 import (
-	"auth/model/validate"
 	"github.com/jinzhu/gorm"
 )
 
@@ -10,10 +9,6 @@ type TeacherAuth struct {
 	UUID      string `gorm:"PRIMARY_KEY;Type:char(20);UNIQUE;INDEX" validate:"uuid=teacher"` // 형식 => 'teacher-' + 12자리 랜덤 수 (20자)
 	TeacherId string `gorm:"varchar(20);NOT NULL;UNIQUE"` // 4~20자 사이
 	TeacherPw string `gorm:"varchar(100):NOT NULL;"`
-}
-
-func (ta *TeacherAuth) BeforeCreate() (err error) {
-	return validate.DBValidator.Struct(ta)
 }
 
 type TeacherInform struct {

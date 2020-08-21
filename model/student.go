@@ -7,7 +7,7 @@ type StudentAuth struct {
 	UUID       string `gorm:"PRIMARY_KEY;Type:char(20);UNIQUE;INDEX"` // 형식 => 'student-' + 12자리 랜덤 수 (20자)
 	StudentId  string `gorm:"Type:varchar(20);NOT NULL;UNIQUE"`  // 4~20자 사이
 	StudentPw  string `gorm:"Type:varchar(100);NOT NULL"`
-	ParentUUID string `gorm:"Type:char(19);NOT NULL"`	  // 형식 => 'parent-' + 12자리 랜덤 수 (19자)
+	ParentUUID string `gorm:"Type:char(19);"`	  // 형식 => 'parent-' + 12자리 랜덤 수 (19자) 만일의 경우를 대비해서 NOT NULL 삭제
 }
 
 type StudentInform struct {

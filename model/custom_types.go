@@ -14,6 +14,10 @@ type class struct {
 	value int64
 }
 
+type studentNumber struct {
+	value int64
+}
+
 // ---
 
 func Grade(v int64) grade {
@@ -22,6 +26,10 @@ func Grade(v int64) grade {
 
 func Class(v int64) class {
 	return class{v}
+}
+
+func StudentNumber(v int64) studentNumber {
+	return studentNumber{v}
 }
 
 // ---
@@ -47,5 +55,17 @@ func (c class) Value() (driver.Value, error) {
 
 func (c *class) Scan(v interface{}) error {
 	c.value = v.(int64)
+	return nil
+}
+
+func (sn studentNumber) Value() (driver.Value, error) {
+	if !StudentNumberValuesList.Contains(sn.value) {
+		return nil, errors.New(fmt.Sprintf("%d is outside the range of the student_number property", sn.value))
+	}
+	return sn.value, nil
+}
+
+func (sn studentNumber) Scan(v interface{}) error {
+	sn.value = v.(int64)
 	return nil
 }

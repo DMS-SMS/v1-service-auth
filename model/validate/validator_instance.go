@@ -10,10 +10,10 @@ var DBValidator *validator.Validate
 func init() {
 	DBValidator = validator.New()
 
-	if err := DBValidator.RegisterValidation("uuid", uuidValidateFunc); err != nil { log.Fatal(err) }
+	if err := DBValidator.RegisterValidation("uuid", isValidateUUID); err != nil { log.Fatal(err) }
 }
 
-func uuidValidateFunc(fl validator.FieldLevel) bool {
+func isValidateUUID(fl validator.FieldLevel) bool {
 	switch fl.Param() {
 	case "student":
 		return studentUUIDRegex.MatchString(fl.Field().String())

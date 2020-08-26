@@ -23,20 +23,26 @@ type DBConfig struct {
 func ConnectDBWithConsul(cli *api.Client) (db *gorm.DB, conf DBConfig, err error) {
 	kv, _, err := cli.KV().Get("db/auth", nil)
 	if err != nil {
-		return
-	}
-	if err = json.Unmarshal(kv.Value, &conf); err != nil {
-		return
-	}
-	if err = validator.New().Struct(&conf); err != nil {
+		err = errors.New(fmt.Sprintf("unable to get db/auth KV from consul, err: %v", err.Error()))
 		return
 	}
 
-	switch strings.ToLower(conf.Dialect) {
+	if err = json.Unmarshal(kv.Value, &conf); err != nil {
+		err = errors.New(fmt.Sprintf("error occurs while unmarshal KV value into struct, err: %v", err.Error()))
+		return
+	}
+
+	if err = validator.New().Struct(&conf); err != nil {
+		err = errors.New(fmt.Sprintf("invalid db/auth KV value, err: %v", err.Error()))
+		return
+	}
+
+	conf.Dialect = strings.ToLower(conf.Dialect)
+	switch conf.Dialect {
 	case "mysql":
 		db, err = connectToMysql(conf)
 	default:
-		err = errors.New("지원하지 않는 DB입니다")
+		err = errors.New(fmt.Sprintf("%s is not supported db in this service.", conf.Dialect))
 	}
 	return
 }

@@ -19,11 +19,11 @@ type StudentInform struct {
 	gorm.Model
 	StudentUUID   string        `gorm:"Type:char(20);UNIQUE;NOT NULL" validate:"uuid=student,len=20"` // 형식 => 'student-' + 12자리 랜덤 수 (20자)
 	Grade         grade         `gorm:"Type:tinyint(1);NOT NULL"`
-	Class         class         `gorm:"Type:tinyint(1);NOT NULL"`                               // in (1~4)
-	StudentNumber studentNumber `gorm:"Type:tinyint(1);NOT NULL"`                               // in (1~21)
-	Name          string        `gorm:"Type:varchar(4);NOT NULL" validate:"min=2,max=4,korean"` // 2~4자 사이 한글
-	PhoneNumber   string        `gorm:"Type:char(11);UNIQUE;NOT NULL"`                          // 11자
-	ProfileUri    string        `gorm:"Type:varchar(150);UNIQUE;NOT NULL"`
+	Class         class         `gorm:"Type:tinyint(1);NOT NULL"`                                     // in (1~4)
+	StudentNumber studentNumber `gorm:"Type:tinyint(1);NOT NULL"`                                     // in (1~21)
+	Name          string        `gorm:"Type:varchar(4);NOT NULL" validate:"min=2,max=4,korean"`       // 2~4자 사이 한글
+	PhoneNumber   string        `gorm:"Type:char(11);UNIQUE;NOT NULL" validate:"len=11,phone_number"` // 11자
+	ProfileUri    string        `gorm:"Type:varchar(150);UNIQUE;NOT NULL"`                            // 제약 조건 나중에 추가 예정
 }
 
 // ---
@@ -43,7 +43,7 @@ type TeacherInform struct {
 	Name        string `gorm:"Type:varchar(4);NOT NULL" validate:"min=2,max=4,korean"`        // 2~4자 사이 한글
 	Grade       grade  `gorm:"Type:tinyint(1);"`                                              // in (1~3)
 	Class       class  `gorm:"Type:tinyint(1);"`                                              // in (1~4)
-	PhoneNumber string `gorm:"Type:char(11);UNIQUE;NOT NULL"`                                 // 11자
+	PhoneNumber string `gorm:"Type:char(11);UNIQUE;NOT NULL" validate:"len=11,phone_number"`  // 11자
 }
 
 // ---
@@ -59,7 +59,7 @@ type ParentAuth struct {
 // 부모님 사용자 정보 테이블
 type ParentInform struct {
 	gorm.Model
-	ParentUUID  string `gorm:"Type:char(19);UNIQUE;NOT NULL" validate:"uuid=parent,len=19"` // 형식 => 'parent-' + 12자리 랜덤 수 (19자)
-	Name        string `gorm:"Type:varchar(4);NOT NULL" validate:"min=2,max=4,korean"`      // 2~4자 사이 한글
-	PhoneNumber string `gorm:"Type:char(11);UNIQUE;NOT NULL"`                               // 11자
+	ParentUUID  string `gorm:"Type:char(19);UNIQUE;NOT NULL" validate:"uuid=parent,len=19"`  // 형식 => 'parent-' + 12자리 랜덤 수 (19자)
+	Name        string `gorm:"Type:varchar(4);NOT NULL" validate:"min=2,max=4,korean"`       // 2~4자 사이 한글
+	PhoneNumber string `gorm:"Type:char(11);UNIQUE;NOT NULL" validate:"len=11,phone_number"` // 11자
 }

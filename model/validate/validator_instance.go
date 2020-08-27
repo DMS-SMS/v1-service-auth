@@ -14,6 +14,7 @@ func init() {
 
 	if err := DBValidator.RegisterValidation("uuid", isValidateUUID); err != nil { log.Fatal(err) }
 	if err := DBValidator.RegisterValidation("korean", isKoreanString); err != nil { log.Fatal(err) }
+	if err := DBValidator.RegisterValidation("phone_number", isPhoneNumber); err != nil { log.Fatal(err) }
 }
 
 func isValidateUUID(fl validator.FieldLevel) bool {
@@ -39,4 +40,8 @@ func isKoreanString(fl validator.FieldLevel) bool {
 		idx += size
 	}
 	return true
+}
+
+func isPhoneNumber(fl validator.FieldLevel) bool {
+	return phoneNumberRegex.MatchString(fl.Field().String())
 }

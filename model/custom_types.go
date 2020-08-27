@@ -35,6 +35,10 @@ func StudentNumber(v int64) studentNumber {
 // ---
 
 func (g grade) Value() (driver.Value, error) {
+	if g.value == 0 {
+		return nil, nil
+	}
+
 	if !GradeValuesList.Contains(g.value) {
 		return nil, errors.New(fmt.Sprintf("%d is outside the range of the grade property", g.value))
 	}
@@ -47,6 +51,10 @@ func (g *grade) Scan(v interface{}) error {
 }
 
 func (c class) Value() (driver.Value, error) {
+	if c.value == 0 {
+		return nil, nil
+	}
+
 	if !ClassValuesList.Contains(c.value) {
 		return nil, errors.New(fmt.Sprintf("%d is outside the range of the class property", c.value))
 	}

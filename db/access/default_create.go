@@ -1,6 +1,7 @@
 package access
 
 import (
+	"auth/db/access/errors"
 	"auth/model"
 )
 
@@ -10,7 +11,7 @@ func (d *Default) CreateStudentAuth(auth *model.StudentAuth) (*model.StudentAuth
 		return auth, result.Error
 	}
 	if result.Error == nil {
-		result.Error = StudentAuthAssertionError
+		result.Error = errors.StudentAuthAssertionError
 	}
 	return nil, result.Error
 }
@@ -21,7 +22,7 @@ func (d *Default) CreateTeacherAuth(auth *model.TeacherAuth) (*model.TeacherAuth
 		return auth, result.Error
 	}
 	if result.Error == nil {
-		result.Error = TeacherAuthAssertionError
+		result.Error = errors.TeacherAuthAssertionError
 	}
 	return nil, result.Error
 }
@@ -32,7 +33,7 @@ func (d *Default) CreateParentAuth(auth *model.ParentAuth) (*model.ParentAuth, e
 		return auth, result.Error
 	}
 	if result.Error == nil {
-		result.Error = ParentAuthAssertionError
+		result.Error = errors.ParentAuthAssertionError
 	}
 	return nil, result.Error
 }
@@ -43,7 +44,7 @@ func (d *Default) CreateStudentInform(inform *model.StudentInform) (*model.Stude
 		return inform, result.Error
 	}
 	if result.Error == nil {
-		result.Error = StudentInformAssertionError
+		result.Error = errors.StudentInformAssertionError
 	}
 	return nil, result.Error
 }
@@ -54,7 +55,7 @@ func (d *Default) CreateTeacherInform(inform *model.TeacherInform) (*model.Teach
 		return inform, result.Error
 	}
 	if result.Error == nil {
-		result.Error = TeacherInformAssertionError
+		result.Error = errors.TeacherInformAssertionError
 	}
 	return nil, result.Error
 }
@@ -65,7 +66,7 @@ func (d *Default) CreateParentInform(inform *model.ParentInform) (*model.ParentI
 		return inform, result.Error
 	}
 	if result.Error == nil {
-		result.Error = ParentInformAssertionError
+		result.Error = errors.ParentInformAssertionError
 	}
 	return nil, result.Error
 }

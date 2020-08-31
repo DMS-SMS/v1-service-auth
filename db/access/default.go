@@ -1,19 +1,26 @@
 package access
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+)
 
-type Default struct {
+type _default struct {
+	None
 	tx *gorm.DB
 }
 
-func (d *Default) Begin(db *gorm.DB) {
+func Default() *_default {
+	return new(_default)
+}
+
+func (d *_default) Begin(db *gorm.DB) {
 	d.tx = db.Begin()
 }
 
-func (d *Default) Commit() *gorm.DB {
+func (d *_default) Commit() *gorm.DB {
 	return d.tx.Commit()
 }
 
-func (d *Default) Rollback() *gorm.DB {
+func (d *_default) Rollback() *gorm.DB {
 	return d.tx.Rollback()
 }

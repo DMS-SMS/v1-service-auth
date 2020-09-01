@@ -22,6 +22,13 @@ func (pi *ParentInform) ExceptGormModel() *ParentInform { return exceptGormModel
 // 제약조건 -> 매개변수로 넘길 변수는 포인터 변수여야 하고 구조체인 동시에 gorm.Model 객체의 필드들을 가지고 있어야 함!! (X -> panic 발생)
 func exceptGormModel(table interface{}) (gormModelExceptTable interface{}) {
 	gormModelExceptTable = reflect.New(reflect.ValueOf(table).Elem().Type()).Interface()
+	tableValue := reflect.ValueOf(table).Elem()
+	gormModelExceptTableValue := reflect.ValueOf(gormModelExceptTable).Elem()
+
+	for i := 0; i < tableValue.NumField(); i++ {
+		gormModelExceptTableValue.Field(i).Set(tableValue.Field(i))
+	}
+
 	reflect.ValueOf(gormModelExceptTable).Elem().FieldByName("ID").Set(reflect.ValueOf(uint(0)))
 	reflect.ValueOf(gormModelExceptTable).Elem().FieldByName("CreatedAt").Set(reflect.ValueOf(time.Time{}))
 	reflect.ValueOf(gormModelExceptTable).Elem().FieldByName("UpdatedAt").Set(reflect.ValueOf(time.Time{}))

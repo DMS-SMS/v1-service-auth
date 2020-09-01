@@ -22,3 +22,9 @@ func (sa *StudentAuth) ExceptGormModel() *StudentAuth { return exceptGormModel(s
 func (ta *TeacherAuth) ExceptGormModel() *TeacherAuth { return exceptGormModel(ta).(*TeacherAuth) }
 
 func (pa *ParentAuth) ExceptGormModel() *ParentAuth  { return exceptGormModel(pa).(*ParentAuth) }
+
+func (si *StudentInform) ExceptGormModel() *StudentInform { return exceptGormModel(si).(*StudentInform) }
+
+func (ti *TeacherInform) ExceptGormModel() *TeacherInform { return exceptGormModel(ti).(*TeacherInform) }
+
+func (pi *ParentInform) ExceptGormModel() *ParentInform { return exceptGormModel(pi).(*ParentInform) }

@@ -5,7 +5,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-type None struct { tx *gorm.DB }
+type None struct {}
 // 계정 생성 메서드
 func (t None) CreateStudentAuth(*model.StudentAuth) (result *model.StudentAuth, err error) { return }
 func (t None) CreateTeacherAuth(*model.TeacherAuth) (result *model.TeacherAuth, err error) { return }

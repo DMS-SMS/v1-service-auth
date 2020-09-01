@@ -2,6 +2,7 @@ package access
 
 import (
 	"github.com/jinzhu/gorm"
+	"reflect"
 )
 
 type _default struct {
@@ -9,8 +10,8 @@ type _default struct {
 	tx *gorm.DB
 }
 
-func Default() *_default {
-	return new(_default)
+func DefaultReflectType() reflect.Type {
+	return reflect.TypeOf(&_default{})
 }
 
 func (d *_default) Begin(db *gorm.DB) {

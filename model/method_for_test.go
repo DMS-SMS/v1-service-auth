@@ -17,27 +17,8 @@ func exceptGormModel(table interface{}) (gormModelExceptTable interface{}) {
 }
 
 // ExceptGormModel 메서드 -> 리시버 변수로부터 gorm.Model(임베딩 객체)에 포함되어있는 필드 값 초기화 후 반환 메서드
-func (sa *StudentAuth) ExceptGormModel() *StudentAuth {
-	return &StudentAuth{
-		UUID:       sa.UUID,
-		StudentId:  sa.StudentId,
-		StudentPw:  sa.StudentPw,
-		ParentUUID: sa.ParentUUID,
-	}
-}
+func (sa *StudentAuth) ExceptGormModel() *StudentAuth { return exceptGormModel(sa).(*StudentAuth) }
 
-func (ta *TeacherAuth) ExceptGormModel() *TeacherAuth {
-	return &TeacherAuth{
-		UUID:      ta.UUID,
-		TeacherId: ta.TeacherId,
-		TeacherPw: ta.TeacherPw,
-	}
-}
+func (ta *TeacherAuth) ExceptGormModel() *TeacherAuth { return exceptGormModel(ta).(*TeacherAuth) }
 
-func (pa *ParentAuth) ExceptGormModel() *ParentAuth  {
-	return &ParentAuth{
-		UUID:     pa.UUID,
-		ParentId: pa.ParentId,
-		ParentPw: pa.ParentPw,
-	}
-}
+func (pa *ParentAuth) ExceptGormModel() *ParentAuth  { return exceptGormModel(pa).(*ParentAuth) }

@@ -4,14 +4,19 @@ import (
 	"auth/adapter"
 	"auth/db"
 	"auth/model"
+	"auth/tool/mysqlerr"
 	"fmt"
 	"github.com/hashicorp/consul/api"
+	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"log"
+	"strings"
 	"testing"
 )
 
 var manager db.AccessorManage
+var dbc *gorm.DB
+var conf adapter.DBConfig
 
 func init() {
 	cli, err := api.NewClient(api.DefaultConfig())
@@ -19,7 +24,7 @@ func init() {
 		log.Fatal(err)
 	}
 
-	dbc, _, err := adapter.ConnectDBWithConsul(cli, "db/auth/local_test")
+	dbc, conf, err = adapter.ConnectDBWithConsul(cli, "db/auth/local_test")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -39,6 +44,10 @@ var passwords = map[string]string{
 }
 
 func TestDefault_CreateStudentAuth(t *testing.T) {
+	defer func() {
+		_ = dbc.Close()
+	}()
+
 	// Tx 시작
 	access, err := manager.BeginTx()
 	if err != nil {
@@ -50,11 +59,11 @@ func TestDefault_CreateStudentAuth(t *testing.T) {
 		UUID, ParentID, ParentPW string
 	} {
 		{
-			UUID:     "parent-432143214321",
+			UUID:     "parent-111111111111",
 			ParentID: "jinhong07191",
 			ParentPW: passwords["testPW1"],
 		}, {
-			UUID:     "parent-123412341234",
+			UUID:     "parent-222222222222",
 			ParentID: "jinhong07192",
 			ParentPW: passwords["testPW2"],
 		},
@@ -73,26 +82,48 @@ func TestDefault_CreateStudentAuth(t *testing.T) {
 		ExpectAuth *model.StudentAuth
 		ExpectError error
 	} {
-		{ // 정상적인 input test case
-			UUID: "student-123412341234",
-			ParentUUID: "parent-123412341234",
-			StudentID: "jinhong07191",
+		{ // success case
+			UUID: "student-111111111111",
+			ParentUUID: "parent-111111111111",
+			StudentID: "jinhong0719",
 			StudentPW: passwords["testPW1"],
 			ExpectError: nil,
+		}, { // UUID duplicate
+			UUID: "student-111111111111",
+			ParentUUID: "parent-111111111111",
+			StudentID: "jinhong07191",
+			StudentPW: passwords["testPW1"],
+			ExpectError: mysqlerr.DuplicateEntry("uuid", "student-111111111111"),
+		}, { // StudentID duplicate
+			UUID: "student-222222222222",
+			ParentUUID: "parent-111111111111",
+			StudentID: "jinhong0719",
+			StudentPW: passwords["testPW1"],
+			ExpectError: mysqlerr.DuplicateEntry("student_id", "jinhong0719"),
+		}, { // ParentUUID(foreign key) reference constraint X
+			UUID: "student-222222222222",
+			ParentUUID: "parent-123412341234", // not exist parent uuid
+			StudentID: "jinhong07192",
+			StudentPW: passwords["testPW1"],
+			ExpectError: mysqlerr.FKConstraintFail(strings.ToLower(conf.DB), "student_auths", (&model.StudentAuth{}).ParentUUIDConstraintName(), "parent_uuid", mysqlerr.Reference{
+				TableName: "parent_auths",
+				AttrName:  "uuid",
+			}),
 		},
 	}
 
 	for _, test := range tests {
-		paramAuth := &model.StudentAuth{
+		auth := &model.StudentAuth{
 			UUID:       test.UUID,
 			StudentId:  test.StudentID,
 			StudentPw:  test.StudentPW,
 			ParentUUID: test.ParentUUID,
 		}
+		expectAuth := auth
 
-		createdAuth, err := access.CreateStudentAuth(paramAuth)
+		resultAuth, err := access.CreateStudentAuth(auth)
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
-		assert.Equalf(t, paramAuth, createdAuth, "result model assertion (test case: %v)", test)
+		assert.Equalf(t, expectAuth, resultAuth, "result model assertion (test case: %v)", test)
 	}
 
 	access.Rollback()

@@ -6,7 +6,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
-func DuplicateEntry(entry, key string) *mysql.MySQLError {
+func DuplicateEntry(key, entry string) *mysql.MySQLError {
 	return &mysql.MySQLError{
 		Number:  mysqlerr.ER_DUP_ENTRY,
 		Message: fmt.Sprintf("Duplicate entry '%s' for key '%s'", entry, key),

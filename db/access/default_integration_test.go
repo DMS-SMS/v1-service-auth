@@ -10,13 +10,11 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"log"
-	"strings"
 	"testing"
 )
 
 var manager db.AccessorManage
 var dbc *gorm.DB
-var conf adapter.DBConfig
 
 func init() {
 	cli, err := api.NewClient(api.DefaultConfig())
@@ -24,7 +22,7 @@ func init() {
 		log.Fatal(err)
 	}
 
-	dbc, conf, err = adapter.ConnectDBWithConsul(cli, "db/auth/local_test")
+	dbc, _, err = adapter.ConnectDBWithConsul(cli, "db/auth/local_test")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,12 +33,6 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-var passwords = map[string]string{
-	"testPW1": "$2a$10$POwSnghOjkriuQ4w1Bj3zeHIGA7fXv8UI/UFXEhnnO5YrcwkUDcXq",
-	"testPW2": "$2a$10$XxGXTboHZxhoqzKcBVqkJOiNSy6narAvIQ/ljfTJ4m93jAt8GyX.e",
-	"testPW3": "$2a$10$sfZLOR8iVyhXI0y8nXcKIuKseahKu4NLSlocUWqoBdGrpLIZzxJ2S",
 }
 
 func TestDefault_CreateStudentAuth(t *testing.T) {
@@ -105,10 +97,7 @@ func TestDefault_CreateStudentAuth(t *testing.T) {
 			ParentUUID: "parent-123412341234", // not exist parent uuid
 			StudentID: "jinhong07192",
 			StudentPW: passwords["testPW1"],
-			ExpectError: mysqlerr.FKConstraintFail(strings.ToLower(conf.DB), "student_auths", (&model.StudentAuth{}).ParentUUIDConstraintName(), "parent_uuid", mysqlerr.Reference{
-				TableName: "parent_auths",
-				AttrName:  "uuid",
-			}),
+			ExpectError: StudentAuthParentUUIDFKConstraintFailError,
 		},
 	}
 
@@ -128,3 +117,18 @@ func TestDefault_CreateStudentAuth(t *testing.T) {
 
 	access.Rollback()
 }
+
+var passwords = map[string]string{
+	"testPW1": "$2a$10$POwSnghOjkriuQ4w1Bj3zeHIGA7fXv8UI/UFXEhnnO5YrcwkUDcXq",
+	"testPW2": "$2a$10$XxGXTboHZxhoqzKcBVqkJOiNSy6narAvIQ/ljfTJ4m93jAt8GyX.e",
+	"testPW3": "$2a$10$sfZLOR8iVyhXI0y8nXcKIuKseahKu4NLSlocUWqoBdGrpLIZzxJ2S",
+}
+
+var (
+	StudentAuthParentUUIDFKConstraintFailError = mysqlerr.FKConstraintFail("sms_auth_test_db",
+		"student_auths", (&model.StudentAuth{}).ParentUUIDConstraintName(), "parent_uuid",
+		mysqlerr.Reference{
+			TableName: "parent_auths",
+			AttrName:  "uuid",
+		})
+)

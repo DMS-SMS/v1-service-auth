@@ -27,7 +27,6 @@ func init() {
 		log.Fatal(err)
 	}
 	db.Migrate(dbc)
-	dbc.LogMode(true)
 
 	manager, err = db.NewAccessorManage(DefaultReflectType(), dbc)
 	if err != nil {
@@ -35,11 +34,7 @@ func init() {
 	}
 }
 
-func TestDefault_CreateStudentAuth(t *testing.T) {
-	defer func() {
-		_ = dbc.Close()
-	}()
-
+func Test_default_CreateStudentAuth(t *testing.T) {
 	// Tx 시작
 	access, err := manager.BeginTx()
 	if err != nil {
@@ -108,14 +103,19 @@ func TestDefault_CreateStudentAuth(t *testing.T) {
 			StudentPw:  test.StudentPW,
 			ParentUUID: test.ParentUUID,
 		}
-		expectAuth := auth
 
-		resultAuth, err := access.CreateStudentAuth(auth)
+		test.ExpectAuth = auth.DeepCopy()
+		auth, err := access.CreateStudentAuth(auth)
+
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
-		assert.Equalf(t, expectAuth, resultAuth, "result model assertion (test case: %v)", test)
+		assert.Equalf(t, test.ExpectAuth, auth.ExceptGormModel(), "result model assertion (test case: %v)", test)
 	}
 
 	access.Rollback()
+}
+
+func TestDBClose(t *testing.T) {
+	_ = dbc.Close()
 }
 
 var passwords = map[string]string{

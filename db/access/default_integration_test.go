@@ -92,7 +92,7 @@ func Test_default_CreateStudentAuth(t *testing.T) {
 			ParentUUID: "parent-123412341234", // not exist parent uuid
 			StudentID: "jinhong07192",
 			StudentPW: passwords["testPW1"],
-			ExpectError: StudentAuthParentUUIDFKConstraintFailError,
+			ExpectError: studentAuthParentUUIDFKConstraintFailError,
 		},
 	}
 
@@ -114,6 +114,52 @@ func Test_default_CreateStudentAuth(t *testing.T) {
 	access.Rollback()
 }
 
+func Test_default_CreateParentAuth(t *testing.T) {
+	tests := []struct{
+		UUID, ParentId, ParentPw string
+		ExpectAuth *model.ParentAuth
+		ExpectError error
+	} {
+		{ // success case
+			UUID: "parent-111111111111",
+			ParentId: "parent1",
+			ParentPw: passwords["testPW1"],
+			ExpectError: nil,
+		}, { // UUID duplicate
+			UUID: "parent-111111111111",
+			ParentId: "parent2",
+			ParentPw: passwords["testPW2"],
+			ExpectError: mysqlerr.DuplicateEntry("uuid", "parent-111111111111"),
+		}, { // ParentId duplicate
+			UUID: "parent-222222222222",
+			ParentId: "parent1",
+			ParentPw: passwords["testPW2"],
+			ExpectError: mysqlerr.DuplicateEntry("parent_id", "parent1"),
+		},
+	}
+
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, test := range tests {
+		auth := &model.ParentAuth{
+			UUID:     test.UUID,
+			ParentId: test.ParentId,
+			ParentPw: test.ParentPw,
+		}
+
+		test.ExpectAuth = auth.DeepCopy()
+		auth, err := access.CreateParentAuth(auth)
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, test.ExpectAuth, auth.ExceptGormModel(), "result model assertion (test case: %v)", test)
+	}
+
+	access.Rollback()
+}
+
 func TestDBClose(t *testing.T) {
 	_ = dbc.Close()
 }
@@ -125,7 +171,7 @@ var passwords = map[string]string{
 }
 
 var (
-	StudentAuthParentUUIDFKConstraintFailError = mysqlerr.FKConstraintFail("sms_auth_test_db",
+	studentAuthParentUUIDFKConstraintFailError = mysqlerr.FKConstraintFail("sms_auth_test_db",
 		"student_auths", (&model.StudentAuth{}).ParentUUIDConstraintName(), "parent_uuid",
 		mysqlerr.Reference{
 			TableName: "parent_auths",

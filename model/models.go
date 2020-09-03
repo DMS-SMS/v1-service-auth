@@ -18,9 +18,9 @@ type StudentAuth struct {
 type StudentInform struct {
 	gorm.Model
 	StudentUUID   string        `gorm:"Type:char(20);UNIQUE;NOT NULL" validate:"uuid=student,len=20"` // 형식 => 'student-' + 12자리 랜덤 수 (20자)
-	Grade         grade         `gorm:"Type:tinyint(1);NOT NULL"`
-	Class         class         `gorm:"Type:tinyint(1);NOT NULL"`                                     // in (1~4)
-	StudentNumber studentNumber `gorm:"Type:tinyint(1);NOT NULL"`                                     // in (1~21)
+	Grade         grade         `gorm:"Type:tinyint(1);NOT NULL" validate:"range=1~3"`				  // 1~3 사이 값
+	Class         class         `gorm:"Type:tinyint(1);NOT NULL" validate:"range=1~4"`                // 1~4 사이 값
+	StudentNumber studentNumber `gorm:"Type:tinyint(1);NOT NULL" validate:"range=1~21"`               // 1~21 사이 값
 	Name          string        `gorm:"Type:varchar(4);NOT NULL" validate:"min=2,max=4,korean"`       // 2~4자 사이 한글
 	PhoneNumber   string        `gorm:"Type:char(11);UNIQUE;NOT NULL" validate:"len=11,phone_number"` // 11자
 	ProfileUri    string        `gorm:"Type:varchar(150);UNIQUE;NOT NULL"`                            // 제약 조건 나중에 추가 예정
@@ -41,8 +41,8 @@ type TeacherInform struct {
 	gorm.Model
 	TeacherUUID string `gorm:"Type:char(20);UNIQUE;NOT NULL'" validate:"uuid=teacher,len=20"` // 형식 => 'teacher-' + 12자리 랜덤 수 (20자)
 	Name        string `gorm:"Type:varchar(4);NOT NULL" validate:"min=2,max=4,korean"`        // 2~4자 사이 한글
-	Grade       grade  `gorm:"Type:tinyint(1);"`                                              // in (1~3)
-	Class       class  `gorm:"Type:tinyint(1);"`                                              // in (1~4)
+	Grade       grade  `gorm:"Type:tinyint(1);" validate:"range=0~3"`						  // in (1~3)
+	Class       class  `gorm:"Type:tinyint(1);" validate:"range=0~4"`						  // in (1~4)
 	PhoneNumber string `gorm:"Type:char(11);UNIQUE;NOT NULL" validate:"len=11,phone_number"`  // 11자
 }
 

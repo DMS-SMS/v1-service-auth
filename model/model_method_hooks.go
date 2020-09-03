@@ -28,25 +28,14 @@ func (si *StudentInform) BeforeCreate(tx *gorm.DB) (err error) {
 	query := tx.Where("grade = ? AND class = ? AND student_number = ?", si.Grade, si.Class, si.StudentNumber).Find(&StudentInform{})
 	if query.RowsAffected != 0 {
 		// number와 같은 key들 상수로 선언 및 관리 필요
-		return mysqlerr.DuplicateEntry("number", fmt.Sprintf("%d-%d-%02d", si.Grade.value, si.Class.value, si.StudentNumber.value))
+		err = mysqlerr.DuplicateEntry("number", fmt.Sprintf("%d-%d-%02d", si.Grade, si.Class.value, si.StudentNumber.value))
 	}
 
-	return nil
+	return
 }
 
 func (ti *TeacherInform) BeforeCreate(tx *gorm.DB) (err error) {
-	if err = validate.DBValidator.Struct(ti); err != nil {
-		return
-	}
-
-	query := tx.Where("grade = ? AND class = ?", ti.Grade, ti.Class).Find(&TeacherInform{})
-	if query.RowsAffected != 0 {
-		// class와 같은 entry들 상수로 선언 및 관리 필요
-		// DB의 다형성을 위한 에러 코드 생성 함수 추상화 필요 (나중에)
-		return mysqlerr.DuplicateEntry("class", fmt.Sprintf("%d-%d", ti.Grade.value, ti.Class.value))
-	}
-
-	return nil
+	return validate.DBValidator.Struct(ti)
 }
 
 func (pi *ParentInform) BeforeCreate() (err error) {

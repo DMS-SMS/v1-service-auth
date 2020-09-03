@@ -28,7 +28,7 @@ func (si *StudentInform) BeforeCreate(tx *gorm.DB) (err error) {
 	query := tx.Where("grade = ? AND class = ? AND student_number = ?", si.Grade, si.Class, si.StudentNumber).Find(&StudentInform{})
 	if query.RowsAffected != 0 {
 		// number와 같은 key들 상수로 선언 및 관리 필요
-		err = mysqlerr.DuplicateEntry("number", fmt.Sprintf("%d-%d-%02d", si.Grade, si.Class.value, si.StudentNumber.value))
+		err = mysqlerr.DuplicateEntry("number", fmt.Sprintf("%d-%d-%02d", si.Grade, si.Class, si.StudentNumber))
 	}
 
 	return

@@ -66,3 +66,37 @@ type ParentPW string
 func (pp ParentPW) Value() (driver.Value, error) { return string(pp), nil }
 func (pp *ParentPW) Scan(src interface{}) (err error) { *pp = ParentPW(src.(string)); return }
 func (pp ParentPW) KeyName() string { return "parent_pw" }
+
+type StudentUUID string
+func (su StudentUUID) Value() (driver.Value, error) { return string(su), nil }
+func (su *StudentUUID) Scan(src interface{}) (err error) { *su = StudentUUID(src.(string)); return }
+func (su StudentUUID) KeyName() string { return "student_uuid" }
+
+type TeacherUUID string
+func (tu TeacherUUID) Value() (driver.Value, error) { return string(tu), nil }
+func (tu *TeacherUUID) Scan(src interface{}) (err error) { *tu = TeacherUUID(src.(string)); return }
+func (tu TeacherUUID) KeyName() string { return "teacher_uuid" }
+
+type ParentUUID string
+func (pu ParentUUID) Value() (value driver.Value, err error) {
+	value = string(pu)
+	if value == "" { value = nil }
+	return
+}
+func (pu *ParentUUID) Scan(src interface{}) (err error) { *pu = ParentUUID(src.(string)); return }
+func (pu ParentUUID) KeyName() string { return "parent_uuid" }
+
+type Name string
+func (n Name) Value() (driver.Value, error) { return string(n), nil }
+func (n *Name) Scan(src interface{}) (err error) { *n = Name(src.(string)); return }
+func (n Name) KeyName() string { return "name" }
+
+type PhoneNumber string
+func (pn PhoneNumber) Value() (driver.Value, error) { return string(pn), nil }
+func (pn *PhoneNumber) Scan(src interface{}) (err error) { *pn = PhoneNumber(src.(string)); return }
+func (pn PhoneNumber) KeyName() string { return "phone_number" }
+
+type ProfileURI string
+func (pu ProfileURI) Value() (driver.Value, error) { return string(pu), nil }
+func (pu *ProfileURI) Scan(src interface{}) (err error) { *pu = ProfileURI(src.(string)); return }
+func (pu ProfileURI) KeyName() string { return "profile_uri" }

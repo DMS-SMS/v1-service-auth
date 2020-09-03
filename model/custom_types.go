@@ -11,6 +11,7 @@ func (g grade) Value() (value driver.Value, err error) {
 	return
 }
 func (g *grade) Scan(v interface{}) (_ error) { *g = grade(v.(int64)); return }
+func (g grade) KeyName() string { return "grade" }
 
 type class int64
 func (c class) Value() (value driver.Value, err error) {
@@ -19,6 +20,8 @@ func (c class) Value() (value driver.Value, err error) {
 	return
 }
 func (c *class) Scan(v interface{}) (err error) { *c = class(v.(int64)); return }
+func (c class) KeyName() string { return "class" }
+
 
 type studentNumber int64
 func (sn studentNumber) Value() (value driver.Value, err error) {
@@ -27,3 +30,4 @@ func (sn studentNumber) Value() (value driver.Value, err error) {
 	return
 }
 func (sn *studentNumber) Scan(v interface{}) (err error) { *sn = studentNumber(v.(int64)); return }
+func (sn studentNumber) KeyName() string { return "student_number" }

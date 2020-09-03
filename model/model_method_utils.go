@@ -26,9 +26,9 @@ func exceptGormModel(model interface{}) (gormModelExceptTable interface{}) {
 }
 
 // DeepCopy 메서드 -> 리시버 변수에 대한 DeepCopy 본사본 생성 및 반환 메서드
-func (sa *StudentAuth) 	 DeepCopy() *StudentAuth   { return deepCopyModel(sa).(*StudentAuth) }
-func (ta *TeacherAuth) 	 DeepCopy() *TeacherAuth   { return deepCopyModel(ta).(*TeacherAuth) }
-func (pa *ParentAuth) 	 DeepCopy() *ParentAuth    { return deepCopyModel(pa).(*ParentAuth) }
+func (sa *StudentAuth)   DeepCopy() *StudentAuth   { return deepCopyModel(sa).(*StudentAuth) }
+func (ta *TeacherAuth)   DeepCopy() *TeacherAuth   { return deepCopyModel(ta).(*TeacherAuth) }
+func (pa *ParentAuth)    DeepCopy() *ParentAuth    { return deepCopyModel(pa).(*ParentAuth) }
 func (si *StudentInform) DeepCopy() *StudentInform { return deepCopyModel(si).(*StudentInform) }
 func (ti *TeacherInform) DeepCopy() *TeacherInform { return deepCopyModel(ti).(*TeacherInform) }
 func (pi *ParentInform)  DeepCopy() *ParentInform  { return deepCopyModel(pi).(*ParentInform) }

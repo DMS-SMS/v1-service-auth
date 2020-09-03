@@ -18,74 +18,47 @@ var (
 	StudentNumberValuesList = arraylist.NewWithInt64(studentNumberAvailableValues...)
 )
 
-type grade struct {
-	value int64
-}
-
-type class struct {
-	value int64
-}
-
-type studentNumber struct {
-	value int64
-}
-
-// ---
-
-func Grade(v int64) grade {
-	return grade{v}
-}
-
-func Class(v int64) class {
-	return class{v}
-}
-
-func StudentNumber(v int64) studentNumber {
-	return studentNumber{v}
-}
-
-// ---
-
-func (g grade) Value() (driver.Value, error) {
-	if g.value == 0 {
-		return nil, nil
-	}
-
+type grade struct { value int64 }
+func Grade(v int64) grade { return grade{v} }
+func (g grade) Value() (value driver.Value, err error) {
+	value = g.value
+	if g.value == int64(0) { return }
 	if !GradeValuesList.Contains(g.value) {
-		return nil, errors.New(fmt.Sprintf("%d is outside the range of the grade property", g.value))
+		err = errors.New(fmt.Sprintf("%d is outside the range of the grade property", g.value))
 	}
-	return g.value, nil
+	return
 }
-
-func (g *grade) Scan(v interface{}) error {
+func (g *grade) Scan(v interface{}) (err error) {
 	g.value = v.(int64)
-	return nil
+	return
 }
 
-func (c class) Value() (driver.Value, error) {
-	if c.value == 0 {
-		return nil, nil
-	}
 
+type class struct { value int64 }
+func Class(v int64) class { return class{v} }
+func (c class) Value() (value driver.Value, err error) {
+	value = c.value
+	if c.value == int64(0) { return }
 	if !ClassValuesList.Contains(c.value) {
-		return nil, errors.New(fmt.Sprintf("%d is outside the range of the class property", c.value))
+		err = errors.New(fmt.Sprintf("%d is outside the range of the class property", c.value))
 	}
-	return c.value, nil
+	return
 }
-
-func (c *class) Scan(v interface{}) error {
+func (c *class) Scan(v interface{}) (err error) {
 	c.value = v.(int64)
-	return nil
+	return
 }
 
-func (sn studentNumber) Value() (driver.Value, error) {
+type studentNumber struct { value int64 }
+func StudentNumber(v int64) studentNumber { return studentNumber{v} }
+func (sn studentNumber) Value() (value driver.Value, err error) {
+	value = sn.value
 	if !StudentNumberValuesList.Contains(sn.value) {
-		return nil, errors.New(fmt.Sprintf("%d is outside the range of the student_number property", sn.value))
+		err = errors.New(fmt.Sprintf("%d is outside the range of the student_number property", sn.value))
 	}
-	return sn.value, nil
+	return
 }
-
-func (sn studentNumber) Scan(v interface{}) error {
+func (sn studentNumber) Scan(v interface{}) (err error) {
 	sn.value = v.(int64)
-	return nil
+	return
 }

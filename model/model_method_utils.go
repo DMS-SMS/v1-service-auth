@@ -46,3 +46,11 @@ func (sa *StudentAuth)   ParentUUIDConstraintName()  string { return "student_au
 func (si *StudentInform) StudentUUIDConstraintName() string { return "student_informs_student_uuid_student_auths_uuid_foreign" }
 func (ti *TeacherInform) TeacherUUIDConstraintName() string { return "teacher_informs_teacher_uuid_teacher_auths_uuid_foreign" }
 func (pi *ParentInform)  ParentUUIDConstraintName()  string { return "parent_informs_parent_uuid_parent_auths_uuid_foreign" }
+
+// TableName 메서드 -> 리시버 변수에 해당되는 테이블의 이름 반환 메서드
+func (sa *StudentAuth)   TableName() string { return "student_auths" }
+func (ta *TeacherAuth)   TableName() string { return "teacher_auths" }
+func (pa *ParentAuth)    TableName() string { return "parent_auths" }
+func (si *StudentInform) TableName() string { return "student_informs" }
+func (ti *TeacherInform) TableName() string { return "teacher_informs" }
+func (pi *ParentInform)  TableName() string { return "parent_informs" }

@@ -2,7 +2,6 @@ package model
 
 import (
 	"database/sql/driver"
-	"fmt"
 )
 
 // Grade 필드에서 사용할 사용자 정의 타입
@@ -41,9 +40,9 @@ func (sn studentNumber) KeyName() string { return "student_number" }
 // UUID 필드에서 사용할 사용자 정의 타입
 type uuid string
 func UUID(s string) uuid { return uuid(s) }
-func (u uuid) Value() (driver.Value, error) { fmt.Println(string(u)); return string(u), nil }
+func (u uuid) Value() (driver.Value, error) { return string(u), nil }
 func (u *uuid) Scan(src interface{}) (err error) { *u = uuid(src.([]uint8)); return }
-func (u uuid) KeyName() string { return "UUID" }
+func (u uuid) KeyName() string { return "uuid" }
 
 // StudentID 필드에서 사용할 사용자 정의 타입
 type studentID string

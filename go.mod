@@ -23,5 +23,6 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
 	github.com/uber/jaeger-lib v2.2.0+incompatible // indirect
+	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 	google.golang.org/protobuf v1.25.0
 )

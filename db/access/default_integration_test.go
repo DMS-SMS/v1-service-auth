@@ -57,7 +57,11 @@ func Test_default_CreateStudentAuth(t *testing.T) {
 	}
 
 	for _, init := range inits {
-		auth := &model.ParentAuth{UUID: init.UUID, ParentId: init.ParentID, ParentPw: init.ParentPW}
+		auth := &model.ParentAuth{
+			UUID:     model.UUID(init.UUID),
+			ParentID: model.ParentID(init.ParentID),
+			ParentPW: model.ParentPW(init.ParentPW),
+		}
 		if _, err := access.CreateParentAuth(auth); err != nil {
 			access.Rollback()
 			log.Fatal(fmt.Sprintf("error occurs while creating parent auth, err: %v", err))
@@ -98,10 +102,10 @@ func Test_default_CreateStudentAuth(t *testing.T) {
 
 	for _, test := range tests {
 		auth := &model.StudentAuth{
-			UUID:       test.UUID,
-			StudentId:  test.StudentID,
-			StudentPw:  test.StudentPW,
-			ParentUUID: test.ParentUUID,
+			UUID:       model.UUID(test.UUID),
+			StudentID:  model.StudentID(test.StudentID),
+			StudentPW:  model.StudentPW(test.StudentPW),
+			ParentUUID: model.ParentUUID(test.ParentUUID),
 		}
 
 		test.ExpectAuth = auth.DeepCopy()
@@ -145,9 +149,9 @@ func Test_default_CreateParentAuth(t *testing.T) {
 
 	for _, test := range tests {
 		auth := &model.ParentAuth{
-			UUID:     test.UUID,
-			ParentId: test.ParentId,
-			ParentPw: test.ParentPw,
+			UUID:     model.UUID(test.UUID),
+			ParentID: model.ParentID(test.ParentId),
+			ParentPW: model.ParentPW(test.ParentPw),
 		}
 
 		test.ExpectAuth = auth.DeepCopy()

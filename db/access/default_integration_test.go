@@ -84,13 +84,13 @@ func Test_default_CreateStudentAuth(t *testing.T) {
 			ParentUUID: "parent-111111111111",
 			StudentID: "jinhong07191",
 			StudentPW: passwords["testPW1"],
-			ExpectError: mysqlerr.DuplicateEntry("uuid", "student-111111111111"),
+			ExpectError: mysqlerr.DuplicateEntry(studentAuthModel.UUID.KeyName(), "student-111111111111"),
 		}, { // StudentID duplicate
 			UUID: "student-222222222222",
 			ParentUUID: "parent-111111111111",
 			StudentID: "jinhong0719",
 			StudentPW: passwords["testPW1"],
-			ExpectError: mysqlerr.DuplicateEntry("student_id", "jinhong0719"),
+			ExpectError: mysqlerr.DuplicateEntry(studentAuthModel.StudentID.KeyName(), "jinhong0719"),
 		}, { // ParentUUID(foreign key) reference constraint X
 			UUID: "student-222222222222",
 			ParentUUID: "parent-123412341234", // not exist parent uuid
@@ -133,12 +133,12 @@ func Test_default_CreateParentAuth(t *testing.T) {
 			UUID: "parent-111111111111",
 			ParentId: "parent2",
 			ParentPw: passwords["testPW2"],
-			ExpectError: mysqlerr.DuplicateEntry("uuid", "parent-111111111111"),
+			ExpectError: mysqlerr.DuplicateEntry(parentAuthModel.UUID.KeyName(), "parent-111111111111"),
 		}, { // ParentId duplicate
 			UUID: "parent-222222222222",
 			ParentId: "parent1",
 			ParentPw: passwords["testPW2"],
-			ExpectError: mysqlerr.DuplicateEntry("parent_id", "parent1"),
+			ExpectError: mysqlerr.DuplicateEntry(parentAuthModel.ParentID.KeyName(), "parent1"),
 		},
 	}
 
@@ -175,10 +175,15 @@ var passwords = map[string]string{
 }
 
 var (
+	studentAuthModel = new(model.StudentAuth)
+	parentAuthModel = new(model.ParentAuth)
+)
+
+var (
 	studentAuthParentUUIDFKConstraintFailError = mysqlerr.FKConstraintFail("sms_auth_test_db",
-		"student_auths", (&model.StudentAuth{}).ParentUUIDConstraintName(), "parent_uuid",
+		studentAuthModel.TableName(), studentAuthModel.ParentUUIDConstraintName(), studentAuthModel.ParentUUID.KeyName(),
 		mysqlerr.Reference{
-			TableName: "parent_auths",
-			AttrName:  "uuid",
+			TableName: parentAuthModel.TableName(),
+			AttrName:  parentAuthModel.UUID.KeyName(),
 		})
 )

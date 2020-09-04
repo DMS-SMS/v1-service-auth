@@ -164,6 +164,52 @@ func Test_default_CreateParentAuth(t *testing.T) {
 	access.Rollback()
 }
 
+func Test_default_CreateTeacherAuth(t *testing.T) {
+	tests := []struct{
+		UUID, TeacherID, TeacherPW string
+		ExpectAuth *model.TeacherAuth
+		ExpectError error
+	} {
+		{ // success case
+			UUID:        "teacher-111111111111",
+			TeacherID:   "teacher1",
+			TeacherPW:   passwords["testPW1"],
+			ExpectError: nil,
+		}, { // UUID duplicate
+			UUID:        "teacher-111111111111",
+			TeacherID:   "teacher2",
+			TeacherPW:   passwords["testPW2"],
+			ExpectError: mysqlerr.DuplicateEntry(teacherAuthModel.UUID.KeyName(), "teacher-111111111111"),
+		}, { // TeacherID duplicate
+			UUID:        "teacher-222222222222",
+			TeacherID:   "teacher1",
+			TeacherPW:   passwords["testPW2"],
+			ExpectError: mysqlerr.DuplicateEntry(teacherAuthModel.TeacherID.KeyName(), "teacher1"),
+		},
+	}
+
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, test := range tests {
+		auth := &model.TeacherAuth{
+			UUID:      model.UUID(test.UUID),
+			TeacherID: model.TeacherID(test.TeacherID),
+			TeacherPW: model.TeacherPW(test.TeacherPW),
+		}
+
+		test.ExpectAuth = auth.DeepCopy()
+		auth, err := access.CreateTeacherAuth(auth)
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, test.ExpectAuth, auth.ExceptGormModel(), "result model assertion (test case: %v)", test)
+	}
+
+	access.Rollback()
+}
+
 func TestDBClose(t *testing.T) {
 	_ = dbc.Close()
 }
@@ -176,6 +222,7 @@ var passwords = map[string]string{
 
 var (
 	studentAuthModel = new(model.StudentAuth)
+	teacherAuthModel = new(model.TeacherAuth)
 	parentAuthModel = new(model.ParentAuth)
 )
 

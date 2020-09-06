@@ -119,6 +119,11 @@ func Test_default_CreateStudentAuth(t *testing.T) {
 }
 
 func Test_default_CreateParentAuth(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	tests := []struct{
 		UUID, ParentId, ParentPw string
 		ExpectAuth *model.ParentAuth
@@ -142,11 +147,6 @@ func Test_default_CreateParentAuth(t *testing.T) {
 		},
 	}
 
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	for _, test := range tests {
 		auth := &model.ParentAuth{
 			UUID:     model.UUID(test.UUID),
@@ -165,6 +165,11 @@ func Test_default_CreateParentAuth(t *testing.T) {
 }
 
 func Test_default_CreateTeacherAuth(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	tests := []struct{
 		UUID, TeacherID, TeacherPW string
 		ExpectAuth *model.TeacherAuth
@@ -188,11 +193,6 @@ func Test_default_CreateTeacherAuth(t *testing.T) {
 		},
 	}
 
-	access, err := manager.BeginTx()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	for _, test := range tests {
 		auth := &model.TeacherAuth{
 			UUID:      model.UUID(test.UUID),
@@ -208,6 +208,93 @@ func Test_default_CreateTeacherAuth(t *testing.T) {
 	}
 
 	access.Rollback()
+}
+
+func Test_default_CreateStudentInform(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 학생 계정 생성을 위한 부모님 계정 생성
+	for _, init := range []struct {
+		UUID, ParentID, ParentPW string
+	} {
+		{
+			UUID:     "parent-111111111111",
+			ParentID: "jinhong0719",
+			ParentPW: passwords["testPW1"],
+		},
+	} {
+		_, err := access.CreateParentAuth(&model.ParentAuth{
+			UUID:     model.UUID(init.UUID),
+			ParentID: model.ParentID(init.ParentID),
+			ParentPW: model.ParentPW(init.ParentPW),
+		})
+		if err != nil {
+			access.Rollback()
+			log.Fatal(fmt.Sprintf("error occurs while creating parent auth, err: %v", err))
+		}
+	}
+
+	// 학생 정보 생성을 위한 학생 계정 생성
+	for _, init := range []struct {
+		UUID, StudentID, StudentPW, ParentUUID string
+	} {
+		{
+			UUID:       "student-111111111111",
+			StudentID:  "jinhong0719",
+			StudentPW: passwords["testPW1"],
+			ParentUUID: "parent-111111111111",
+		},
+	} {
+		_, err := access.CreateStudentAuth(&model.StudentAuth{
+			UUID:       model.UUID(init.UUID),
+			StudentID:  model.StudentID(init.StudentID),
+			StudentPW:  model.StudentPW(init.StudentPW),
+			ParentUUID: model.ParentUUID(init.ParentUUID),
+		})
+		if err != nil {
+			access.Rollback()
+			log.Fatal(fmt.Sprintf("error occurs while creating student auth, err: %v", err))
+		}
+	}
+
+	tests := []struct {
+		StudentUUID, Name, PhoneNumber, ProfileURI string
+		Grade, Class, StudentNumber                int64
+		ExpectResult                               *model.StudentInform
+		ExpectError                                error
+	} {
+		{ // success case
+			StudentUUID:   "student-111111111111",
+			Grade:         2,
+			Class:         2,
+			StudentNumber: 7,
+			Name:          "박진홍",
+			PhoneNumber:   "01088378347",
+			ProfileURI:    "example.com/profiles/student-111111111111",
+			ExpectError:   nil,
+		},
+	}
+
+	for _, test := range tests {
+		inform := &model.StudentInform{
+			StudentUUID:   model.StudentUUID(test.StudentUUID),
+			Grade:         model.Grade(test.Grade),
+			Class:         model.Class(test.Class),
+			StudentNumber: model.StudentNumber(test.StudentNumber),
+			Name:          model.Name(test.Name),
+			PhoneNumber:   model.PhoneNumber(test.PhoneNumber),
+			ProfileURI:    model.ProfileURI(test.ProfileURI),
+		}
+
+		test.ExpectResult = inform.DeepCopy()
+		result, err := access.CreateStudentInform(inform)
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result model assertion error (test case: %v)", test)
+	}
 }
 
 func TestDBClose(t *testing.T) {

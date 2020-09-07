@@ -32,6 +32,7 @@ var (
 	parentAuthModel = new(model.ParentAuth)
 	studentInformModel = new(model.StudentInform)
 	teacherInformModel = new(model.TeacherInform)
+	parentInformModel = new(model.ParentInform)
 )
 
 var (
@@ -57,6 +58,7 @@ var (
 		AttrName:  studentAuthModel.UUID.KeyName(),
 	})
 
+	// TeacherInform 테이블의 TeacherUUID 속성의 FK 제약조건 위반에 대한 에러 변수
 	teacherInformTeacherUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
 		DBName:         strings.ToLower("SMS_Auth_Test_DB"),
 		TableName:      teacherInformModel.TableName(),
@@ -65,6 +67,17 @@ var (
 	}, mysqlerr.RefInform{
 		TableName: teacherAuthModel.TableName(),
 		AttrName:  teacherAuthModel.UUID.KeyName(),
+	})
+
+	// TeacherInform 테이블의 TeacherUUID 속성의 FK 제약조건 위반에 대한 에러 변수
+	parentInformParentUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
+		DBName:         strings.ToLower("SMS_Auth_Test_DB"),
+		TableName:      parentInformModel.TableName(),
+		ConstraintName: parentInformModel.ParentUUIDConstraintName(),
+		AttrName:       parentInformModel.ParentUUID.KeyName(),
+	}, mysqlerr.RefInform{
+		TableName: parentAuthModel.TableName(),
+		AttrName:  parentAuthModel.UUID.KeyName(),
 	})
 )
 
@@ -538,6 +551,22 @@ func Test_default_CreateParentInform(t *testing.T) {
 			ParentUUID:  "parent-111111111111",
 			Name:        "박진홍",
 			PhoneNumber: "01088378347",
+			ExpectError: nil,
+		}, { // parent uuid duplicate error
+			ParentUUID:  "parent-111111111111",
+			Name:        "박진홍",
+			PhoneNumber: "01012341234",
+			ExpectError: mysqlerr.DuplicateEntry(parentInformModel.ParentUUID.KeyName(), "parent-111111111111"),
+		}, { // phone number duplicate error
+			ParentUUID:  "parent-222222222222",
+			Name:        "박진홍",
+			PhoneNumber: "01088378347",
+			ExpectError: mysqlerr.DuplicateEntry(parentInformModel.PhoneNumber.KeyName(), "01088378347"),
+		}, { // parent uuid FK constraint fail
+			ParentUUID:  "parent-333333333333",
+			Name:        "박진홍",
+			PhoneNumber: "01012341234",
+			ExpectError: parentInformParentUUIDFKConstraintFailError,
 		},
 	}
 

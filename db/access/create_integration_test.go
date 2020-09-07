@@ -31,6 +31,7 @@ var (
 	teacherAuthModel = new(model.TeacherAuth)
 	parentAuthModel = new(model.ParentAuth)
 	studentInformModel = new(model.StudentInform)
+	teacherInformModel = new(model.TeacherInform)
 )
 
 var (
@@ -54,6 +55,16 @@ var (
 	}, mysqlerr.RefInform{
 		TableName: studentAuthModel.TableName(),
 		AttrName:  studentAuthModel.UUID.KeyName(),
+	})
+
+	teacherInformTeacherUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
+		DBName:         strings.ToLower("SMS_Auth_Test_DB"),
+		TableName:      teacherInformModel.TableName(),
+		ConstraintName: teacherInformModel.TeacherUUIDConstraintName(),
+		AttrName:       teacherInformModel.TeacherUUID.KeyName(),
+	}, mysqlerr.RefInform{
+		TableName: teacherAuthModel.TableName(),
+		AttrName:  teacherAuthModel.UUID.KeyName(),
 	})
 )
 
@@ -409,8 +420,12 @@ func Test_default_CreateTeacherInform(t *testing.T) {
 	} {
 		{
 			UUID:      "teacher-111111111111",
-			TeacherID: "jinhong0719",
+			TeacherID: "jinhong07191",
 			TeacherPW: passwords["testPW1"],
+		}, {
+			UUID:      "teacher-222222222222",
+			TeacherID: "jinhong07192",
+			TeacherPW: passwords["testPW2"],
 		},
 	} {
 		_, err := access.CreateTeacherAuth(&model.TeacherAuth{
@@ -436,6 +451,28 @@ func Test_default_CreateTeacherInform(t *testing.T) {
 			Class:       2,
 			Name:        "박진홍",
 			PhoneNumber: "01088378347",
+			ExpectError: nil,
+		}, { // teacher uuid duplicate
+			TeacherUUID: "teacher-111111111111",
+			Grade:       1,
+			Class:       2,
+			Name:        "박진홍",
+			PhoneNumber: "01012341234",
+			ExpectError: mysqlerr.DuplicateEntry(teacherInformModel.TeacherUUID.KeyName(), "teacher-111111111111"),
+		}, { // phone number duplicate
+			TeacherUUID: "teacher-222222222222",
+			Grade:       1,
+			Class:       2,
+			Name:        "박진홍",
+			PhoneNumber: "01088378347",
+			ExpectError: mysqlerr.DuplicateEntry(teacherInformModel.PhoneNumber.KeyName(), "01088378347"),
+		}, { // teacher uuid fk constraint fail
+			TeacherUUID: "teacher-333333333333",
+			Grade:       1,
+			Class:       2,
+			Name:        "박진홍",
+			PhoneNumber: "01012341234",
+			ExpectError: teacherInformTeacherUUIDFKConstraintFailError,
 		},
 	}
 

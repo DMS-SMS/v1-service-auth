@@ -21,7 +21,7 @@ type FKInform struct {
 	DBName, TableName, ConstraintName, AttrName string
 }
 
-func FKConstraintFail(fk FKInform, ref RefInform) *mysql.MySQLError {
+func FKConstraintFailWithoutReferenceInform(fk FKInform, ref RefInform) *mysql.MySQLError {
 	prefix := "Cannot add or update a child row: a foreign key constraint fails"
 	suffix := fmt.Sprintf("(`%s`.`%s`, CONSTRAINT `%s` FOREIGN KEY (`%s`) REFERENCES `%s` (`%s`))",
 		fk.DBName, fk.TableName, fk.ConstraintName, fk.AttrName, ref.TableName, ref.AttrName)

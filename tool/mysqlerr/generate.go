@@ -13,14 +13,18 @@ func DuplicateEntry(key, entry string) *mysql.MySQLError {
 	}
 }
 
-type Reference struct {
+type RefInform struct {
 	TableName, AttrName string
 }
 
-func FKConstraintFail(dbName, tableName, constraintName, attrName string, ref Reference) *mysql.MySQLError {
+type FKInform struct {
+	dbName, tableName, constraintName, attrName string
+}
+
+func FKConstraintFail(fk FKInform, ref RefInform) *mysql.MySQLError {
 	prefix := "Cannot add or update a child row: a foreign key constraint fails"
 	suffix := fmt.Sprintf("(`%s`.`%s`, CONSTRAINT `%s` FOREIGN KEY (`%s`) REFERENCES `%s` (`%s`))",
-		dbName, tableName, constraintName, attrName, ref.TableName, ref.AttrName)
+		fk.dbName, fk.tableName, fk.constraintName, fk.attrName, ref.TableName, ref.AttrName)
 	return &mysql.MySQLError{
 		Number:  mysqlerr.ER_NO_REFERENCED_ROW_2,
 		Message: fmt.Sprintf("%s %s", prefix, suffix),

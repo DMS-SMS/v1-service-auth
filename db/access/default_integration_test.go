@@ -15,8 +15,47 @@ import (
 	"testing"
 )
 
-var manager db.AccessorManage
-var dbc *gorm.DB
+var (
+	manager db.AccessorManage
+	dbc *gorm.DB
+)
+
+var passwords = map[string]string{
+	"testPW1": "$2a$10$POwSnghOjkriuQ4w1Bj3zeHIGA7fXv8UI/UFXEhnnO5YrcwkUDcXq",
+	"testPW2": "$2a$10$XxGXTboHZxhoqzKcBVqkJOiNSy6narAvIQ/ljfTJ4m93jAt8GyX.e",
+	"testPW3": "$2a$10$sfZLOR8iVyhXI0y8nXcKIuKseahKu4NLSlocUWqoBdGrpLIZzxJ2S",
+}
+
+var (
+	studentAuthModel = new(model.StudentAuth)
+	teacherAuthModel = new(model.TeacherAuth)
+	parentAuthModel = new(model.ParentAuth)
+	studentInformModel = new(model.StudentInform)
+)
+
+var (
+	// StudentAuth 테이블의 ParentUUID 속성의 FK 제약조건 위반에 대한 에러 변수
+	studentAuthParentUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
+		DBName:         strings.ToLower("SMS_Auth_Test_DB"),
+		TableName:      studentAuthModel.TableName(),
+		ConstraintName: studentAuthModel.ParentUUIDConstraintName(),
+		AttrName:       studentAuthModel.ParentUUID.KeyName(),
+	}, mysqlerr.RefInform{
+		TableName: parentAuthModel.TableName(),
+		AttrName:  parentAuthModel.UUID.KeyName(),
+	})
+
+	// StudentInform 테이블의 StudentUUID 속성의 FK 제약조건 위반에 대한 에러 변수
+	studentInformStudentUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
+		DBName:         strings.ToLower("SMS_Auth_Test_DB"),
+		TableName:      studentInformModel.TableName(),
+		ConstraintName: studentInformModel.StudentUUIDConstraintName(),
+		AttrName:       studentInformModel.StudentUUID.KeyName(),
+	}, mysqlerr.RefInform{
+		TableName: studentAuthModel.TableName(),
+		AttrName:  studentAuthModel.UUID.KeyName(),
+	})
+)
 
 func init() {
 	cli, err := api.NewClient(api.DefaultConfig())
@@ -359,36 +398,3 @@ func TestDBClose(t *testing.T) {
 	_ = dbc.Close()
 }
 
-var passwords = map[string]string{
-	"testPW1": "$2a$10$POwSnghOjkriuQ4w1Bj3zeHIGA7fXv8UI/UFXEhnnO5YrcwkUDcXq",
-	"testPW2": "$2a$10$XxGXTboHZxhoqzKcBVqkJOiNSy6narAvIQ/ljfTJ4m93jAt8GyX.e",
-	"testPW3": "$2a$10$sfZLOR8iVyhXI0y8nXcKIuKseahKu4NLSlocUWqoBdGrpLIZzxJ2S",
-}
-
-var (
-	studentAuthModel = new(model.StudentAuth)
-	teacherAuthModel = new(model.TeacherAuth)
-	parentAuthModel = new(model.ParentAuth)
-	studentInformModel = new(model.StudentInform)
-)
-
-var (
-	studentAuthParentUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
-		DBName:         strings.ToLower("SMS_Auth_Test_DB"),
-		TableName:      studentAuthModel.TableName(),
-		ConstraintName: studentAuthModel.ParentUUIDConstraintName(),
-		AttrName:       studentAuthModel.ParentUUID.KeyName(),
-	}, mysqlerr.RefInform{
-		TableName: parentAuthModel.TableName(),
-		AttrName:  parentAuthModel.UUID.KeyName(),
-	})
-	studentInformStudentUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
-		DBName:         strings.ToLower("SMS_Auth_Test_DB"),
-		TableName:      studentInformModel.TableName(),
-		ConstraintName: studentInformModel.StudentUUIDConstraintName(),
-		AttrName:       studentInformModel.StudentUUID.KeyName(),
-	}, mysqlerr.RefInform{
-		TableName: studentAuthModel.TableName(),
-		AttrName:  studentAuthModel.UUID.KeyName(),
-	})
-)

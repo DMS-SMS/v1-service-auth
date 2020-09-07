@@ -152,6 +152,10 @@ func Test_default_CreateStudentAuth(t *testing.T) {
 		test.ExpectAuth = auth.DeepCopy()
 		auth, err := access.CreateStudentAuth(auth)
 
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+			err = mysqlerr.ExceptReferenceInformFrom(mysqlErr)
+		}
+
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
 		assert.Equalf(t, test.ExpectAuth, auth.ExceptGormModel(), "result model assertion (test case: %v)", test)
 	}

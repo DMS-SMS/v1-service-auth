@@ -499,6 +499,67 @@ func Test_default_CreateTeacherInform(t *testing.T) {
 	access.Rollback()
 }
 
+func Test_default_CreateParentInform(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, init := range []struct{
+		UUID, ParentID, ParentPW string
+	}{
+		{
+			UUID: "parent-111111111111",
+			ParentID: "jinhong07191",
+			ParentPW: passwords["testPW1"],
+		}, {
+			UUID: "parent-222222222222",
+			ParentID: "jinhong07192",
+			ParentPW: passwords["testPW2"],
+		},
+	} {
+		_, err := access.CreateParentAuth(&model.ParentAuth{
+			UUID:     model.UUID(init.UUID),
+			ParentID: model.ParentID(init.ParentID),
+			ParentPW: model.ParentPW(init.ParentPW),
+		})
+		if err != nil {
+			access.Rollback()
+			log.Fatal(fmt.Sprintf("error occurs while creating parent auth, err: %v", err))
+		}
+	}
+
+	tests := []struct {
+		ParentUUID, Name, PhoneNumber string
+		ExpectResult                  *model.ParentInform
+		ExpectError                   error
+	} {
+		{ // success case
+			ParentUUID:  "parent-111111111111",
+			Name:        "박진홍",
+			PhoneNumber: "01088378347",
+		},
+	}
+
+	for _, test := range tests {
+		inform := &model.ParentInform{
+			ParentUUID:  model.ParentUUID(test.ParentUUID),
+			Name:        model.Name(test.Name),
+			PhoneNumber: model.PhoneNumber(test.PhoneNumber),
+		}
+
+		test.ExpectResult = inform.DeepCopy()
+		result, err := access.CreateParentInform(inform)
+
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+			err = mysqlerr.ExceptReferenceInformFrom(mysqlErr)
+		}
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result model assertion error (test case: %v)", test)
+	}
+}
+
 func TestDBClose(t *testing.T) {
 	_ = dbc.Close()
 }

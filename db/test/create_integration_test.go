@@ -1,84 +1,17 @@
-package access
+package test
 
 import (
 	"auth/adapter"
 	"auth/db"
+	dbAccess "auth/db/access"
 	"auth/model"
 	"auth/tool/mysqlerr"
 	"fmt"
 	"github.com/go-sql-driver/mysql"
 	"github.com/hashicorp/consul/api"
-	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"log"
-	"strings"
 	"testing"
-)
-
-var (
-	manager db.AccessorManage
-	dbc *gorm.DB
-)
-
-var passwords = map[string]string{
-	"testPW1": "$2a$10$POwSnghOjkriuQ4w1Bj3zeHIGA7fXv8UI/UFXEhnnO5YrcwkUDcXq",
-	"testPW2": "$2a$10$XxGXTboHZxhoqzKcBVqkJOiNSy6narAvIQ/ljfTJ4m93jAt8GyX.e",
-	"testPW3": "$2a$10$sfZLOR8iVyhXI0y8nXcKIuKseahKu4NLSlocUWqoBdGrpLIZzxJ2S",
-}
-
-var (
-	studentAuthModel = new(model.StudentAuth)
-	teacherAuthModel = new(model.TeacherAuth)
-	parentAuthModel = new(model.ParentAuth)
-	studentInformModel = new(model.StudentInform)
-	teacherInformModel = new(model.TeacherInform)
-	parentInformModel = new(model.ParentInform)
-)
-
-var (
-	// StudentAuth 테이블의 ParentUUID 속성의 FK 제약조건 위반에 대한 에러 변수
-	studentAuthParentUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
-		DBName:         strings.ToLower("SMS_Auth_Test_DB"),
-		TableName:      studentAuthModel.TableName(),
-		ConstraintName: studentAuthModel.ParentUUIDConstraintName(),
-		AttrName:       studentAuthModel.ParentUUID.KeyName(),
-	}, mysqlerr.RefInform{
-		TableName: parentAuthModel.TableName(),
-		AttrName:  parentAuthModel.UUID.KeyName(),
-	})
-
-	// StudentInform 테이블의 StudentUUID 속성의 FK 제약조건 위반에 대한 에러 변수
-	studentInformStudentUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
-		DBName:         strings.ToLower("SMS_Auth_Test_DB"),
-		TableName:      studentInformModel.TableName(),
-		ConstraintName: studentInformModel.StudentUUIDConstraintName(),
-		AttrName:       studentInformModel.StudentUUID.KeyName(),
-	}, mysqlerr.RefInform{
-		TableName: studentAuthModel.TableName(),
-		AttrName:  studentAuthModel.UUID.KeyName(),
-	})
-
-	// TeacherInform 테이블의 TeacherUUID 속성의 FK 제약조건 위반에 대한 에러 변수
-	teacherInformTeacherUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
-		DBName:         strings.ToLower("SMS_Auth_Test_DB"),
-		TableName:      teacherInformModel.TableName(),
-		ConstraintName: teacherInformModel.TeacherUUIDConstraintName(),
-		AttrName:       teacherInformModel.TeacherUUID.KeyName(),
-	}, mysqlerr.RefInform{
-		TableName: teacherAuthModel.TableName(),
-		AttrName:  teacherAuthModel.UUID.KeyName(),
-	})
-
-	// TeacherInform 테이블의 TeacherUUID 속성의 FK 제약조건 위반에 대한 에러 변수
-	parentInformParentUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
-		DBName:         strings.ToLower("SMS_Auth_Test_DB"),
-		TableName:      parentInformModel.TableName(),
-		ConstraintName: parentInformModel.ParentUUIDConstraintName(),
-		AttrName:       parentInformModel.ParentUUID.KeyName(),
-	}, mysqlerr.RefInform{
-		TableName: parentAuthModel.TableName(),
-		AttrName:  parentAuthModel.UUID.KeyName(),
-	})
 )
 
 func init() {
@@ -93,7 +26,7 @@ func init() {
 	}
 	db.Migrate(dbc)
 
-	manager, err = db.NewAccessorManage(DefaultReflectType(), dbc)
+	manager, err = db.NewAccessorManage(dbAccess.DefaultReflectType(), dbc)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -592,4 +525,3 @@ func Test_default_CreateParentInform(t *testing.T) {
 func TestDBClose(t *testing.T) {
 	_ = dbc.Close()
 }
-

@@ -11,6 +11,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"log"
+	"strings"
 	"testing"
 )
 
@@ -344,8 +345,9 @@ func Test_default_CreateStudentInform(t *testing.T) {
 		result, err := access.CreateStudentInform(inform)
 
 		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
-			err = mysqlerr.ExceptReferenceOptionFrom(mysqlErr)
+			err = mysqlerr.ExceptReferenceInformFrom(mysqlErr)
 		}
+
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
 		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result model assertion error (test case: %v)", test)
 	}
@@ -371,16 +373,22 @@ var (
 )
 
 var (
-	studentAuthParentUUIDFKConstraintFailError = mysqlerr.FKConstraintFail("sms_auth_test_db",
-		studentAuthModel.TableName(), studentAuthModel.ParentUUIDConstraintName(), studentAuthModel.ParentUUID.KeyName(),
-		mysqlerr.Reference{
-			TableName: parentAuthModel.TableName(),
-			AttrName:  parentAuthModel.UUID.KeyName(),
-		})
-	studentInformStudentUUIDFKConstraintFailError = mysqlerr.FKConstraintFail("sms_auth_test_db",
-		studentInformModel.TableName(), studentInformModel.StudentUUIDConstraintName(), studentInformModel.StudentUUID.KeyName(),
-		mysqlerr.Reference{
-			TableName: studentAuthModel.TableName(),
-			AttrName:  studentAuthModel.UUID.KeyName(),
-		})
+	studentAuthParentUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
+		DBName:         strings.ToLower("SMS_Auth_Test_DB"),
+		TableName:      studentAuthModel.TableName(),
+		ConstraintName: studentAuthModel.ParentUUIDConstraintName(),
+		AttrName:       studentAuthModel.ParentUUID.KeyName(),
+	}, mysqlerr.RefInform{
+		TableName: parentAuthModel.TableName(),
+		AttrName:  parentAuthModel.UUID.KeyName(),
+	})
+	studentInformStudentUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
+		DBName:         strings.ToLower("SMS_Auth_Test_DB"),
+		TableName:      studentInformModel.TableName(),
+		ConstraintName: studentInformModel.StudentUUIDConstraintName(),
+		AttrName:       studentInformModel.StudentUUID.KeyName(),
+	}, mysqlerr.RefInform{
+		TableName: studentAuthModel.TableName(),
+		AttrName:  studentAuthModel.UUID.KeyName(),
+	})
 )

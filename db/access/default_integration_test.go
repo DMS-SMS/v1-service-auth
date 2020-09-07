@@ -6,6 +6,7 @@ import (
 	"auth/model"
 	"auth/tool/mysqlerr"
 	"fmt"
+	"github.com/go-sql-driver/mysql"
 	"github.com/hashicorp/consul/api"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
@@ -243,7 +244,12 @@ func Test_default_CreateStudentInform(t *testing.T) {
 	} {
 		{
 			UUID:       "student-111111111111",
-			StudentID:  "jinhong0719",
+			StudentID:  "jinhong07191",
+			StudentPW: passwords["testPW1"],
+			ParentUUID: "parent-111111111111",
+		}, {
+			UUID:       "student-222222222222",
+			StudentID:  "jinhong07192",
 			StudentPW: passwords["testPW1"],
 			ParentUUID: "parent-111111111111",
 		},
@@ -275,6 +281,51 @@ func Test_default_CreateStudentInform(t *testing.T) {
 			PhoneNumber:   "01088378347",
 			ProfileURI:    "example.com/profiles/student-111111111111",
 			ExpectError:   nil,
+		}, { // student uuid duplicate
+			StudentUUID:   "student-111111111111",
+			Grade:         1,
+			Class:         2,
+			StudentNumber: 8,
+			Name:          "빡진홍",
+			PhoneNumber:   "01012341234",
+			ProfileURI:    "example.com/profiles/student-111111111112",
+			ExpectError:   mysqlerr.DuplicateEntry(studentInformModel.StudentUUID.KeyName(), "student-111111111111"),
+		}, { // student number duplicate
+			StudentUUID:   "student-222222222222",
+			Grade:         2,
+			Class:         2,
+			StudentNumber: 7,
+			Name:          "빡진홍",
+			PhoneNumber:   "01012341234",
+			ProfileURI:    "example.com/profiles/student-222222222222",
+			ExpectError:   mysqlerr.DuplicateEntry(studentInformModel.StudentNumber.KeyName(), "2-2-07"),
+		}, { // phone number duplicate
+			StudentUUID:   "student-222222222222",
+			Grade:         1,
+			Class:         2,
+			StudentNumber: 8,
+			Name:          "빡진홍",
+			PhoneNumber:   "01088378347",
+			ProfileURI:    "example.com/profiles/student-222222222222",
+			ExpectError:   mysqlerr.DuplicateEntry(studentInformModel.PhoneNumber.KeyName(), "01088378347"),
+		}, { // profile uri duplicate
+			StudentUUID:   "student-222222222222",
+			Grade:         1,
+			Class:         2,
+			StudentNumber: 8,
+			Name:          "빡진홍",
+			PhoneNumber:   "01012341234",
+			ProfileURI:    "example.com/profiles/student-111111111111",
+			ExpectError:   mysqlerr.DuplicateEntry(studentInformModel.ProfileURI.KeyName(), "example.com/profiles/student-111111111111"),
+		}, { // student uuid FK constraint fail
+			StudentUUID:   "student-333333333333",
+			Grade:         1,
+			Class:         2,
+			StudentNumber: 8,
+			Name:          "빡진홍",
+			PhoneNumber:   "01012341234",
+			ProfileURI:    "example.com/profiles/student-333333333333",
+			ExpectError:   studentInformStudentUUIDFKConstraintFailError,
 		},
 	}
 
@@ -292,9 +343,14 @@ func Test_default_CreateStudentInform(t *testing.T) {
 		test.ExpectResult = inform.DeepCopy()
 		result, err := access.CreateStudentInform(inform)
 
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+			err = mysqlerr.ExceptReferenceOptionFrom(mysqlErr)
+		}
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
 		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result model assertion error (test case: %v)", test)
 	}
+
+	access.Commit()
 }
 
 func TestDBClose(t *testing.T) {
@@ -311,6 +367,7 @@ var (
 	studentAuthModel = new(model.StudentAuth)
 	teacherAuthModel = new(model.TeacherAuth)
 	parentAuthModel = new(model.ParentAuth)
+	studentInformModel = new(model.StudentInform)
 )
 
 var (
@@ -319,5 +376,11 @@ var (
 		mysqlerr.Reference{
 			TableName: parentAuthModel.TableName(),
 			AttrName:  parentAuthModel.UUID.KeyName(),
+		})
+	studentInformStudentUUIDFKConstraintFailError = mysqlerr.FKConstraintFail("sms_auth_test_db",
+		studentInformModel.TableName(), studentInformModel.StudentUUIDConstraintName(), studentInformModel.StudentUUID.KeyName(),
+		mysqlerr.Reference{
+			TableName: studentAuthModel.TableName(),
+			AttrName:  studentAuthModel.UUID.KeyName(),
 		})
 )

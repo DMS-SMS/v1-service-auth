@@ -398,6 +398,70 @@ func Test_default_CreateStudentInform(t *testing.T) {
 	access.Rollback()
 }
 
+func Test_default_CreateTeacherInform(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, init := range []struct {
+		UUID, TeacherID, TeacherPW string
+	} {
+		{
+			UUID:      "teacher-111111111111",
+			TeacherID: "jinhong0719",
+			TeacherPW: passwords["testPW1"],
+		},
+	} {
+		_, err := access.CreateTeacherAuth(&model.TeacherAuth{
+			UUID:      model.UUID(init.UUID),
+			TeacherID: model.TeacherID(init.TeacherID),
+			TeacherPW: model.TeacherPW(init.TeacherPW),
+		})
+		if err != nil {
+			access.Rollback()
+			log.Fatal(fmt.Sprintf("error occurs while creating teacher auth. err: %v", err))
+		}
+	}
+
+	tests := []struct {
+		TeacherUUID, Name, PhoneNumber string
+		Grade, Class                   int64
+		ExpectResult                   *model.TeacherInform
+		ExpectError                    error
+	} {
+		{ // success test case
+			TeacherUUID: "teacher-111111111111",
+			Grade:       2,
+			Class:       2,
+			Name:        "박진홍",
+			PhoneNumber: "01088378347",
+		},
+	}
+
+	for _, test := range tests {
+		inform := &model.TeacherInform{
+			TeacherUUID: model.TeacherUUID(test.TeacherUUID),
+			Grade:       model.Grade(test.Grade),
+			Class:       model.Class(test.Class),
+			Name:        model.Name(test.Name),
+			PhoneNumber: model.PhoneNumber(test.PhoneNumber),
+		}
+
+		test.ExpectResult = inform.DeepCopy()
+		result, err := access.CreateTeacherInform(inform)
+
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+			err = mysqlerr.ExceptReferenceInformFrom(mysqlErr)
+		}
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result model assertion error (test case: %v)", test)
+	}
+
+	access.Rollback()
+}
+
 func TestDBClose(t *testing.T) {
 	_ = dbc.Close()
 }

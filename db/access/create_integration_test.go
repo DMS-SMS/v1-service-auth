@@ -342,7 +342,7 @@ func Test_default_CreateStudentInform(t *testing.T) {
 			Name:          "빡진홍",
 			PhoneNumber:   "01012341234",
 			ProfileURI:    "example.com/profiles/student-222222222222",
-			ExpectError:   mysqlerr.DuplicateEntry(studentInformModel.StudentNumber.KeyName(), "2-2-07"),
+			ExpectError:   mysqlerr.DuplicateEntry(studentInformModel.StudentNumber.KeyName(), "2207"),
 		}, { // phone number duplicate
 			StudentUUID:   "student-222222222222",
 			Grade:         1,
@@ -395,7 +395,7 @@ func Test_default_CreateStudentInform(t *testing.T) {
 		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result model assertion error (test case: %v)", test)
 	}
 
-	access.Commit()
+	access.Rollback()
 }
 
 func TestDBClose(t *testing.T) {

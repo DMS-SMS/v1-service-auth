@@ -117,11 +117,6 @@ func Test_default_CreateStudentAuth(t *testing.T) {
 		assert.Equalf(t, test.ExpectAuth, auth.ExceptGormModel(), "result model assertion (test case: %v)", test)
 	}
 
-	access.GetStudentUUIDWithInform(&model.StudentInform{
-		StudentUUID:   "",
-		StudentNumber: 0,
-		ProfileURI:    "",
-	})
 	access.Rollback()
 }
 

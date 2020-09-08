@@ -2,22 +2,12 @@ package test
 
 import (
 	"auth/db"
-	"auth/model"
 	"github.com/jinzhu/gorm"
 )
 
 var (
 	manager db.AccessorManage
 	dbc *gorm.DB
-)
-
-var (
-	studentAuthModel = new(model.StudentAuth)
-	teacherAuthModel = new(model.TeacherAuth)
-	parentAuthModel = new(model.ParentAuth)
-	studentInformModel = new(model.StudentInform)
-	teacherInformModel = new(model.TeacherInform)
-	parentInformModel = new(model.ParentInform)
 )
 
 var passwords = map[string]string{

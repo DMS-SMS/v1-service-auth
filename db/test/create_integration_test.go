@@ -82,13 +82,13 @@ func Test_default_CreateStudentAuth(t *testing.T) {
 			ParentUUID: "parent-111111111111",
 			StudentID: "jinhong07191",
 			StudentPW: passwords["testPW1"],
-			ExpectError: mysqlerr.DuplicateEntry(studentAuthModel.UUID.KeyName(), "student-111111111111"),
+			ExpectError: mysqlerr.DuplicateEntry(model.StudentAuthInstance.UUID.KeyName(), "student-111111111111"),
 		}, { // StudentID duplicate
 			UUID: "student-222222222222",
 			ParentUUID: "parent-111111111111",
 			StudentID: "jinhong0719",
 			StudentPW: passwords["testPW1"],
-			ExpectError: mysqlerr.DuplicateEntry(studentAuthModel.StudentID.KeyName(), "jinhong0719"),
+			ExpectError: mysqlerr.DuplicateEntry(model.StudentAuthInstance.StudentID.KeyName(), "jinhong0719"),
 		}, { // ParentUUID(foreign key) reference constraint X
 			UUID: "student-222222222222",
 			ParentUUID: "parent-123412341234", // not exist parent uuid
@@ -117,6 +117,11 @@ func Test_default_CreateStudentAuth(t *testing.T) {
 		assert.Equalf(t, test.ExpectAuth, auth.ExceptGormModel(), "result model assertion (test case: %v)", test)
 	}
 
+	access.GetStudentUUIDWithInform(&model.StudentInform{
+		StudentUUID:   "",
+		StudentNumber: 0,
+		ProfileURI:    "",
+	})
 	access.Rollback()
 }
 
@@ -140,12 +145,12 @@ func Test_default_CreateParentAuth(t *testing.T) {
 			UUID: "parent-111111111111",
 			ParentId: "parent2",
 			ParentPw: passwords["testPW2"],
-			ExpectError: mysqlerr.DuplicateEntry(parentAuthModel.UUID.KeyName(), "parent-111111111111"),
+			ExpectError: mysqlerr.DuplicateEntry(model.ParentAuthInstance.UUID.KeyName(), "parent-111111111111"),
 		}, { // ParentId duplicate
 			UUID: "parent-222222222222",
 			ParentId: "parent1",
 			ParentPw: passwords["testPW2"],
-			ExpectError: mysqlerr.DuplicateEntry(parentAuthModel.ParentID.KeyName(), "parent1"),
+			ExpectError: mysqlerr.DuplicateEntry(model.ParentAuthInstance.ParentID.KeyName(), "parent1"),
 		},
 	}
 
@@ -186,12 +191,12 @@ func Test_default_CreateTeacherAuth(t *testing.T) {
 			UUID:        "teacher-111111111111",
 			TeacherID:   "teacher2",
 			TeacherPW:   passwords["testPW2"],
-			ExpectError: mysqlerr.DuplicateEntry(teacherAuthModel.UUID.KeyName(), "teacher-111111111111"),
+			ExpectError: mysqlerr.DuplicateEntry(model.TeacherAuthInstance.UUID.KeyName(), "teacher-111111111111"),
 		}, { // TeacherID duplicate
 			UUID:        "teacher-222222222222",
 			TeacherID:   "teacher1",
 			TeacherPW:   passwords["testPW2"],
-			ExpectError: mysqlerr.DuplicateEntry(teacherAuthModel.TeacherID.KeyName(), "teacher1"),
+			ExpectError: mysqlerr.DuplicateEntry(model.TeacherAuthInstance.TeacherID.KeyName(), "teacher1"),
 		},
 	}
 
@@ -290,7 +295,7 @@ func Test_default_CreateStudentInform(t *testing.T) {
 			Name:          "빡진홍",
 			PhoneNumber:   "01012341234",
 			ProfileURI:    "example.com/profiles/student-111111111112",
-			ExpectError:   mysqlerr.DuplicateEntry(studentInformModel.StudentUUID.KeyName(), "student-111111111111"),
+			ExpectError:   mysqlerr.DuplicateEntry(model.StudentInformInstance.StudentUUID.KeyName(), "student-111111111111"),
 		}, { // student number duplicate
 			StudentUUID:   "student-222222222222",
 			Grade:         2,
@@ -299,7 +304,7 @@ func Test_default_CreateStudentInform(t *testing.T) {
 			Name:          "빡진홍",
 			PhoneNumber:   "01012341234",
 			ProfileURI:    "example.com/profiles/student-222222222222",
-			ExpectError:   mysqlerr.DuplicateEntry(studentInformModel.StudentNumber.KeyName(), "2207"),
+			ExpectError:   mysqlerr.DuplicateEntry(model.StudentInformInstance.StudentNumber.KeyName(), "2207"),
 		}, { // phone number duplicate
 			StudentUUID:   "student-222222222222",
 			Grade:         1,
@@ -308,7 +313,7 @@ func Test_default_CreateStudentInform(t *testing.T) {
 			Name:          "빡진홍",
 			PhoneNumber:   "01088378347",
 			ProfileURI:    "example.com/profiles/student-222222222222",
-			ExpectError:   mysqlerr.DuplicateEntry(studentInformModel.PhoneNumber.KeyName(), "01088378347"),
+			ExpectError:   mysqlerr.DuplicateEntry(model.StudentInformInstance.PhoneNumber.KeyName(), "01088378347"),
 		}, { // profile uri duplicate
 			StudentUUID:   "student-222222222222",
 			Grade:         1,
@@ -317,7 +322,7 @@ func Test_default_CreateStudentInform(t *testing.T) {
 			Name:          "빡진홍",
 			PhoneNumber:   "01012341234",
 			ProfileURI:    "example.com/profiles/student-111111111111",
-			ExpectError:   mysqlerr.DuplicateEntry(studentInformModel.ProfileURI.KeyName(), "example.com/profiles/student-111111111111"),
+			ExpectError:   mysqlerr.DuplicateEntry(model.StudentInformInstance.ProfileURI.KeyName(), "example.com/profiles/student-111111111111"),
 		}, { // student uuid FK constraint fail
 			StudentUUID:   "student-333333333333",
 			Grade:         1,
@@ -404,14 +409,14 @@ func Test_default_CreateTeacherInform(t *testing.T) {
 			Class:       2,
 			Name:        "박진홍",
 			PhoneNumber: "01012341234",
-			ExpectError: mysqlerr.DuplicateEntry(teacherInformModel.TeacherUUID.KeyName(), "teacher-111111111111"),
+			ExpectError: mysqlerr.DuplicateEntry(model.TeacherInformInstance.TeacherUUID.KeyName(), "teacher-111111111111"),
 		}, { // phone number duplicate
 			TeacherUUID: "teacher-222222222222",
 			Grade:       1,
 			Class:       2,
 			Name:        "박진홍",
 			PhoneNumber: "01088378347",
-			ExpectError: mysqlerr.DuplicateEntry(teacherInformModel.PhoneNumber.KeyName(), "01088378347"),
+			ExpectError: mysqlerr.DuplicateEntry(model.TeacherInformInstance.PhoneNumber.KeyName(), "01088378347"),
 		}, { // teacher uuid fk constraint fail
 			TeacherUUID: "teacher-333333333333",
 			Grade:       1,
@@ -489,12 +494,12 @@ func Test_default_CreateParentInform(t *testing.T) {
 			ParentUUID:  "parent-111111111111",
 			Name:        "박진홍",
 			PhoneNumber: "01012341234",
-			ExpectError: mysqlerr.DuplicateEntry(parentInformModel.ParentUUID.KeyName(), "parent-111111111111"),
+			ExpectError: mysqlerr.DuplicateEntry(model.ParentInformInstance.ParentUUID.KeyName(), "parent-111111111111"),
 		}, { // phone number duplicate error
 			ParentUUID:  "parent-222222222222",
 			Name:        "박진홍",
 			PhoneNumber: "01088378347",
-			ExpectError: mysqlerr.DuplicateEntry(parentInformModel.PhoneNumber.KeyName(), "01088378347"),
+			ExpectError: mysqlerr.DuplicateEntry(model.ParentInformInstance.PhoneNumber.KeyName(), "01088378347"),
 		}, { // parent uuid FK constraint fail
 			ParentUUID:  "parent-333333333333",
 			Name:        "박진홍",

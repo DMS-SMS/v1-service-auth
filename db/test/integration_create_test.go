@@ -18,6 +18,7 @@ func Test_Accessor_CreateStudentAuth(t *testing.T) {
 	}
 	defer func() {
 		access.Rollback()
+		waitForFinish.Done()
 	}()
 
 	// StudentAuth.ParentUUID에 설정할 값을 위한 학부모 계정 생성
@@ -97,9 +98,6 @@ func Test_Accessor_CreateStudentAuth(t *testing.T) {
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
 		assert.Equalf(t, test.ExpectAuth, auth.ExceptGormModel(), "result model assertion (test case: %v)", test)
 	}
-
-	access.Rollback()
-	waitForFinish.Done()
 }
 
 func Test_Accessor_CreateParentAuth(t *testing.T) {
@@ -109,6 +107,7 @@ func Test_Accessor_CreateParentAuth(t *testing.T) {
 	}
 	defer func() {
 		access.Rollback()
+		waitForFinish.Done()
 	}()
 
 	tests := []struct{
@@ -147,9 +146,6 @@ func Test_Accessor_CreateParentAuth(t *testing.T) {
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
 		assert.Equalf(t, test.ExpectAuth, auth.ExceptGormModel(), "result model assertion (test case: %v)", test)
 	}
-
-	access.Rollback()
-	waitForFinish.Done()
 }
 
 func Test_Accessor_CreateTeacherAuth(t *testing.T) {
@@ -159,6 +155,7 @@ func Test_Accessor_CreateTeacherAuth(t *testing.T) {
 	}
 	defer func() {
 		access.Rollback()
+		waitForFinish.Done()
 	}()
 
 	tests := []struct{
@@ -197,9 +194,6 @@ func Test_Accessor_CreateTeacherAuth(t *testing.T) {
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
 		assert.Equalf(t, test.ExpectAuth, auth.ExceptGormModel(), "result model assertion (test case: %v)", test)
 	}
-
-	access.Rollback()
-	waitForFinish.Done()
 }
 
 func Test_Accessor_CreateStudentInform(t *testing.T) {
@@ -209,6 +203,7 @@ func Test_Accessor_CreateStudentInform(t *testing.T) {
 	}
 	defer func() {
 		access.Rollback()
+		waitForFinish.Done()
 	}()
 
 	// 학생 계정 생성을 위한 부모님 계정 생성
@@ -344,9 +339,6 @@ func Test_Accessor_CreateStudentInform(t *testing.T) {
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
 		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result model assertion error (test case: %v)", test)
 	}
-
-	access.Rollback()
-	waitForFinish.Done()
 }
 
 func Test_Accessor_CreateTeacherInform(t *testing.T) {
@@ -356,6 +348,7 @@ func Test_Accessor_CreateTeacherInform(t *testing.T) {
 	}
 	defer func() {
 		access.Rollback()
+		waitForFinish.Done()
 	}()
 
 	for _, init := range []struct {
@@ -438,9 +431,6 @@ func Test_Accessor_CreateTeacherInform(t *testing.T) {
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
 		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result model assertion error (test case: %v)", test)
 	}
-
-	access.Rollback()
-	waitForFinish.Done()
 }
 
 func Test_Accessor_CreateParentInform(t *testing.T) {
@@ -450,6 +440,7 @@ func Test_Accessor_CreateParentInform(t *testing.T) {
 	}
 	defer func() {
 		access.Rollback()
+		waitForFinish.Done()
 	}()
 
 	for _, init := range []struct{
@@ -521,7 +512,4 @@ func Test_Accessor_CreateParentInform(t *testing.T) {
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
 		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result model assertion error (test case: %v)", test)
 	}
-
-	access.Rollback()
-	waitForFinish.Done()
 }

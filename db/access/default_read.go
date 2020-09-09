@@ -63,6 +63,31 @@ func (d *_default) GetStudentUUIDsWithInform(inform *model.StudentInform) (uuidA
 	for _, inform := range informs {
 		uuidArr = append(uuidArr, string(inform.StudentUUID))
 	}
+	return
+}
 
+func (d *_default) GetParentUUIDsWithInform(inform *model.ParentInform) (uuidArr []string, err error) {
+	cascadeTx := d.tx.New()
+
+	if inform.ParentUUID != emptyString {
+		cascadeTx = cascadeTx.Where("parent_uuid = ?", inform.ParentUUID)
+	}
+	if inform.Name != emptyString {
+		cascadeTx = cascadeTx.Where("name = ?", inform.Name)
+	}
+	if inform.PhoneNumber != emptyString {
+		cascadeTx = cascadeTx.Where("phone_number = ?", inform.PhoneNumber)
+	}
+
+	informs := make([]*model.ParentInform, 1, 3)
+	err = cascadeTx.Find(&informs).Error
+
+	if len(informs) == 0 {
+		err = gorm.ErrRecordNotFound
+	}
+
+	for _, inform := range informs {
+		uuidArr = append(uuidArr, string(inform.ParentUUID))
+	}
 	return
 }

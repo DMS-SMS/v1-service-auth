@@ -34,9 +34,9 @@ type Accessor interface {
 	CreateParentInform(*model.ParentInform) (result *model.ParentInform, err error)
 
 	// 사용자 정보로 uuid 조회 메서드 (계정 삭제 시 사용)
-	GetStudentUUIDWithInform(*model.StudentInform) (sid []string, err error)
-	GetTeacherUUIDWithInform(*model.TeacherInform) (tid []string, err error)
-	GetParentUUIDWithInform(*model.ParentInform) (pid []string, err error)
+	GetStudentUUIDsWithInform(*model.StudentInform) (sid []string, err error)
+	GetTeacherUUIDsWithInform(*model.TeacherInform) (tid []string, err error)
+	GetParentUUIDsWithInform(*model.ParentInform) (pid []string, err error)
 
 	// 계정 UUID로 정보 조회 메서드
 	GetStudentInformWithUUID(sid string) (*model.StudentInform, error)

@@ -16,6 +16,9 @@ func Test_Accessor_CreateStudentAuth(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer func() {
+		access.Rollback()
+	}()
 
 	// StudentAuth.ParentUUID에 설정할 값을 위한 학부모 계정 생성
 	inits := []struct {
@@ -96,6 +99,7 @@ func Test_Accessor_CreateStudentAuth(t *testing.T) {
 	}
 
 	access.Rollback()
+	waitForFinish.Done()
 }
 
 func Test_Accessor_CreateParentAuth(t *testing.T) {
@@ -103,6 +107,9 @@ func Test_Accessor_CreateParentAuth(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer func() {
+		access.Rollback()
+	}()
 
 	tests := []struct{
 		UUID, ParentId, ParentPw string
@@ -142,6 +149,7 @@ func Test_Accessor_CreateParentAuth(t *testing.T) {
 	}
 
 	access.Rollback()
+	waitForFinish.Done()
 }
 
 func Test_Accessor_CreateTeacherAuth(t *testing.T) {
@@ -149,6 +157,9 @@ func Test_Accessor_CreateTeacherAuth(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer func() {
+		access.Rollback()
+	}()
 
 	tests := []struct{
 		UUID, TeacherID, TeacherPW string
@@ -188,6 +199,7 @@ func Test_Accessor_CreateTeacherAuth(t *testing.T) {
 	}
 
 	access.Rollback()
+	waitForFinish.Done()
 }
 
 func Test_Accessor_CreateStudentInform(t *testing.T) {
@@ -195,6 +207,9 @@ func Test_Accessor_CreateStudentInform(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer func() {
+		access.Rollback()
+	}()
 
 	// 학생 계정 생성을 위한 부모님 계정 생성
 	for _, init := range []struct {
@@ -331,6 +346,7 @@ func Test_Accessor_CreateStudentInform(t *testing.T) {
 	}
 
 	access.Rollback()
+	waitForFinish.Done()
 }
 
 func Test_Accessor_CreateTeacherInform(t *testing.T) {
@@ -338,6 +354,9 @@ func Test_Accessor_CreateTeacherInform(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer func() {
+		access.Rollback()
+	}()
 
 	for _, init := range []struct {
 		UUID, TeacherID, TeacherPW string
@@ -421,6 +440,7 @@ func Test_Accessor_CreateTeacherInform(t *testing.T) {
 	}
 
 	access.Rollback()
+	waitForFinish.Done()
 }
 
 func Test_Accessor_CreateParentInform(t *testing.T) {
@@ -428,6 +448,9 @@ func Test_Accessor_CreateParentInform(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer func() {
+		access.Rollback()
+	}()
 
 	for _, init := range []struct{
 		UUID, ParentID, ParentPW string
@@ -498,4 +521,7 @@ func Test_Accessor_CreateParentInform(t *testing.T) {
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
 		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result model assertion error (test case: %v)", test)
 	}
+
+	access.Rollback()
+	waitForFinish.Done()
 }

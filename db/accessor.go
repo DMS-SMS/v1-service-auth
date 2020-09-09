@@ -22,7 +22,7 @@ type Accessor interface {
 	ChangeParentAuthPw(uuid string, parentPW string) error
 
 	// 계성 삭제 메서드 (Soft Delete)
-	DeleteStudentAuth(uuid uint) error
+	DeleteStudentAuth(uuid string) error
 	DeleteTeacherAuth(uuid string) error
 	DeleteParentAuth(uuid string) error
 

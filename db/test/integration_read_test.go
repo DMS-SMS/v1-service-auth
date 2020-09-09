@@ -94,7 +94,6 @@ func Test_Accessor_GetStudentAuthWithID(t *testing.T) {
 	waitForFinish.Done()
 }
 
-
 func Test_Accessor_GetTeacherAuthWithID(t *testing.T) {
 	access, err := manager.BeginTx()
 	if err != nil {
@@ -148,6 +147,67 @@ func Test_Accessor_GetTeacherAuthWithID(t *testing.T) {
 		}
 
 		result, err := access.GetTeacherAuthWithID(test.TeacherID)
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion fail (test case: %v)", test)
+		assert.Equalf(t, expectResult, result.ExceptGormModel(), "result model assertion fail (test case: %v)", test)
+	}
+
+	waitForFinish.Done()
+}
+
+func Test_Accessor_GetParentAuthWithID(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Rollback()
+	}()
+
+	for _, init := range []struct {
+		UUID, ParentID, ParentPW string
+	} {
+		{
+			UUID:     "parent-111111111111",
+			ParentID: "jinhong0719",
+			ParentPW: passwords["testPW1"],
+		},
+	} {
+		_, err := access.CreateParentAuth(&model.ParentAuth{
+			UUID:     model.UUID(init.UUID),
+			ParentID: model.ParentID(init.ParentID),
+			ParentPW: model.ParentPW(init.ParentPW),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating parent auth, err: %v", err))
+		}
+	}
+
+	tests := []struct {
+		ParentID                                   string
+		ExpectUUID, ExpectParentID, ExpectParentPW string
+		ExpectError                                error
+	} {
+		{ // success case
+			ParentID:       "jinhong0719",
+			ExpectUUID:     "parent-111111111111",
+			ExpectParentID: "jinhong0719",
+			ExpectParentPW: passwords["testPW1"],
+			ExpectError:    nil,
+		}, { // no exist student id
+			ParentID:    "noExistStudentID",
+			ExpectError: gorm.ErrRecordNotFound,
+		},
+	}
+
+	for _, test := range tests {
+		expectResult := &model.ParentAuth{
+			UUID:     model.UUID(test.ExpectUUID),
+			ParentID: model.ParentID(test.ExpectParentID),
+			ParentPW: model.ParentPW(test.ExpectParentPW),
+		}
+
+		result, err := access.GetParentAuthWithID(test.ParentID)
 
 		assert.Equalf(t, test.ExpectError, err, "error assertion fail (test case: %v)", test)
 		assert.Equalf(t, expectResult, result.ExceptGormModel(), "result model assertion fail (test case: %v)", test)

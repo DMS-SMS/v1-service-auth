@@ -7,13 +7,16 @@ import (
 	"github.com/hashicorp/consul/api"
 	"github.com/jinzhu/gorm"
 	"log"
-	"testing"
+	"sync"
 )
 
 var (
 	manager db.AccessorManage
 	dbc *gorm.DB
+	waitForFinish sync.WaitGroup
 )
+
+const numberOfTestFunc = 7
 
 func init() {
 	cli, err := api.NewClient(api.DefaultConfig())
@@ -31,14 +34,17 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	go func() {
+		waitForFinish = sync.WaitGroup{}
+		waitForFinish.Add(numberOfTestFunc)
+		waitForFinish.Wait()
+		_ = dbc.Close()
+	}()
 }
 
 var passwords = map[string]string{
 	"testPW1": "$2a$10$POwSnghOjkriuQ4w1Bj3zeHIGA7fXv8UI/UFXEhnnO5YrcwkUDcXq",
 	"testPW2": "$2a$10$XxGXTboHZxhoqzKcBVqkJOiNSy6narAvIQ/ljfTJ4m93jAt8GyX.e",
 	"testPW3": "$2a$10$sfZLOR8iVyhXI0y8nXcKIuKseahKu4NLSlocUWqoBdGrpLIZzxJ2S",
-}
-
-func TestDBClose(t *testing.T) {
-	_ = dbc.Close()
 }

@@ -1,3 +1,5 @@
 
 auth-service
 /.idea
+/.DS_Store
+coverage.out

@@ -1,4 +1,4 @@
-package dataservice
+package db
 
 import (
 	"auth/model"

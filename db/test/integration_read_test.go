@@ -59,31 +59,36 @@ func Test_Accessor_GetStudentAuthWithID(t *testing.T) {
 	}
 
 	tests := []struct {
-		StudentID    string
-		ExpectResult *model.StudentAuth
-		ExpectError  error
+		StudentID                         string
+		ExpectUUID, ExpectStudentID       string
+		ExpectStudentPW, ExpectParentUUID string
+		ExpectError                       error
 	} {
 		{ // success case
-			StudentID: "jinhong0719",
-			ExpectResult: &model.StudentAuth{
-				UUID:       "student-111111111111",
-				StudentID:  "jinhong0719",
-				StudentPW:  model.StudentPW(passwords["testPW1"]),
-				ParentUUID: "parent-111111111111",
-			},
-			ExpectError: nil,
+			StudentID:        "jinhong0719",
+			ExpectUUID:       "student-111111111111",
+			ExpectStudentID:  "jinhong0719",
+			ExpectStudentPW:  passwords["testPW1"],
+			ExpectParentUUID: "parent-111111111111",
+			ExpectError:      nil,
 		}, { // no exist student id
 			StudentID:    "noExistStudentID",
-			ExpectResult: nil,
 			ExpectError:  gorm.ErrRecordNotFound,
 		},
 	}
 
 	for _, test := range tests {
+		expectResult := &model.StudentAuth{
+			UUID:       model.UUID(test.ExpectUUID),
+			StudentID:  model.StudentID(test.ExpectStudentID),
+			StudentPW:  model.StudentPW(test.ExpectStudentPW),
+			ParentUUID: model.ParentUUID(test.ExpectParentUUID),
+		}
+
 		result, err := access.GetStudentAuthWithID(test.StudentID)
 
 		assert.Equalf(t, test.ExpectError, err, "error assertion fail (test case: %v)", test)
-		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result model assertion fail (test case: %v)", test)
+		assert.Equalf(t, expectResult, result.ExceptGormModel(), "result model assertion fail (test case: %v)", test)
 	}
 
 	waitForFinish.Done()

@@ -93,3 +93,65 @@ func Test_Accessor_GetStudentAuthWithID(t *testing.T) {
 
 	waitForFinish.Done()
 }
+
+
+func Test_Accessor_GetTeacherAuthWithID(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Rollback()
+	}()
+
+	for _, init := range []struct {
+		UUID, TeacherID, TeacherPW string
+	} {
+		{
+			UUID:      "teacher-111111111111",
+			TeacherID: "jinhong0719",
+			TeacherPW: passwords["testPW1"],
+		},
+	} {
+		_, err := access.CreateTeacherAuth(&model.TeacherAuth{
+			UUID:     model.UUID(init.UUID),
+			TeacherID: model.TeacherID(init.TeacherID),
+			TeacherPW: model.TeacherPW(init.TeacherPW),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating teacher auth, err: %v", err))
+		}
+	}
+
+	tests := []struct {
+		TeacherID                                    string
+		ExpectUUID, ExpectTeacherID, ExpectTeacherPW string
+		ExpectError                                  error
+	} {
+		{ // success case
+			TeacherID:       "jinhong0719",
+			ExpectUUID:      "teacher-111111111111",
+			ExpectTeacherID: "jinhong0719",
+			ExpectTeacherPW: passwords["testPW1"],
+			ExpectError:     nil,
+		}, { // no exist student id
+			TeacherID:   "noExistStudentID",
+			ExpectError: gorm.ErrRecordNotFound,
+		},
+	}
+
+	for _, test := range tests {
+		expectResult := &model.TeacherAuth{
+			UUID:       model.UUID(test.ExpectUUID),
+			TeacherID:  model.TeacherID(test.ExpectTeacherID),
+			TeacherPW:  model.TeacherPW(test.ExpectTeacherPW),
+		}
+
+		result, err := access.GetTeacherAuthWithID(test.TeacherID)
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion fail (test case: %v)", test)
+		assert.Equalf(t, expectResult, result.ExceptGormModel(), "result model assertion fail (test case: %v)", test)
+	}
+
+	waitForFinish.Done()
+}

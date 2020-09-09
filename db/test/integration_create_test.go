@@ -1,36 +1,14 @@
 package test
 
 import (
-	"auth/adapter"
-	"auth/db"
-	dbAccess "auth/db/access"
 	"auth/model"
 	"auth/tool/mysqlerr"
 	"fmt"
 	"github.com/go-sql-driver/mysql"
-	"github.com/hashicorp/consul/api"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
 )
-
-func init() {
-	cli, err := api.NewClient(api.DefaultConfig())
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	dbc, _, err = adapter.ConnectDBWithConsul(cli, "db/auth/local_test")
-	if err != nil {
-		log.Fatal(err)
-	}
-	db.Migrate(dbc)
-
-	manager, err = db.NewAccessorManage(dbAccess.DefaultReflectType(), dbc)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
 
 func Test_default_CreateStudentAuth(t *testing.T) {
 	// Tx 시작
@@ -520,8 +498,4 @@ func Test_default_CreateParentInform(t *testing.T) {
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
 		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result model assertion error (test case: %v)", test)
 	}
-}
-
-func TestDBClose(t *testing.T) {
-	_ = dbc.Close()
 }

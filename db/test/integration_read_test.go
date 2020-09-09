@@ -370,6 +370,122 @@ func Test_Accessor_GetStudentUUIDWithInform(t *testing.T) {
 	}
 }
 
+func Test_Accessor_GetTeacherUUIDWithInform(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		_ = access.Rollback()
+		waitForFinish.Done()
+	}()
+
+	// 선생님 계정 생성
+	for _, init := range []struct {
+		UUID, TeacherID, TeacherPW string
+	} {
+		{
+			UUID:      "teacher-111111111111",
+			TeacherID: "jinhong07191",
+			TeacherPW: passwords["testPW1"],
+		}, {
+			UUID:      "teacher-222222222222",
+			TeacherID: "jinhong07192",
+			TeacherPW: passwords["testPW2"],
+		}, {
+			UUID:      "teacher-333333333333",
+			TeacherID: "jinhong07193",
+			TeacherPW: passwords["testPW1"],
+		},
+	} {
+		_, err := access.CreateTeacherAuth(&model.TeacherAuth{
+			UUID:      model.UUID(init.UUID),
+			TeacherID: model.TeacherID(init.TeacherID),
+			TeacherPW: model.TeacherPW(init.TeacherPW),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating teacher auth, err: %v", err))
+		}
+	}
+
+	// 학생 정보 생성
+	for _, init := range []struct {
+		TeacherUUID, Name, PhoneNumber string
+		Grade, Class                   int64
+	} {
+		{
+			TeacherUUID: "teacher-111111111111",
+			Grade:       2,
+			Class:       2,
+			Name:        "박진홍",
+			PhoneNumber: "01011111111",
+		}, {
+			TeacherUUID: "teacher-222222222222",
+			Grade:       2,
+			Class:       2,
+			Name:        "윤석준",
+			PhoneNumber: "01022222222",
+		}, {
+			TeacherUUID: "teacher-333333333333",
+			Name:        "오준상",
+			PhoneNumber: "01033333333",
+		},
+	} {
+		_, err := access.CreateTeacherInform(&model.TeacherInform{
+			TeacherUUID: model.TeacherUUID(init.TeacherUUID),
+			Grade:       model.Grade(init.Grade),
+			Class:       model.Class(init.Class),
+			Name:        model.Name(init.Name),
+			PhoneNumber: model.PhoneNumber(init.PhoneNumber),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating student inform, err: %v", err))
+		}
+	}
+
+	tests := []struct {
+		TeacherUUID, Name, PhoneNumber string
+		Grade, Class                   int64
+		ExpectUUIDArr                  []string
+		ExpectError                    error
+	} {
+		{
+			TeacherUUID:   "teacher-111111111111",
+			ExpectUUIDArr: []string{"teacher-111111111111"},
+			ExpectError:   nil,
+		}, {
+			Grade:         2,
+			Class:         2,
+			ExpectUUIDArr: []string{"teacher-111111111111", "teacher-222222222222"},
+			ExpectError:   nil,
+		}, {
+			Grade:         2,
+			Class:         2,
+			Name:          "박진홍",
+			ExpectUUIDArr: []string{"teacher-111111111111"},
+			ExpectError:   nil,
+		}, {
+			PhoneNumber:   "01088378347",
+			ExpectUUIDArr: ([]string)(nil),
+			ExpectError:   gorm.ErrRecordNotFound,
+		},
+		// Grade 및 Class 값이 NULL인 Rows를 알고 싶을 때는?
+	}
+
+	for _, test := range tests {
+		uuidArr, err := access.GetTeacherUUIDsWithInform(&model.TeacherInform{
+			TeacherUUID: model.TeacherUUID(test.TeacherUUID),
+			Grade:       model.Grade(test.Grade),
+			Class:       model.Class(test.Class),
+			Name:        model.Name(test.Name),
+			PhoneNumber: model.PhoneNumber(test.PhoneNumber),
+		})
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, test.ExpectUUIDArr, uuidArr, "uuid array result assertion error (test case: %v)", test)
+	}
+}
+
 func Test_Accessor_GetParentUUIDWithInform(t *testing.T) {
 	access, err := manager.BeginTx()
 	if err != nil {
@@ -448,6 +564,12 @@ func Test_Accessor_GetParentUUIDWithInform(t *testing.T) {
 		}, {
 			Name:          "박진홍",
 			ExpectUUIDArr: []string{"parent-111111111111", "parent-222222222222", "parent-333333333333"},
+			ExpectError:   nil,
+		}, {
+			ParentUUID:    "parent-333333333333",
+			Name:          "박진홍",
+			PhoneNumber:   "01033333333",
+			ExpectUUIDArr: []string{"parent-333333333333"},
 			ExpectError:   nil,
 		}, {
 			PhoneNumber:   "01088378347",

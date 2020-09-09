@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func Test_default_CreateStudentAuth(t *testing.T) {
+func Test_Accessor_CreateStudentAuth(t *testing.T) {
 	// Tx 시작
 	access, err := manager.BeginTx()
 	if err != nil {
@@ -98,7 +98,7 @@ func Test_default_CreateStudentAuth(t *testing.T) {
 	access.Rollback()
 }
 
-func Test_default_CreateParentAuth(t *testing.T) {
+func Test_Accessor_CreateParentAuth(t *testing.T) {
 	access, err := manager.BeginTx()
 	if err != nil {
 		log.Fatal(err)
@@ -144,7 +144,7 @@ func Test_default_CreateParentAuth(t *testing.T) {
 	access.Rollback()
 }
 
-func Test_default_CreateTeacherAuth(t *testing.T) {
+func Test_Accessor_CreateTeacherAuth(t *testing.T) {
 	access, err := manager.BeginTx()
 	if err != nil {
 		log.Fatal(err)
@@ -190,7 +190,7 @@ func Test_default_CreateTeacherAuth(t *testing.T) {
 	access.Rollback()
 }
 
-func Test_default_CreateStudentInform(t *testing.T) {
+func Test_Accessor_CreateStudentInform(t *testing.T) {
 	access, err := manager.BeginTx()
 	if err != nil {
 		log.Fatal(err)
@@ -333,7 +333,7 @@ func Test_default_CreateStudentInform(t *testing.T) {
 	access.Rollback()
 }
 
-func Test_default_CreateTeacherInform(t *testing.T) {
+func Test_Accessor_CreateTeacherInform(t *testing.T) {
 	access, err := manager.BeginTx()
 	if err != nil {
 		log.Fatal(err)
@@ -423,7 +423,7 @@ func Test_default_CreateTeacherInform(t *testing.T) {
 	access.Rollback()
 }
 
-func Test_default_CreateParentInform(t *testing.T) {
+func Test_Accessor_CreateParentInform(t *testing.T) {
 	access, err := manager.BeginTx()
 	if err != nil {
 		log.Fatal(err)

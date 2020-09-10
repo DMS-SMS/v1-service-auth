@@ -15,17 +15,17 @@ func NewMock(mock *mock.Mock) _mock {
 }
 
 // 계정 생성 메서드
-func (m _mock) CreateStudentAuth(auth *model.StudentAuth) (result *model.StudentAuth, err error) {
+func (m _mock) CreateStudentAuth(auth *model.StudentAuth) (resultAuth *model.StudentAuth, err error) {
 	args := m.mock.Called(auth)
 	return args.Get(0).(*model.StudentAuth), args.Error(1)
 }
 
-func (m _mock) CreateTeacherAuth(auth *model.TeacherAuth) (result *model.TeacherAuth, err error) {
+func (m _mock) CreateTeacherAuth(auth *model.TeacherAuth) (resultAuth *model.TeacherAuth, err error) {
 	args := m.mock.Called(auth)
 	return args.Get(0).(*model.TeacherAuth), args.Error(1)
 }
 
-func (m _mock) CreateParentAuth(auth *model.ParentAuth) (result *model.ParentAuth, err error) {
+func (m _mock) CreateParentAuth(auth *model.ParentAuth) (resultAuth *model.ParentAuth, err error) {
 	args := m.mock.Called(auth)
 	return args.Get(0).(*model.ParentAuth), args.Error(1)
 }
@@ -75,17 +75,17 @@ func (m _mock) DeleteParentAuth(uuid string) error {
 // ---
 
 // 사용자 정보 추가 메서드
-func (m _mock) CreateStudentInform(inform *model.StudentInform) (result *model.StudentInform, err error) {
+func (m _mock) CreateStudentInform(inform *model.StudentInform) (resultInform *model.StudentInform, err error) {
 	args := m.mock.Called(inform)
 	return args.Get(0).(*model.StudentInform), args.Error(1)
 }
 
-func (m _mock) CreateTeacherInform(inform *model.TeacherInform) (result *model.TeacherInform, err error) {
+func (m _mock) CreateTeacherInform(inform *model.TeacherInform) (resultInform *model.TeacherInform, err error) {
 	args := m.mock.Called(inform)
 	return args.Get(0).(*model.TeacherInform), args.Error(1)
 }
 
-func (m _mock) CreateParentInform(inform *model.ParentInform) (result *model.ParentInform, err error) {
+func (m _mock) CreateParentInform(inform *model.ParentInform) (resultInform *model.ParentInform, err error) {
 	args := m.mock.Called(inform)
 	return args.Get(0).(*model.ParentInform), args.Error(1)
 }
@@ -123,19 +123,19 @@ func (m _mock) GetParentInformWithUUID(uuid string) (*model.ParentInform, error)
 }
 
 // 사용자 정보 수정 메서드
-func (m _mock) ModifyStudentInform(uuid string, modify *model.StudentInform) (result *model.StudentInform, err error) {
-	args := m.mock.Called(uuid, modify)
-	return args.Get(0).(*model.StudentInform), args.Error(1)
+func (m _mock) ModifyStudentInform(uuid string, revisionInform *model.StudentInform) (err error) {
+	args := m.mock.Called(uuid, revisionInform)
+	return args.Error(0)
 }
 
-func (m _mock) ModifyTeacherInform(uuid string, modify *model.TeacherInform) (result *model.TeacherInform, err error) {
-	args := m.mock.Called(uuid, modify)
-	return args.Get(0).(*model.TeacherInform), args.Error(1)
+func (m _mock) ModifyTeacherInform(uuid string, revisionInform *model.TeacherInform) (err error) {
+	args := m.mock.Called(uuid, revisionInform)
+	return args.Error(0)
 }
 
-func (m _mock) ModifyParentInform(uuid string, modify *model.ParentInform) (result *model.ParentInform, err error) {
-	args := m.mock.Called(uuid, modify)
-	return args.Get(0).(*model.ParentInform), args.Error(1)
+func (m _mock) ModifyParentInform(uuid string, revisionInform *model.ParentInform) (err error) {
+	args := m.mock.Called(uuid, revisionInform)
+	return args.Error(0)
 }
 
 // ---

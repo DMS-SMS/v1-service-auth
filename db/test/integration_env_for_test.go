@@ -16,7 +16,7 @@ var (
 	waitForFinish sync.WaitGroup
 )
 
-const numberOfTestFunc = 9
+const numberOfTestFunc = 15
 
 func init() {
 	cli, err := api.NewClient(api.DefaultConfig())

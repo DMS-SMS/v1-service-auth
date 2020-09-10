@@ -127,83 +127,57 @@ func Test_Access_ModifyStudentInform(t *testing.T) {
 	}
 
 	tests := []struct {
-		StudentUUID  string
-		Modify       *model.StudentInform
-		ExpectResult *model.StudentInform
-		ExpectError  error
+		StudentUUIDForArgs, StudentUUID string
+		Grade, Class, StudentNumber     int64
+		Name, PhoneNumber, ProfileURI   string
+		ExpectError                     error
 	} {
 		{ // success case 1 (about int64 field)
-			StudentUUID: "student-111111111111",
-			Modify: &model.StudentInform{
-				Grade:         3,
-				Class:         2,
-				StudentNumber: 8,
-			},
-			ExpectResult: &model.StudentInform{
-				StudentUUID:   "student-111111111111",
-				Grade:         3,
-				Class:         2,
-				StudentNumber: 8,
-				Name:          "박진홍",
-				PhoneNumber:   "01011111111",
-				ProfileURI:    "example.com/profiles/student-111111111111",
-			},
-			ExpectError: nil,
+			StudentUUIDForArgs: "student-111111111111",
+			Grade:              3,
+			Class:              2,
+			StudentNumber:      8,
+			ExpectError:        nil,
 		}, { // success case 2 (about string field)
-			StudentUUID: "student-222222222222",
-			Modify: &model.StudentInform{
-				Name: "오줌상",
-				PhoneNumber: "01044444444",
-				ProfileURI: "example.com/profiles/student/student-222222222222",
-			},
-			ExpectResult: &model.StudentInform{
-				StudentUUID:   "student-222222222222",
-				Grade:         2,
-				Class:         2,
-				StudentNumber: 12,
-				Name:          "오줌상",
-				PhoneNumber:   "01044444444",
-				ProfileURI:    "example.com/profiles/student/student-222222222222",
-			},
-			ExpectError: nil,
+			StudentUUIDForArgs: "student-222222222222",
+			Name:               "오줌상",
+			PhoneNumber:        "01044444444",
+			ProfileURI:         "example.com/profiles/student/student-222222222222",
+			ExpectError:        nil,
 		}, { // student number duplicate error
-			StudentUUID: "student-222222222222",
-			Modify: &model.StudentInform{
-				Grade:         2,
-				Class:         2,
-				StudentNumber: 14,
-			},
-			ExpectResult: new(model.StudentInform),
-			ExpectError:  mysqlerr.DuplicateEntry(model.StudentInformInstance.StudentNumber.KeyName(), "2214"),
+			StudentUUIDForArgs: "student-222222222222",
+			Grade:              2,
+			Class:              2,
+			StudentNumber:      14,
+			ExpectError:        mysqlerr.DuplicateEntry(model.StudentInformInstance.StudentNumber.KeyName(), "2214"),
 		}, { // student number duplicate error
-			StudentUUID: "student-222222222222",
-			Modify: &model.StudentInform{
-				PhoneNumber: "01011111111",
-			},
-			ExpectResult: new(model.StudentInform),
-			ExpectError:  mysqlerr.DuplicateEntry(model.StudentInformInstance.PhoneNumber.KeyName(), "010111111111"),
+			StudentUUIDForArgs: "student-222222222222",
+			PhoneNumber:        "01011111111",
+			ExpectError:        mysqlerr.DuplicateEntry(model.StudentInformInstance.PhoneNumber.KeyName(), "01011111111"),
 		}, { // student uuid cannot be changed error
-			StudentUUID: "student-222222222222",
-			Modify: &model.StudentInform{
-				StudentUUID: "student-444444444444",
-			},
-			ExpectResult: new(model.StudentInform),
-			ExpectError:  errors.StudentUUIDCannotBeChanged,
+			StudentUUIDForArgs: "student-222222222222",
+			StudentUUID:        "student-444444444444",
+			ExpectError:        errors.StudentUUIDCannotBeChanged,
 		}, { // no exist student uuid -> nil error return!
-			StudentUUID: "student-4444444444444444",
-			Modify: &model.StudentInform{
-				StudentNumber: 1,
-			},
-			ExpectResult: new(model.StudentInform),
-			ExpectError:  nil,
+			StudentUUIDForArgs: "student-4444444444444444",
+			StudentNumber:      1,
+			ExpectError:        nil,
 		},
 		// 도메인 밖의 값이라면 어떻계?
 	}
 
 	for _, test := range tests {
-		result, err := access.ModifyStudentInform(test.StudentUUID, test.Modify)
+		revisionInform := &model.StudentInform{
+			StudentUUID:   model.StudentUUID(test.StudentUUID),
+			Grade:         model.Grade(test.Grade),
+			Class:         model.Class(test.Class),
+			StudentNumber: model.StudentNumber(test.StudentNumber),
+			Name:          model.Name(test.Name),
+			PhoneNumber:   model.PhoneNumber(test.PhoneNumber),
+			ProfileURI:    model.ProfileURI(test.ProfileURI),
+		}
+		err := access.ModifyStudentInform(test.StudentUUIDForArgs, revisionInform)
 
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
-		assert.Equalf(t, test.ExpectResult, result.ExceptGormModel(), "result inform model assertion error (test case: %v)", test)
 	}
 }

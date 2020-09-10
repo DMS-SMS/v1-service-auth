@@ -7,6 +7,21 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+const (
+	emptyString = ""
+	emptyInt = 0
+)
+
+const (
+	validStudentUUID = "student-111111111111"
+	validGrade = 2
+	validClass = 2
+	validStudentNumber = 7
+	validName = "박진홍"
+	validPhoneNumber = "01088378347"
+	validProfileURI = "example.com/profiles/student-111111111111"
+)
+
 func (sa *StudentAuth) BeforeCreate() (err error) {
 	return validate.DBValidator.Struct(sa)
 }

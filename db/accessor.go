@@ -44,9 +44,9 @@ type Accessor interface {
 	GetParentInformWithUUID(uuid string) (*model.ParentInform, error)
 
 	// 사용자 정보 수정 메서드
-	ModifyStudentInform(uuid string, modify *model.StudentInform) (result *model.StudentInform, err error)
-	ModifyTeacherInform(uuid string, modify *model.TeacherInform) (result *model.TeacherInform, err error)
-	ModifyParentInform(uuid string, modify *model.ParentInform) (result *model.ParentInform, err error)
+	ModifyStudentInform(uuid string, modify *model.StudentInform) (err error)
+	ModifyTeacherInform(uuid string, modify *model.TeacherInform) (err error)
+	ModifyParentInform(uuid string, modify *model.ParentInform) (err error)
 
 	// ---
 

@@ -7,9 +7,9 @@ import (
 
 type Accessor interface {
 	// 계정 생성 메서드
-	CreateStudentAuth(*model.StudentAuth) (auth *model.StudentAuth, err error)
-	CreateTeacherAuth(*model.TeacherAuth) (auth *model.TeacherAuth, err error)
-	CreateParentAuth(*model.ParentAuth) (auth *model.ParentAuth, err error)
+	CreateStudentAuth(auth *model.StudentAuth) (resultAuth *model.StudentAuth, err error)
+	CreateTeacherAuth(auth *model.TeacherAuth) (resultAuth *model.TeacherAuth, err error)
+	CreateParentAuth(auth *model.ParentAuth) (resultAuth *model.ParentAuth, err error)
 
 	// 계정 ID로 계정 정보 조회 메서드
 	GetStudentAuthWithID(studentID string) (*model.StudentAuth, error)
@@ -29,9 +29,9 @@ type Accessor interface {
 	// ---
 
 	// 사용자 정보 추가 메서드
-	CreateStudentInform(*model.StudentInform) (result *model.StudentInform, err error)
-	CreateTeacherInform(*model.TeacherInform) (result *model.TeacherInform, err error)
-	CreateParentInform(*model.ParentInform) (result *model.ParentInform, err error)
+	CreateStudentInform(inform *model.StudentInform) (resultInform *model.StudentInform, err error)
+	CreateTeacherInform(inform *model.TeacherInform) (resultInform *model.TeacherInform, err error)
+	CreateParentInform(inform *model.ParentInform) (resultInform *model.ParentInform, err error)
 
 	// 사용자 정보로 uuid 조회 메서드 (계정 삭제 시 사용)
 	GetStudentUUIDsWithInform(*model.StudentInform) (uuidArr []string, err error)
@@ -44,9 +44,9 @@ type Accessor interface {
 	GetParentInformWithUUID(uuid string) (*model.ParentInform, error)
 
 	// 사용자 정보 수정 메서드
-	ModifyStudentInform(uuid string, modify *model.StudentInform) (result *model.StudentInform, err error)
-	ModifyTeacherInform(uuid string, modify *model.TeacherInform) (result *model.TeacherInform, err error)
-	ModifyParentInform(uuid string, modify *model.ParentInform) (result *model.ParentInform, err error)
+	ModifyStudentInform(uuid string, revisionInform *model.StudentInform) (err error)
+	ModifyTeacherInform(uuid string, revisionInform *model.TeacherInform) (err error)
+	ModifyParentInform(uuid string, revisionInform *model.ParentInform) (err error)
 
 	// ---
 

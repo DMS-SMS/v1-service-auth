@@ -1,11 +1,30 @@
 package test
 
 import (
+	"auth/db"
 	"auth/model"
 	"auth/tool/mysqlerr"
+	"github.com/jinzhu/gorm"
 	"strings"
+	"sync"
 )
 
+var (
+	manager db.AccessorManage
+	dbc *gorm.DB
+	waitForFinish sync.WaitGroup
+)
+
+const numberOfTestFunc = 15
+
+// Hashed Passwords
+var passwords = map[string]string{
+	"testPW1": "$2a$10$POwSnghOjkriuQ4w1Bj3zeHIGA7fXv8UI/UFXEhnnO5YrcwkUDcXq",
+	"testPW2": "$2a$10$XxGXTboHZxhoqzKcBVqkJOiNSy6narAvIQ/ljfTJ4m93jAt8GyX.e",
+	"testPW3": "$2a$10$sfZLOR8iVyhXI0y8nXcKIuKseahKu4NLSlocUWqoBdGrpLIZzxJ2S",
+}
+
+// FK Constraint Fail Errors
 var (
 	// StudentAuth 테이블의 ParentUUID 속성의 FK 제약조건 위반에 대한 에러 변수
 	studentAuthParentUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{

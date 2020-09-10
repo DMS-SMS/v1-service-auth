@@ -49,6 +49,44 @@ func (si *StudentInform) BeforeCreate(tx *gorm.DB) (err error) {
 	return
 }
 
+func (si *StudentInform) BeforeUpdate(tx *gorm.DB) (err error) {
+	informForValidate := si.DeepCopy()
+
+	if informForValidate.StudentUUID == emptyString {
+		informForValidate.StudentUUID = validStudentUUID
+	}
+	if informForValidate.Grade == emptyInt {
+		informForValidate.Grade = validGrade
+	}
+	if informForValidate.Class == emptyInt {
+		informForValidate.Class = validClass
+	}
+	if informForValidate.StudentNumber == emptyInt {
+		informForValidate.StudentNumber = validStudentNumber
+	}
+	if informForValidate.Name == emptyString {
+		informForValidate.Name = validName
+	}
+	if informForValidate.PhoneNumber == emptyString {
+		informForValidate.PhoneNumber = validPhoneNumber
+	}
+	if informForValidate.ProfileURI == emptyString {
+		informForValidate.ProfileURI = validProfileURI
+	}
+
+	if err = validate.DBValidator.Struct(informForValidate); err != nil {
+		return
+	}
+
+	if si.Grade != emptyInt && si.Class != emptyInt && si.StudentNumber != emptyInt {
+		studentNumberTable := tx.Where("grade = ? AND class = ? AND student_number = ?", si.Grade, si.Class, si.StudentNumber).Find(&StudentInform{})
+		if studentNumberTable.RowsAffected != 0 {
+			err = mysqlerr.DuplicateEntry(si.StudentNumber.KeyName(), fmt.Sprintf("%d%d%02d", si.Grade, si.Class, si.StudentNumber))
+		}
+	}
+	return
+}
+
 func (ti *TeacherInform) BeforeCreate(tx *gorm.DB) (err error) {
 	return validate.DBValidator.Struct(ti)
 }

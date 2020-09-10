@@ -42,9 +42,9 @@ func (t None) GetTeacherInformWithUUID(uuid string) (inform *model.TeacherInform
 func (t None) GetParentInformWithUUID(uuid string) (inform *model.ParentInform, err error) { return }
 
 // 사용자 정보 수정 메서드
-func (t None) ModifyStudentInform(uuid string, modify *model.StudentInform) (result *model.StudentInform, err error) { return }
-func (t None) ModifyTeacherInform(uuid string, modify *model.TeacherInform) (result *model.TeacherInform, err error) { return }
-func (t None) ModifyParentInform(uuid string, modify *model.ParentInform) (result *model.ParentInform, err error) { return }
+func (t None) ModifyStudentInform(uuid string, revisionInform *model.StudentInform) (err error) { return }
+func (t None) ModifyTeacherInform(uuid string, revisionInform *model.TeacherInform) (err error) { return }
+func (t None) ModifyParentInform(uuid string, revisionInform *model.ParentInform) (err error) { return }
 
 // 트랜잭션 관련 메서드
 func (t None) Begin(db *gorm.DB) {}

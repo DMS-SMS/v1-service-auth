@@ -145,17 +145,17 @@ func Test_Access_ModifyStudentInform(t *testing.T) {
 			ProfileURI:         "example.com/profiles/student/student-222222222222",
 			ExpectError:        nil,
 		}, { // student number duplicate error
-			StudentUUIDForArgs: "student-222222222222",
+			StudentUUIDForArgs: "student-333333333333",
 			Grade:              2,
 			Class:              2,
 			StudentNumber:      14,
 			ExpectError:        mysqlerr.DuplicateEntry(model.StudentInformInstance.StudentNumber.KeyName(), "2214"),
 		}, { // student number duplicate error
-			StudentUUIDForArgs: "student-222222222222",
+			StudentUUIDForArgs: "student-333333333333",
 			PhoneNumber:        "01011111111",
 			ExpectError:        mysqlerr.DuplicateEntry(model.StudentInformInstance.PhoneNumber.KeyName(), "01011111111"),
 		}, { // student uuid cannot be changed error
-			StudentUUIDForArgs: "student-222222222222",
+			StudentUUIDForArgs: "student-333333333333",
 			StudentUUID:        "student-444444444444",
 			ExpectError:        errors.StudentUUIDCannotBeChanged,
 		}, { // no exist student uuid -> nil error return!
@@ -179,5 +179,61 @@ func Test_Access_ModifyStudentInform(t *testing.T) {
 		err := access.ModifyStudentInform(test.StudentUUIDForArgs, revisionInform)
 
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+	}
+
+	testsForConfirmModify := []struct {
+		StudentUUIDArgs, StudentUUID  string
+		Grade, Class, StudentNumber   int64
+		Name, PhoneNumber, ProfileURI string
+		ExpectError                   error
+	} {
+		{
+			StudentUUIDArgs: "student-111111111111",
+			StudentUUID:     "student-111111111111",
+			Grade:           3,
+			Class:           2,
+			StudentNumber:   8,
+			Name:            "박진홍",
+			PhoneNumber:     "01011111111",
+			ProfileURI:      "example.com/profiles/student-111111111111",
+			ExpectError:     nil,
+		}, {
+			StudentUUIDArgs: "student-222222222222",
+			StudentUUID:     "student-222222222222",
+			Grade:           2,
+			Class:           2,
+			StudentNumber:   12,
+			Name:            "오줌상",
+			PhoneNumber:     "01044444444",
+			ProfileURI:      "example.com/profiles/student/student-222222222222",
+			ExpectError:     nil,
+		}, {
+			StudentUUIDArgs: "student-333333333333",
+			StudentUUID:     "student-333333333333",
+			Grade:           2,
+			Class:           2,
+			StudentNumber:   14,
+			Name:            "윤석준",
+			PhoneNumber:     "01033333333",
+			ProfileURI:      "example.com/profiles/student-333333333333",
+			ExpectError:     nil,
+		},
+	}
+
+	for _, test := range testsForConfirmModify {
+		expectResult := &model.StudentInform{
+			StudentUUID:   model.StudentUUID(test.StudentUUID),
+			Grade:         model.Grade(test.Grade),
+			Class:         model.Class(test.Class),
+			StudentNumber: model.StudentNumber(test.StudentNumber),
+			Name:          model.Name(test.Name),
+			PhoneNumber:   model.PhoneNumber(test.PhoneNumber),
+			ProfileURI:    model.ProfileURI(test.ProfileURI),
+		}
+		resultInform, err := access.GetStudentInformWithUUID(test.StudentUUIDArgs)
+
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, expectResult, resultInform.ExceptGormModel(), "result inform model assertion error (test case: %v)", test)
 	}
 }

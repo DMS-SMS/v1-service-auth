@@ -123,3 +123,23 @@ func (d *_default) GetParentUUIDsWithInform(inform *model.ParentInform) (uuidArr
 	}
 	return
 }
+
+func (d *_default) GetStudentInformWithUUID(uuid string) (inform *model.StudentInform, err error) {
+	inform = new(model.StudentInform)
+	err = d.tx.Where("student_uuid = ?", uuid).Find(inform).Error
+	return
+}
+
+
+func (d *_default) GetTeacherInformWithUUID(uuid string) (inform *model.TeacherInform, err error) {
+	inform = new(model.TeacherInform)
+	err = d.tx.Where("teacher_uuid = ?", uuid).Find(inform).Error
+	return
+}
+
+
+func (d *_default) GetParentInformWithUUID(uuid string) (inform *model.ParentInform, err error) {
+	inform = new(model.ParentInform)
+	err = d.tx.Where("parent_uuid = ?", uuid).Find(inform).Error
+	return
+}

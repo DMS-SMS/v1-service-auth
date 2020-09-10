@@ -29,9 +29,9 @@ type Accessor interface {
 	// ---
 
 	// 사용자 정보 추가 메서드
-	CreateStudentInform(*model.StudentInform) (result *model.StudentInform, err error)
-	CreateTeacherInform(*model.TeacherInform) (result *model.TeacherInform, err error)
-	CreateParentInform(*model.ParentInform) (result *model.ParentInform, err error)
+	CreateStudentInform(*model.StudentInform) (inform *model.StudentInform, err error)
+	CreateTeacherInform(*model.TeacherInform) (inform *model.TeacherInform, err error)
+	CreateParentInform(*model.ParentInform) (inform *model.ParentInform, err error)
 
 	// 사용자 정보로 uuid 조회 메서드 (계정 삭제 시 사용)
 	GetStudentUUIDsWithInform(*model.StudentInform) (uuidArr []string, err error)
@@ -44,9 +44,9 @@ type Accessor interface {
 	GetParentInformWithUUID(uuid string) (*model.ParentInform, error)
 
 	// 사용자 정보 수정 메서드
-	ModifyStudentInform(uuid string, modify *model.StudentInform) (err error)
-	ModifyTeacherInform(uuid string, modify *model.TeacherInform) (err error)
-	ModifyParentInform(uuid string, modify *model.ParentInform) (err error)
+	ModifyStudentInform(uuid string, revisionInform *model.StudentInform) (err error)
+	ModifyTeacherInform(uuid string, revisionInform *model.TeacherInform) (err error)
+	ModifyParentInform(uuid string, revisionInform *model.ParentInform) (err error)
 
 	// ---
 

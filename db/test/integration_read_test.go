@@ -803,3 +803,84 @@ func Test_Accessor_GetTeacherInformWithUUID(t *testing.T) {
 		assert.Equalf(t, expectResult, result.ExceptGormModel(), "result inform model assertion error (test case: %v)", test)
 	}
 }
+
+func Test_Accessor_GetParentInformWithUUID(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Rollback()
+		waitForFinish.Done()
+	}()
+
+	// 학부모 계정 생성
+	for _, init := range []struct {
+		UUID, ParentID, ParentPW string
+	} {
+		{
+			UUID:     "parent-111111111111",
+			ParentID: "jinhong0719",
+			ParentPW: passwords["testPW1"],
+		},
+	} {
+		_, err := access.CreateParentAuth(&model.ParentAuth{
+			UUID:     model.UUID(init.UUID),
+			ParentID: model.ParentID(init.ParentID),
+			ParentPW: model.ParentPW(init.ParentPW),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating parent auth, err: %v", err))
+		}
+	}
+
+	// 학부모 정보 생성
+	for _, init := range []struct {
+		ParentUUID, Name, PhoneNumber string
+	} {
+		{
+			ParentUUID:  "parent-111111111111",
+			Name:        "박진홍",
+			PhoneNumber: "01088378347",
+		},
+	} {
+		_, err := access.CreateParentInform(&model.ParentInform{
+			ParentUUID:  model.ParentUUID(init.ParentUUID),
+			Name:        model.Name(init.Name),
+			PhoneNumber: model.PhoneNumber(init.PhoneNumber),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating parent inform, err: %v", err))
+		}
+	}
+
+	tests := []struct {
+		ParentUUIDForArgs, ParentUUID string
+		Name, PhoneNumber             string
+		ExpectError                   error
+	} {
+		{
+			ParentUUIDForArgs: "parent-111111111111",
+			ParentUUID:        "parent-111111111111",
+			Name:              "박진홍",
+			PhoneNumber:       "01088378347",
+			ExpectError:       nil,
+		},
+		{
+			ParentUUIDForArgs: "student-222222222222",
+			ExpectError:       gorm.ErrRecordNotFound,
+		},
+	}
+
+	for _, test := range tests {
+		expectResult := &model.ParentInform{
+			ParentUUID:  model.ParentUUID(test.ParentUUID),
+			Name:        model.Name(test.Name),
+			PhoneNumber: model.PhoneNumber(test.PhoneNumber),
+		}
+		result, err := access.GetParentInformWithUUID(test.ParentUUIDForArgs)
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, expectResult, result.ExceptGormModel(), "result inform model assertion error (test case: %v)", test)
+	}
+}

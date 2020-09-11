@@ -536,3 +536,106 @@ func Test_Access_ModifyParentInform(t *testing.T) {
 		assert.Equalf(t, expectResult, resultInform.ExceptGormModel(), "result inform model assertion error (test case: %v)", test)
 	}
 }
+
+func Test_Access_ChangeStudentPW(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		_ = access.Rollback()
+		waitForFinish.Done()
+	}()
+
+	// 학부모 계정 생성
+	for _, init := range []struct {
+		UUID, ParentID, ParentPW string
+	} {
+		{
+			UUID:     "parent-111111111111",
+			ParentID: "jinhong07191",
+			ParentPW: passwords["testPW1"],
+		},
+	} {
+		_, err := access.CreateParentAuth(&model.ParentAuth{
+			UUID:     model.UUID(init.UUID),
+			ParentID: model.ParentID(init.ParentID),
+			ParentPW: model.ParentPW(init.ParentPW),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating parent auth, err: %v", err))
+		}
+	}
+
+	// 학생 계정 생성
+	for _, init := range []struct {
+		UUID, StudentID, StudentPW, ParentUUID string
+	} {
+		{
+			UUID:       "student-111111111111",
+			StudentID:  "jinhong07191",
+			StudentPW:  passwords["testPW1"],
+			ParentUUID: "parent-111111111111",
+		},
+	} {
+		_, err := access.CreateStudentAuth(&model.StudentAuth{
+			UUID:       model.UUID(init.UUID),
+			StudentID:  model.StudentID(init.StudentID),
+			StudentPW:  model.StudentPW(init.StudentPW),
+			ParentUUID: model.ParentUUID(init.ParentUUID),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating student auth, err: %v", err))
+		}
+	}
+
+	tests := []struct {
+		StudentUUID, StudentPW string
+		ExpectError            error
+	} {
+		{ // success case
+			StudentUUID: "student-111111111111",
+			StudentPW:   passwords["testPW2"],
+			ExpectError: nil,
+		}, { // no exist student uuid -> no error!!
+			StudentUUID: "student-222222222222",
+			StudentPW:   passwords["testPW2"],
+			ExpectError: nil,
+		},
+	}
+
+	for _, test := range tests {
+		err := access.ChangeStudentPW(test.StudentUUID, test.StudentPW)
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+	}
+
+	testsForConfirmChange := []struct {
+		StudentIDForArgs, StudentUUID  string
+		StudentID, StudentPW, ParentUUID string
+		ExpectError                      error
+	} {
+		{
+			StudentIDForArgs: "jinhong07191",
+			StudentUUID:      "student-111111111111",
+			StudentID:        "jinhong07191",
+			StudentPW:        passwords["testPW2"],
+			ParentUUID:       "parent-111111111111",
+			ExpectError:      nil,
+		},
+	}
+
+	for _, test := range testsForConfirmChange {
+		expectResult := &model.StudentAuth{
+			UUID:       model.UUID(test.StudentUUID),
+			StudentID:  model.StudentID(test.StudentID),
+			StudentPW:  model.StudentPW(test.StudentPW),
+			ParentUUID: model.ParentUUID(test.ParentUUID),
+		}
+		resultAuth, err := access.GetStudentAuthWithID(test.StudentIDForArgs)
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, expectResult, resultAuth.ExceptGormModel(), "result auth model assertion error (test case: %v)", test)
+	}
+}
+
+// CheckIfStudentExistsWithUUID 추가 필요

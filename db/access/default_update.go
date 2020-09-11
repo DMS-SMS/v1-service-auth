@@ -32,10 +32,24 @@ func (d *_default) ModifyTeacherInform(uuid string, revisionInform *model.Teache
 		return
 	}
 
-	if revisionInform.Grade != emptyInt          { contextForUpdate[revisionInform.Grade.KeyName()] = revisionInform.Grade }
-	if revisionInform.Class != emptyInt          { contextForUpdate[revisionInform.Class.KeyName()] = revisionInform.Class }
 	if revisionInform.Name != emptyString        { contextForUpdate[revisionInform.Name.KeyName()] = revisionInform.Name }
 	if revisionInform.PhoneNumber != emptyString { contextForUpdate[revisionInform.PhoneNumber.KeyName()] = revisionInform.PhoneNumber }
+
+	if revisionInform.Grade != emptyInt {
+		if int64(revisionInform.Grade) == model.TeacherInformInstance.Grade.NullReplaceValue() {
+			contextForUpdate[revisionInform.Grade.KeyName()] = model.Grade(0)
+		} else {
+			contextForUpdate[revisionInform.Grade.KeyName()] = revisionInform.Grade
+		}
+	}
+
+	if revisionInform.Class != emptyInt {
+		if int64(revisionInform.Class) == model.TeacherInformInstance.Class.NullReplaceValue() {
+			contextForUpdate[revisionInform.Class.KeyName()] = model.Class(0)
+		} else {
+			contextForUpdate[revisionInform.Class.KeyName()] = revisionInform.Class
+		}
+	}
 
 	err = d.tx.Model(&model.TeacherInform{}).Where("teacher_uuid = ?", uuid).Updates(contextForUpdate).Error
 	return

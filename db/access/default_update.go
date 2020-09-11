@@ -74,3 +74,13 @@ func (d *_default) ChangeStudentPW(uuid string, studentPW string) (err error) {
 	err = d.tx.Model(&model.StudentAuth{}).Where("uuid = ?", uuid).Update("student_pw", studentPW).Error
 	return
 }
+
+func (d *_default) ChangeTeacherPW(uuid string, teacherPW string) (err error) {
+	err = d.tx.Model(&model.TeacherAuth{}).Where("uuid = ?", uuid).Update("teacher_pw", teacherPW).Error
+	return
+}
+
+func (d *_default) ChangeParentPW(uuid string, parentPW string) (err error) {
+	err = d.tx.Model(&model.ParentAuth{}).Where("uuid = ?", uuid).Update("parent_pw", parentPW).Error
+	return
+}

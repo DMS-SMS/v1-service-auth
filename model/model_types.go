@@ -34,7 +34,7 @@ type class int64
 func Class(i int64) class { return class(i) }
 func (c class) Value() (value driver.Value, err error) {
 	value = int64(c)
-	if value == 0 { value = nil }
+	if value == int64(0) { value = nil }
 	return
 }
 func (c *class) Scan(src interface{}) (err error) { *c = class(src.(int64)); return }
@@ -46,7 +46,7 @@ type studentNumber int64
 func StudentNumber(i int64) studentNumber { return studentNumber(i) }
 func (sn studentNumber) Value() (value driver.Value, err error) {
 	value = int64(sn)
-	if value == 0 { value = nil }
+	if value == int64(0) { value = nil }
 	return
 }
 func (sn *studentNumber) Scan(src interface{}) (err error) { *sn = studentNumber(src.(int64)); return }

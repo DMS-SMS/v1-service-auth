@@ -638,4 +638,81 @@ func Test_Access_ChangeStudentPW(t *testing.T) {
 	}
 }
 
+func Test_Access_ChangeTeacherPW(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		_ = access.Rollback()
+		waitForFinish.Done()
+	}()
+
+	// 선생님 계정 생성
+	for _, init := range []struct {
+		UUID, TeacherID, TeacherPW string
+	} {
+		{
+			UUID:      "teacher-111111111111",
+			TeacherID: "jinhong07191",
+			TeacherPW: passwords["testPW1"],
+		},
+	} {
+		_, err := access.CreateTeacherAuth(&model.TeacherAuth{
+			UUID:      model.UUID(init.UUID),
+			TeacherID: model.TeacherID(init.TeacherID),
+			TeacherPW: model.TeacherPW(init.TeacherPW),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating teacher auth, err: %v", err))
+		}
+	}
+
+	tests := []struct {
+		TeacherUUID, TeacherPW string
+		ExpectError            error
+	} {
+		{ // success case
+			TeacherUUID: "teacher-111111111111",
+			TeacherPW:   passwords["testPW2"],
+			ExpectError: nil,
+		}, { // no exist student uuid -> no error!!
+			TeacherUUID: "student-222222222222",
+			TeacherPW:   passwords["testPW2"],
+			ExpectError: nil,
+		},
+	}
+
+	for _, test := range tests {
+		err := access.ChangeTeacherPW(test.TeacherUUID, test.TeacherPW)
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+	}
+
+	testsForConfirmChange := []struct {
+		TeacherIDForArgs, TeacherUUID string
+		TeacherID, TeacherPW          string
+		ExpectError                   error
+	} {
+		{
+			TeacherIDForArgs: "jinhong07191",
+			TeacherUUID:      "student-111111111111",
+			TeacherID:        "jinhong07191",
+			TeacherPW:        passwords["testPW2"],
+			ExpectError:      nil,
+		},
+	}
+
+	for _, test := range testsForConfirmChange {
+		expectResult := &model.TeacherAuth{
+			UUID:      model.UUID(test.TeacherUUID),
+			TeacherID: model.TeacherID(test.TeacherID),
+			TeacherPW: model.TeacherPW(test.TeacherPW),
+		}
+		resultAuth, err := access.GetTeacherAuthWithID(test.TeacherIDForArgs)
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, expectResult, resultAuth.ExceptGormModel(), "result auth model assertion error (test case: %v)", test)
+	}
+}
+
 // CheckIfStudentExistsWithUUID 추가 필요

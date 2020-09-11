@@ -159,11 +159,10 @@ func Test_Access_ModifyStudentInform(t *testing.T) {
 			StudentUUID:        "student-444444444444",
 			ExpectError:        errors.StudentUUIDCannotBeChanged,
 		}, { // no exist student uuid -> nil error return!
-			StudentUUIDForArgs: "student-4444444444444444",
+			StudentUUIDForArgs: "student-444444444444",
 			StudentNumber:      1,
 			ExpectError:        nil,
 		},
-		// 도메인 밖의 값이라면 어떻계?
 	}
 
 	for _, test := range tests {
@@ -232,6 +231,172 @@ func Test_Access_ModifyStudentInform(t *testing.T) {
 		}
 		resultInform, err := access.GetStudentInformWithUUID(test.StudentUUIDArgs)
 
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, expectResult, resultInform.ExceptGormModel(), "result inform model assertion error (test case: %v)", test)
+	}
+}
+
+func Test_Access_ModifyTeacherInform(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		_ = access.Rollback()
+		waitForFinish.Done()
+	}()
+
+	// 선생님 계정 생성
+	for _, init := range []struct {
+		UUID, TeacherID, TeacherPW string
+	} {
+		{
+			UUID:      "teacher-111111111111",
+			TeacherID: "jinhong07191",
+			TeacherPW: passwords["testPW1"],
+		}, {
+			UUID:      "teacher-222222222222",
+			TeacherID: "jinhong07192",
+			TeacherPW: passwords["testPW2"],
+		}, {
+			UUID:      "teacher-333333333333",
+			TeacherID: "jinhong07193",
+			TeacherPW: passwords["testPW1"],
+		},
+	} {
+		_, err := access.CreateTeacherAuth(&model.TeacherAuth{
+			UUID:      model.UUID(init.UUID),
+			TeacherID: model.TeacherID(init.TeacherID),
+			TeacherPW: model.TeacherPW(init.TeacherID),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating teacher auth, err: %v", err))
+		}
+	}
+
+	// 선생님 정보 생성
+	for _, init := range []struct {
+		TeacherUUID       string
+		Name, PhoneNumber string
+		Grade, Class      int64
+	} {
+		{
+			TeacherUUID: "teacher-111111111111",
+			Grade:       2,
+			Class:       2,
+			Name:        "박진홍",
+			PhoneNumber: "01011111111",
+		}, {
+			TeacherUUID: "teacher-222222222222",
+			Grade:       1,
+			Class:       2,
+			Name:        "빡진홍",
+			PhoneNumber: "01022222222",
+		}, {
+			TeacherUUID: "teacher-333333333333",
+			Name:        "박진헝",
+			PhoneNumber: "01033333333",
+		},
+	} {
+		_, err := access.CreateTeacherInform(&model.TeacherInform{
+			TeacherUUID:   model.TeacherUUID(init.TeacherUUID),
+			Grade:         model.Grade(init.Grade),
+			Class:         model.Class(init.Class),
+			Name:          model.Name(init.Name),
+			PhoneNumber:   model.PhoneNumber(init.PhoneNumber),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating teacher inform, err: %v", err))
+		}
+	}
+
+	tests := []struct {
+		TeacherUUIDForArgs string
+		TeacherUUID        string
+		Grade, Class       int64
+		Name, PhoneNumber  string
+		ExpectError        error
+	} {
+		{ // success case 1 (about int64 field) (class duplicate allow)
+			TeacherUUIDForArgs: "teacher-111111111111",
+			Grade:              1,
+			Class:              2,
+			ExpectError:        nil,
+		}, { // success case 2 (about string field)
+			TeacherUUIDForArgs: "teacher-222222222222",
+			Name:               "빽진홍",
+			PhoneNumber:        "01044444444",
+			ExpectError:        nil,
+		}, { // phone number duplicate error
+			TeacherUUIDForArgs: "teacher-333333333333",
+			PhoneNumber:        "01011111111",
+			ExpectError:        mysqlerr.DuplicateEntry(model.ParentInformInstance.PhoneNumber.KeyName(), "01011111111"),
+		}, { // student uuid cannot be changed error
+			TeacherUUIDForArgs: "teacher-333333333333",
+			TeacherUUID:        "teacher-444444444444",
+			ExpectError:        errors.TeacherUUIDCannotBeChanged,
+		}, { // no exist student uuid -> nil error return!
+			TeacherUUIDForArgs: "teacher-444444444444",
+			Name:               "되긴됨",
+			ExpectError:        nil,
+		},
+	}
+
+	for _, test := range tests {
+		revisionInform := &model.TeacherInform{
+			TeacherUUID:   model.TeacherUUID(test.TeacherUUID),
+			Grade:         model.Grade(test.Grade),
+			Class:         model.Class(test.Class),
+			Name:          model.Name(test.Name),
+			PhoneNumber:   model.PhoneNumber(test.PhoneNumber),
+		}
+		err := access.ModifyTeacherInform(test.TeacherUUID, revisionInform)
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+	}
+
+	testsForConfirmModify := []struct {
+		TeacherUUIDArgs   string
+		TeacherUUID       string
+		Grade, Class      int64
+		Name, PhoneNumber string
+		ExpectError       error
+	} {
+		{
+			TeacherUUIDArgs: "teacher-111111111111",
+			TeacherUUID:     "teacher-111111111111",
+			Grade:           1,
+			Class:           2,
+			Name:            "박진홍",
+			PhoneNumber:     "01011111111",
+			ExpectError:     nil,
+		}, {
+			TeacherUUIDArgs: "teacher-222222222222",
+			TeacherUUID:     "teacher-222222222222",
+			Grade:           1,
+			Class:           2,
+			Name:            "빽진홍",
+			PhoneNumber:     "01044444444",
+			ExpectError:     nil,
+		}, {
+			TeacherUUIDArgs: "teacher-333333333333",
+			TeacherUUID:     "teacher-333333333333",
+			Name:            "박진헝",
+			PhoneNumber:     "01033333333",
+			ExpectError:     nil,
+		},
+	}
+
+	for _, test := range testsForConfirmModify {
+		expectResult := &model.TeacherInform{
+			TeacherUUID:   model.TeacherUUID(test.TeacherUUID),
+			Grade:         model.Grade(test.Grade),
+			Class:         model.Class(test.Class),
+			Name:          model.Name(test.Name),
+			PhoneNumber:   model.PhoneNumber(test.PhoneNumber),
+		}
+		resultInform, err := access.GetTeacherInformWithUUID(test.TeacherUUIDArgs)
 
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
 		assert.Equalf(t, expectResult, resultInform.ExceptGormModel(), "result inform model assertion error (test case: %v)", test)

@@ -56,10 +56,23 @@ func (d *_default) GetTeacherUUIDsWithInform(inform *model.TeacherInform) (uuidA
 	cascadeTx := d.tx.New()
 
 	if inform.TeacherUUID != emptyString { cascadeTx = cascadeTx.Where("teacher_uuid = ?", inform.TeacherUUID) }
-	if inform.Grade != emptyInt          { cascadeTx = cascadeTx.Where("grade = ?", inform.Grade) }
-	if inform.Class != emptyInt          { cascadeTx = cascadeTx.Where("class = ?", inform.Class) }
 	if inform.Name != emptyString        { cascadeTx = cascadeTx.Where("name = ?", inform.Name) }
 	if inform.PhoneNumber != emptyString { cascadeTx = cascadeTx.Where("phone_number = ?", inform.PhoneNumber) }
+
+	if inform.Grade != emptyInt {
+		if int64(inform.Grade) == model.TeacherInformInstance.Grade.NullReplaceValue() {
+			inform.Grade = 0
+		}
+		cascadeTx = cascadeTx.Where("grade = ?", inform.Grade)
+	}
+
+	if inform.Class != emptyInt {
+		if int64(inform.Class) == model.TeacherInformInstance.Class.NullReplaceValue() {
+			inform.Class = 0
+		}
+		cascadeTx = cascadeTx.Where("class = ?", inform.Class)
+	}
+
 
 	informs := make([]*model.TeacherInform, 1, 3)
 	err = cascadeTx.Find(&informs).Error

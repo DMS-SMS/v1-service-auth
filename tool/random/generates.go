@@ -3,11 +3,16 @@ package random
 import (
 	"math/rand"
 	"strconv"
+	"time"
 )
 
 var (
 	intLetters = []rune("0123456789")
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 func StringConsistOfIntWithLength(length int) string {
 	randomRuneArr := make([]rune, length)

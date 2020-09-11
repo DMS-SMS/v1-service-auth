@@ -1,15 +1,24 @@
 package random
 
-import "math/rand"
+import (
+	"math/rand"
+	"strconv"
+)
 
 var (
 	intLetters = []rune("0123456789")
 )
 
 func StringConsistOfIntWithLength(length int) string {
-	s := make([]rune, length)
-	for i := range s {
-		s[i] = intLetters[rand.Intn(len(intLetters))]
+	randomRuneArr := make([]rune, length)
+	for i := range randomRuneArr {
+		randomRuneArr[i] = intLetters[rand.Intn(len(intLetters))]
 	}
-	return string(s)
+	return string(randomRuneArr)
+}
+
+func Int64WithLength(length int) int64 {
+	randomString := StringConsistOfIntWithLength(length)
+	stringToInt, _ := strconv.Atoi(randomString)
+	return int64(stringToInt)
 }

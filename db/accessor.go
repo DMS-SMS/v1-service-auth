@@ -17,9 +17,9 @@ type Accessor interface {
 	GetParentAuthWithID(parentID string) (*model.ParentAuth, error)
 
 	// UUID로 계정 존재 여부 확인 메서드
-	CheckIfStudentAuthExists(uuid string) (exist bool)
-	CheckIfTeacherAuthExists(uuid string) (exist bool)
-	CheckIfParentAuthExists(uuid string) (exist bool)
+	CheckIfStudentAuthExists(uuid string) (exist bool, err error)
+	CheckIfTeacherAuthExists(uuid string) (exist bool, err error)
+	CheckIfParentAuthExists(uuid string) (exist bool, err error)
 
 	// 비밀번호 변경 메서드
 	ChangeStudentPW(uuid string, studentPW string) error

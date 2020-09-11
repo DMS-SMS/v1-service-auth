@@ -17,9 +17,9 @@ func (t None) GetTeacherAuthWithID(teacherID string) (auth *model.TeacherAuth, e
 func (t None) GetParentAuthWithID(parentID string) (auth *model.ParentAuth, err error) { return }
 
 // UUID로 계정 존재 여부 확인 메서드
-func (t None) CheckIfStudentAuthExists(uuid string) (exist bool) { return }
-func (t None) CheckIfTeacherAuthExists(uuid string) (exist bool) { return }
-func (t None) CheckIfParentAuthExists(uuid string) (exist bool) { return }
+func (t None) CheckIfStudentAuthExists(uuid string) (exist bool, err error) { return }
+func (t None) CheckIfTeacherAuthExists(uuid string) (exist bool, err error) { return }
+func (t None) CheckIfParentAuthExists(uuid string) (exist bool, err error) { return }
 
 // 비밀번호 변경 메서드
 func (t None) ChangeStudentPW(uuid string, studentPW string) error { return nil }

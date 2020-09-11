@@ -47,19 +47,19 @@ func (m _mock) GetParentAuthWithID(parentID string) (*model.ParentAuth, error) {
 }
 
 // UUID로 계정 존재 여부 확인 메서드
-func (m _mock) CheckIfStudentAuthExists(uuid string) bool {
+func (m _mock) CheckIfStudentAuthExists(uuid string) (bool, error) {
 	args := m.mock.Called(uuid)
-	return args.Bool(0)
+	return args.Bool(0), args.Error(1)
 }
 
-func (m _mock) CheckIfTeacherAuthExists(uuid string) bool {
+func (m _mock) CheckIfTeacherAuthExists(uuid string) (bool, error) {
 	args := m.mock.Called(uuid)
-	return args.Bool(0)
+	return args.Bool(0), args.Error(1)
 }
 
-func (m _mock) CheckIfParentAuthExists(uuid string) bool {
+func (m _mock) CheckIfParentAuthExists(uuid string) (bool, error) {
 	args := m.mock.Called(uuid)
-	return args.Bool(0)
+	return args.Bool(0), args.Error(1)
 }
 
 // 비밀번호 변경 메서드

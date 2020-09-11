@@ -216,7 +216,7 @@ func Test_Accessor_GetParentAuthWithID(t *testing.T) {
 	waitForFinish.Done()
 }
 
-func Test_Accessor_GetStudentUUIDWithInform(t *testing.T) {
+func Test_Accessor_GetStudentUUIDsWithInform(t *testing.T) {
 	access, err := manager.BeginTx()
 	if err != nil {
 		log.Fatal(err)
@@ -370,7 +370,7 @@ func Test_Accessor_GetStudentUUIDWithInform(t *testing.T) {
 	}
 }
 
-func Test_Accessor_GetTeacherUUIDWithInform(t *testing.T) {
+func Test_Accessor_GetTeacherUUIDsWithInform(t *testing.T) {
 	access, err := manager.BeginTx()
 	if err != nil {
 		log.Fatal(err)
@@ -443,7 +443,6 @@ func Test_Accessor_GetTeacherUUIDWithInform(t *testing.T) {
 		}
 	}
 
-	fmt.Println(model.TeacherInformInstance.Grade.NullReplaceValue(), model.TeacherInformInstance.Class.NullReplaceValue(), model.StudentAuthInstance.ParentUUID.NullReplaceValue())
 	tests := []struct {
 		TeacherUUID, Name, PhoneNumber string
 		Grade, Class                   int64
@@ -491,7 +490,7 @@ func Test_Accessor_GetTeacherUUIDWithInform(t *testing.T) {
 	}
 }
 
-func Test_Accessor_GetParentUUIDWithInform(t *testing.T) {
+func Test_Accessor_GetParentUUIDsWithInform(t *testing.T) {
 	access, err := manager.BeginTx()
 	if err != nil {
 		log.Fatal(err)

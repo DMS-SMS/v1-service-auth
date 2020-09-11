@@ -295,6 +295,8 @@ func Test_Access_ModifyTeacherInform(t *testing.T) {
 			PhoneNumber: "01022222222",
 		}, {
 			TeacherUUID: "teacher-333333333333",
+			Grade:       3,
+			Class:       2,
 			Name:        "박진헝",
 			PhoneNumber: "01033333333",
 		},
@@ -327,6 +329,11 @@ func Test_Access_ModifyTeacherInform(t *testing.T) {
 			TeacherUUIDForArgs: "teacher-222222222222",
 			Name:               "빽진홍",
 			PhoneNumber:        "01044444444",
+			ExpectError:        nil,
+		}, { // success case 3 (remove grade&class inform)
+			TeacherUUIDForArgs: "teacher-333333333333",
+			Grade:              model.TeacherInformInstance.Grade.NullReplaceValue(),
+			Class:              model.TeacherInformInstance.Class.NullReplaceValue(),
 			ExpectError:        nil,
 		}, { // phone number duplicate error
 			TeacherUUIDForArgs: "teacher-333333333333",

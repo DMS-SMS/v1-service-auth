@@ -7,9 +7,9 @@ import (
 
 type None struct {}
 // 계정 생성 메서드
-func (t None) CreateStudentAuth(*model.StudentAuth) (auth *model.StudentAuth, err error) { return }
-func (t None) CreateTeacherAuth(*model.TeacherAuth) (auth *model.TeacherAuth, err error) { return }
-func (t None) CreateParentAuth(*model.ParentAuth) (auth *model.ParentAuth, err error) { return }
+func (t None) CreateStudentAuth(auth *model.StudentAuth) (resultAuth *model.StudentAuth, err error) { return }
+func (t None) CreateTeacherAuth(auth *model.TeacherAuth) (resultAuth *model.TeacherAuth, err error) { return }
+func (t None) CreateParentAuth(auth *model.ParentAuth) (resultAuth *model.ParentAuth, err error) { return }
 
 // 계정 ID로 계정 정보 조회 메서드
 func (t None) GetStudentAuthWithID(studentID string) (*model.StudentAuth, error) { return nil, nil }
@@ -27,9 +27,9 @@ func (t None) DeleteTeacherAuth(uuid string) error { return nil }
 func (t None) DeleteParentAuth(uuid string) error { return nil }
 
 // 사용자 정보 추가 메서드
-func (t None) CreateStudentInform(*model.StudentInform) (inform *model.StudentInform, err error) { return }
-func (t None) CreateTeacherInform(*model.TeacherInform) (inform *model.TeacherInform, err error) { return }
-func (t None) CreateParentInform(*model.ParentInform) (inform *model.ParentInform, err error) { return }
+func (t None) CreateStudentInform(inform *model.StudentInform) (resultInform *model.StudentInform, err error) { return }
+func (t None) CreateTeacherInform(inform *model.TeacherInform) (resultInform *model.TeacherInform, err error) { return }
+func (t None) CreateParentInform(inform *model.ParentInform) (resultInform *model.ParentInform, err error) { return }
 
 // 사용자 정보로 uuid 조회 메서드
 func (t None) GetStudentUUIDsWithInform(*model.StudentInform) (uuidArr []string, err error) { return }
@@ -42,9 +42,9 @@ func (t None) GetTeacherInformWithUUID(uuid string) (inform *model.TeacherInform
 func (t None) GetParentInformWithUUID(uuid string) (inform *model.ParentInform, err error) { return }
 
 // 사용자 정보 수정 메서드
-func (t None) ModifyStudentInform(uuid string, modify *model.StudentInform) (result *model.StudentInform, err error) { return }
-func (t None) ModifyTeacherInform(uuid string, modify *model.TeacherInform) (result *model.TeacherInform, err error) { return }
-func (t None) ModifyParentInform(uuid string, modify *model.ParentInform) (result *model.ParentInform, err error) { return }
+func (t None) ModifyStudentInform(uuid string, revisionInform *model.StudentInform) (err error) { return }
+func (t None) ModifyTeacherInform(uuid string, revisionInform *model.TeacherInform) (err error) { return }
+func (t None) ModifyParentInform(uuid string, revisionInform *model.ParentInform) (err error) { return }
 
 // 트랜잭션 관련 메서드
 func (t None) Begin(db *gorm.DB) {}

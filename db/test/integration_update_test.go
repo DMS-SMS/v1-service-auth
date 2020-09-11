@@ -677,7 +677,7 @@ func Test_Access_ChangeTeacherPW(t *testing.T) {
 			TeacherPW:   passwords["testPW2"],
 			ExpectError: nil,
 		}, { // no exist student uuid -> no error!!
-			TeacherUUID: "student-222222222222",
+			TeacherUUID: "teacher-222222222222",
 			TeacherPW:   passwords["testPW2"],
 			ExpectError: nil,
 		},
@@ -695,7 +695,7 @@ func Test_Access_ChangeTeacherPW(t *testing.T) {
 	} {
 		{
 			TeacherIDForArgs: "jinhong07191",
-			TeacherUUID:      "student-111111111111",
+			TeacherUUID:      "teacher-111111111111",
 			TeacherID:        "jinhong07191",
 			TeacherPW:        passwords["testPW2"],
 			ExpectError:      nil,
@@ -730,7 +730,7 @@ func Test_Access_ChangeParentPW(t *testing.T) {
 		UUID, ParentID, ParentPW string
 	} {
 		{
-			UUID:      "teacher-111111111111",
+			UUID:     "parent-111111111111",
 			ParentID: "jinhong07191",
 			ParentPW: passwords["testPW1"],
 		},

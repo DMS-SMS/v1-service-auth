@@ -443,6 +443,7 @@ func Test_Accessor_GetTeacherUUIDWithInform(t *testing.T) {
 		}
 	}
 
+	fmt.Println(model.TeacherInformInstance.Grade.NullReplaceValue(), model.TeacherInformInstance.Class.NullReplaceValue(), model.StudentAuthInstance.ParentUUID.NullReplaceValue())
 	tests := []struct {
 		TeacherUUID, Name, PhoneNumber string
 		Grade, Class                   int64
@@ -465,11 +466,15 @@ func Test_Accessor_GetTeacherUUIDWithInform(t *testing.T) {
 			ExpectUUIDArr: []string{"teacher-111111111111"},
 			ExpectError:   nil,
 		}, {
+			Grade:         model.TeacherInformInstance.Grade.NullReplaceValue(),
+			Class:         model.TeacherInformInstance.Class.NullReplaceValue(),
+			ExpectUUIDArr: []string{"teacher-333333333333"},
+			ExpectError:   nil,
+		}, {
 			PhoneNumber:   "01088378347",
 			ExpectUUIDArr: ([]string)(nil),
 			ExpectError:   gorm.ErrRecordNotFound,
 		},
-		// Grade 및 Class 값이 NULL인 Rows를 알고 싶을 때는?
 	}
 
 	for _, test := range tests {

@@ -96,7 +96,7 @@ func (pi *ParentInform) BeforeCreate() (err error) {
 func (pi *ParentInform) BeforeUpdate() (err error) {
 	informForValidate := pi.DeepCopy()
 
-	if informForValidate.ParentUUID == emptyString  { informForValidate.ParentUUID = validTeacherUUID }
+	if informForValidate.ParentUUID == emptyString  { informForValidate.ParentUUID = validParentUUID }
 	if informForValidate.Name == emptyString        { informForValidate.Name = validName }
 	if informForValidate.PhoneNumber == emptyString { informForValidate.PhoneNumber = validPhoneNumber }
 

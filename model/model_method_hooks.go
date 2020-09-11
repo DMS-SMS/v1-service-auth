@@ -14,6 +14,7 @@ const (
 
 const (
 	validStudentUUID = "student-111111111111"
+	validTeacherUUID = "teacher-111111111111"
 	validGrade = 2
 	validClass = 2
 	validStudentNumber = 7
@@ -75,6 +76,18 @@ func (si *StudentInform) BeforeUpdate(tx *gorm.DB) (err error) {
 
 func (ti *TeacherInform) BeforeCreate(tx *gorm.DB) (err error) {
 	return validate.DBValidator.Struct(ti)
+}
+
+func (ti *TeacherInform) BeforeUpdate(tx *gorm.DB) (err error) {
+	informForValidate := ti.DeepCopy()
+
+	if informForValidate.TeacherUUID == emptyString { informForValidate.TeacherUUID = validTeacherUUID }
+	if informForValidate.Grade == emptyInt          { informForValidate.Grade = validGrade }
+	if informForValidate.Class == emptyInt          { informForValidate.Class = validClass }
+	if informForValidate.Name == emptyString        { informForValidate.Name = validName }
+	if informForValidate.PhoneNumber == emptyString { informForValidate.PhoneNumber = validPhoneNumber }
+
+	return validate.DBValidator.Struct(informForValidate)
 }
 
 func (pi *ParentInform) BeforeCreate() (err error) {

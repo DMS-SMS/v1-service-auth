@@ -17,9 +17,9 @@ func (t None) GetTeacherAuthWithID(teacherID string) (*model.TeacherAuth, error)
 func (t None) GetParentAuthWithID(parentID string) (*model.ParentAuth, error) { return nil, nil }
 
 // 비밀번호 변경 메서드
-func (t None) ChangeStudentAuthPw(uuid string, studentPW string) error { return nil }
-func (t None) ChangeTeacherAuthPw(uuid string, teacherPW string) error { return nil }
-func (t None) ChangeParentAuthPw(uuid string, parentPW string) error { return nil }
+func (t None) ChangeStudentPW(uuid string, studentPW string) error { return nil }
+func (t None) ChangeTeacherPW(uuid string, teacherPW string) error { return nil }
+func (t None) ChangeParentPW(uuid string, parentPW string) error { return nil }
 
 // 계성 삭제 메서드 (Soft Delete)
 func (t None) DeleteStudentAuth(uuid string) error { return nil }

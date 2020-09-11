@@ -17,9 +17,9 @@ type Accessor interface {
 	GetParentAuthWithID(parentID string) (*model.ParentAuth, error)
 
 	// 비밀번호 변경 메서드
-	ChangeStudentAuthPw(uuid string, studentPW string) error
-	ChangeTeacherAuthPw(uuid string, teacherPW string) error
-	ChangeParentAuthPw(uuid string, parentPW string) error
+	ChangeStudentPW(uuid string, studentPW string) error
+	ChangeTeacherPW(uuid string, teacherPW string) error
+	ChangeParentPW(uuid string, parentPW string) error
 
 	// 계성 삭제 메서드 (Soft Delete)
 	DeleteStudentAuth(uuid string) error

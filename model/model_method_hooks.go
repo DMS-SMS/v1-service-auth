@@ -52,27 +52,13 @@ func (si *StudentInform) BeforeCreate(tx *gorm.DB) (err error) {
 func (si *StudentInform) BeforeUpdate(tx *gorm.DB) (err error) {
 	informForValidate := si.DeepCopy()
 
-	if informForValidate.StudentUUID == emptyString {
-		informForValidate.StudentUUID = validStudentUUID
-	}
-	if informForValidate.Grade == emptyInt {
-		informForValidate.Grade = validGrade
-	}
-	if informForValidate.Class == emptyInt {
-		informForValidate.Class = validClass
-	}
-	if informForValidate.StudentNumber == emptyInt {
-		informForValidate.StudentNumber = validStudentNumber
-	}
-	if informForValidate.Name == emptyString {
-		informForValidate.Name = validName
-	}
-	if informForValidate.PhoneNumber == emptyString {
-		informForValidate.PhoneNumber = validPhoneNumber
-	}
-	if informForValidate.ProfileURI == emptyString {
-		informForValidate.ProfileURI = validProfileURI
-	}
+	if informForValidate.StudentUUID == emptyString { informForValidate.StudentUUID = validStudentUUID }
+	if informForValidate.Grade == emptyInt          { informForValidate.Grade = validGrade }
+	if informForValidate.Class == emptyInt          { informForValidate.Class = validClass }
+	if informForValidate.StudentNumber == emptyInt  { informForValidate.StudentNumber = validStudentNumber }
+	if informForValidate.Name == emptyString        { informForValidate.Name = validName }
+	if informForValidate.PhoneNumber == emptyString { informForValidate.PhoneNumber = validPhoneNumber }
+	if informForValidate.ProfileURI == emptyString  { informForValidate.ProfileURI = validProfileURI }
 
 	if err = validate.DBValidator.Struct(informForValidate); err != nil {
 		return

@@ -12,14 +12,19 @@ func (t None) CreateTeacherAuth(auth *model.TeacherAuth) (resultAuth *model.Teac
 func (t None) CreateParentAuth(auth *model.ParentAuth) (resultAuth *model.ParentAuth, err error) { return }
 
 // 계정 ID로 계정 정보 조회 메서드
-func (t None) GetStudentAuthWithID(studentID string) (*model.StudentAuth, error) { return nil, nil }
-func (t None) GetTeacherAuthWithID(teacherID string) (*model.TeacherAuth, error) { return nil, nil }
-func (t None) GetParentAuthWithID(parentID string) (*model.ParentAuth, error) { return nil, nil }
+func (t None) GetStudentAuthWithID(studentID string) (auth *model.StudentAuth, err error) { return }
+func (t None) GetTeacherAuthWithID(teacherID string) (auth *model.TeacherAuth, err error) { return }
+func (t None) GetParentAuthWithID(parentID string) (auth *model.ParentAuth, err error) { return }
+
+// UUID로 계정 존재 여부 확인 메서드
+func (t None) CheckIfStudentAuthExists(uuid string) (exist bool, err error) { return }
+func (t None) CheckIfTeacherAuthExists(uuid string) (exist bool, err error) { return }
+func (t None) CheckIfParentAuthExists(uuid string) (exist bool, err error) { return }
 
 // 비밀번호 변경 메서드
-func (t None) ChangeStudentAuthPw(uuid string, studentPW string) error { return nil }
-func (t None) ChangeTeacherAuthPw(uuid string, teacherPW string) error { return nil }
-func (t None) ChangeParentAuthPw(uuid string, parentPW string) error { return nil }
+func (t None) ChangeStudentPW(uuid string, studentPW string) error { return nil }
+func (t None) ChangeTeacherPW(uuid string, teacherPW string) error { return nil }
+func (t None) ChangeParentPW(uuid string, parentPW string) error { return nil }
 
 // 계성 삭제 메서드 (Soft Delete)
 func (t None) DeleteStudentAuth(uuid string) error { return nil }

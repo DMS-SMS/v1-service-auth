@@ -16,10 +16,15 @@ type Accessor interface {
 	GetTeacherAuthWithID(teacherID string) (*model.TeacherAuth, error)
 	GetParentAuthWithID(parentID string) (*model.ParentAuth, error)
 
+	// UUID로 계정 존재 여부 확인 메서드
+	CheckIfStudentAuthExists(uuid string) (exist bool, err error)
+	CheckIfTeacherAuthExists(uuid string) (exist bool, err error)
+	CheckIfParentAuthExists(uuid string) (exist bool, err error)
+
 	// 비밀번호 변경 메서드
-	ChangeStudentAuthPw(uuid string, studentPW string) error
-	ChangeTeacherAuthPw(uuid string, teacherPW string) error
-	ChangeParentAuthPw(uuid string, parentPW string) error
+	ChangeStudentPW(uuid string, studentPW string) error
+	ChangeTeacherPW(uuid string, teacherPW string) error
+	ChangeParentPW(uuid string, parentPW string) error
 
 	// 계성 삭제 메서드 (Soft Delete)
 	DeleteStudentAuth(uuid string) error

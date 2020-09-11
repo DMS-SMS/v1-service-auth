@@ -16,6 +16,7 @@ func Test_Accessor_GetStudentAuthWithID(t *testing.T) {
 	}
 	defer func() {
 		access.Rollback()
+		waitForFinish.Done()
 	}()
 
 	for _, init := range []struct {
@@ -90,8 +91,6 @@ func Test_Accessor_GetStudentAuthWithID(t *testing.T) {
 		assert.Equalf(t, test.ExpectError, err, "error assertion fail (test case: %v)", test)
 		assert.Equalf(t, expectResult, result.ExceptGormModel(), "result model assertion fail (test case: %v)", test)
 	}
-
-	waitForFinish.Done()
 }
 
 func Test_Accessor_GetTeacherAuthWithID(t *testing.T) {
@@ -101,6 +100,7 @@ func Test_Accessor_GetTeacherAuthWithID(t *testing.T) {
 	}
 	defer func() {
 		access.Rollback()
+		waitForFinish.Done()
 	}()
 
 	for _, init := range []struct {
@@ -151,8 +151,6 @@ func Test_Accessor_GetTeacherAuthWithID(t *testing.T) {
 		assert.Equalf(t, test.ExpectError, err, "error assertion fail (test case: %v)", test)
 		assert.Equalf(t, expectResult, result.ExceptGormModel(), "result model assertion fail (test case: %v)", test)
 	}
-
-	waitForFinish.Done()
 }
 
 func Test_Accessor_GetParentAuthWithID(t *testing.T) {
@@ -162,6 +160,7 @@ func Test_Accessor_GetParentAuthWithID(t *testing.T) {
 	}
 	defer func() {
 		access.Rollback()
+		waitForFinish.Done()
 	}()
 
 	for _, init := range []struct {
@@ -212,8 +211,186 @@ func Test_Accessor_GetParentAuthWithID(t *testing.T) {
 		assert.Equalf(t, test.ExpectError, err, "error assertion fail (test case: %v)", test)
 		assert.Equalf(t, expectResult, result.ExceptGormModel(), "result model assertion fail (test case: %v)", test)
 	}
+}
 
-	waitForFinish.Done()
+func Test_Accessor_CheckIfStudentAuthExists(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Rollback()
+		waitForFinish.Done()
+	}()
+
+	for _, init := range []struct {
+		UUID, ParentID, ParentPW string
+	} {
+		{
+			UUID:     "parent-111111111111",
+			ParentID: "jinhong0719",
+			ParentPW: passwords["testPW1"],
+		},
+	} {
+		_, err := access.CreateParentAuth(&model.ParentAuth{
+			UUID:     model.UUID(init.UUID),
+			ParentID: model.ParentID(init.ParentID),
+			ParentPW: model.ParentPW(init.ParentPW),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating parent auth, err: %v", err))
+		}
+	}
+
+	for _, init := range []struct {
+		UUID, StudentID, StudentPW, ParentUUID string
+	} {
+		{
+			UUID:       "student-111111111111",
+			StudentID:  "jinhong0719",
+			StudentPW:  passwords["testPW1"],
+			ParentUUID: "parent-111111111111",
+		},
+	} {
+		_, err := access.CreateStudentAuth(&model.StudentAuth{
+			UUID:       model.UUID(init.UUID),
+			StudentID:  model.StudentID(init.StudentID),
+			StudentPW:  model.StudentPW(init.StudentPW),
+			ParentUUID: model.ParentUUID(init.ParentUUID),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating student auth, err: %v", err))
+		}
+	}
+
+	tests := []struct {
+		StudentUUIDForArgs string
+		ExpectExist        bool
+		ExpectError        error
+	} {
+		{ // success case
+			StudentUUIDForArgs: "student-111111111111",
+			ExpectExist:        true,
+			ExpectError:        nil,
+		}, { // no exist student uuid
+			StudentUUIDForArgs: "student-222222222222",
+			ExpectExist:        false,
+			ExpectError:        nil,
+		},
+	}
+
+	for _, test := range tests {
+		resultExist, err := access.CheckIfStudentAuthExists(test.StudentUUIDForArgs)
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion fail (test case: %v)", test)
+		assert.Equalf(t, test.ExpectExist, resultExist, "result exist value assertion fail (test case: %v)", test)
+	}
+}
+
+func Test_Accessor_CheckIfTeacherAuthExists(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Rollback()
+		waitForFinish.Done()
+	}()
+
+	for _, init := range []struct {
+		UUID, TeacherID, TeacherPW string
+	} {
+		{
+			UUID:      "teacher-111111111111",
+			TeacherID: "jinhong0719",
+			TeacherPW: passwords["testPW1"],
+		},
+	} {
+		_, err := access.CreateTeacherAuth(&model.TeacherAuth{
+			UUID:      model.UUID(init.UUID),
+			TeacherID: model.TeacherID(init.TeacherID),
+			TeacherPW: model.TeacherPW(init.TeacherPW),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating teacher auth, err: %v", err))
+		}
+	}
+
+	tests := []struct {
+		TeacherUUIDForArgs string
+		ExpectExist        bool
+		ExpectError        error
+	} {
+		{ // success case
+			TeacherUUIDForArgs: "teacher-111111111111",
+			ExpectExist:        true,
+			ExpectError:        nil,
+		}, { // no exist student uuid
+			TeacherUUIDForArgs: "teacher-222222222222",
+			ExpectExist:        false,
+			ExpectError:        nil,
+		},
+	}
+
+	for _, test := range tests {
+		resultExist, err := access.CheckIfTeacherAuthExists(test.TeacherUUIDForArgs)
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion fail (test case: %v)", test)
+		assert.Equalf(t, test.ExpectExist, resultExist, "result exist value assertion fail (test case: %v)", test)
+	}
+}
+
+func Test_Accessor_CheckIfParentAuthExists(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Rollback()
+		waitForFinish.Done()
+	}()
+
+	for _, init := range []struct {
+		UUID, ParentID, ParentPW string
+	} {
+		{
+			UUID:     "parent-111111111111",
+			ParentID: "jinhong0719",
+			ParentPW: passwords["testPW1"],
+		},
+	} {
+		_, err := access.CreateParentAuth(&model.ParentAuth{
+			UUID:     model.UUID(init.UUID),
+			ParentID: model.ParentID(init.ParentID),
+			ParentPW: model.ParentPW(init.ParentPW),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating parent auth, err: %v", err))
+		}
+	}
+
+	tests := []struct {
+		ParentUUIDForArgs string
+		ExpectExist        bool
+		ExpectError        error
+	} {
+		{ // success case
+			ParentUUIDForArgs: "parent-111111111111",
+			ExpectExist:        true,
+			ExpectError:        nil,
+		}, { // no exist student uuid
+			ParentUUIDForArgs: "parent-222222222222",
+			ExpectExist:        false,
+			ExpectError:        nil,
+		},
+	}
+
+	for _, test := range tests {
+		resultExist, err := access.CheckIfParentAuthExists(test.ParentUUIDForArgs)
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion fail (test case: %v)", test)
+		assert.Equalf(t, test.ExpectExist, resultExist, "result exist value assertion fail (test case: %v)", test)
+	}
 }
 
 func Test_Accessor_GetStudentUUIDsWithInform(t *testing.T) {

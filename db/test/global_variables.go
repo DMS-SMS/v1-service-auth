@@ -15,7 +15,7 @@ var (
 	waitForFinish sync.WaitGroup
 )
 
-const numberOfTestFunc = 21
+const numberOfTestFunc = 27
 
 // Hashed Passwords
 var passwords = map[string]string{

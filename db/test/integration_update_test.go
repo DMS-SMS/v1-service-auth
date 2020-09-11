@@ -409,3 +409,130 @@ func Test_Access_ModifyTeacherInform(t *testing.T) {
 		assert.Equalf(t, expectResult, resultInform.ExceptGormModel(), "result inform model assertion error (test case: %v)", test)
 	}
 }
+
+func Test_Access_ModifyParentInform(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		_ = access.Rollback()
+		waitForFinish.Done()
+	}()
+
+	// 학부모 계정 생성
+	for _, init := range []struct {
+		UUID, ParentID, ParentPW string
+	} {
+		{
+			UUID:     "parent-111111111111",
+			ParentID: "jinhong07191",
+			ParentPW: passwords["testPW1"],
+		}, {
+			UUID:     "parent-222222222222",
+			ParentID: "jinhong07192",
+			ParentPW: passwords["testPW2"],
+		},
+	} {
+		_, err := access.CreateParentAuth(&model.ParentAuth{
+			UUID:     model.UUID(init.UUID),
+			ParentID: model.ParentID(init.ParentID),
+			ParentPW: model.ParentPW(init.ParentPW),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating parent auth, err: %v", err))
+		}
+	}
+
+	// 학부모 정보 생성
+	for _, init := range []struct {
+		ParentUUID, Name, PhoneNumber string
+	} {
+		{
+			ParentUUID:  "parent-111111111111",
+			Name:        "박진홍",
+			PhoneNumber: "01011111111",
+		}, {
+			ParentUUID:  "parent-222222222222",
+			Name:        "오준상",
+			PhoneNumber: "01022222222",
+		},
+	} {
+		_, err := access.CreateParentInform(&model.ParentInform{
+			ParentUUID:  model.ParentUUID(init.ParentUUID),
+			Name:        model.Name(init.Name),
+			PhoneNumber: model.PhoneNumber(init.PhoneNumber),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating parent inform, err: %v", err))
+		}
+	}
+
+	tests := []struct {
+		ParentUUIDForArgs, ParentUUID string
+		Name, PhoneNumber             string
+		ExpectError                   error
+	} {
+		{ // success case 1 (about string field)
+			ParentUUIDForArgs: "parent-111111111111",
+			Name:              "팍진홍",
+			PhoneNumber:       "01044444444",
+			ExpectError:       nil,
+		}, { // phone number duplicate error
+			ParentUUIDForArgs: "parent-222222222222",
+			PhoneNumber:       "01044444444",
+			ExpectError:       mysqlerr.DuplicateEntry(model.ParentInformInstance.PhoneNumber.KeyName(), "01044444444"),
+		}, { // student uuid cannot be changed error
+			ParentUUIDForArgs: "parent-222222222222",
+			ParentUUID:        "parent-333333333333",
+			ExpectError:       errors.ParentUUIDCannotBeChanged,
+		}, { // no exist student uuid -> nil error return!
+			ParentUUIDForArgs: "parent-333333333333",
+			Name:              "없음",
+			ExpectError:       nil,
+		},
+	}
+
+	for _, test := range tests {
+		revisionInform := &model.ParentInform{
+			ParentUUID:  model.ParentUUID(test.ParentUUID),
+			Name:        model.Name(test.Name),
+			PhoneNumber: model.PhoneNumber(test.PhoneNumber),
+		}
+		err := access.ModifyParentInform(test.ParentUUIDForArgs, revisionInform)
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+	}
+
+	testsForConfirmModify := []struct {
+		ParentUUIDArgs, ParentUUID string
+		Name, PhoneNumber          string
+		ExpectError                error
+	} {
+		{
+			ParentUUIDArgs: "parent-111111111111",
+			ParentUUID:     "parent-111111111111",
+			Name:           "팍진홍",
+			PhoneNumber:    "01044444444",
+			ExpectError:    nil,
+		}, {
+			ParentUUIDArgs: "parent-222222222222",
+			ParentUUID:     "parent-222222222222",
+			Name:           "오준상",
+			PhoneNumber:    "01022222222",
+			ExpectError:    nil,
+		},
+	}
+
+	for _, test := range testsForConfirmModify {
+		expectResult := &model.ParentInform{
+			ParentUUID:  model.ParentUUID(test.ParentUUID),
+			Name:        model.Name(test.Name),
+			PhoneNumber: model.PhoneNumber(test.PhoneNumber),
+		}
+		resultInform, err := access.GetParentInformWithUUID(test.ParentUUIDArgs)
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, expectResult, resultInform.ExceptGormModel(), "result inform model assertion error (test case: %v)", test)
+	}
+}

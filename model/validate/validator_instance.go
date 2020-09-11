@@ -3,6 +3,8 @@ package validate
 import (
 	"github.com/go-playground/validator/v10"
 	"log"
+	"strconv"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 )
@@ -12,9 +14,10 @@ var DBValidator *validator.Validate
 func init() {
 	DBValidator = validator.New()
 
-	if err := DBValidator.RegisterValidation("uuid", isValidateUUID); err != nil { log.Fatal(err) }
-	if err := DBValidator.RegisterValidation("korean", isKoreanString); err != nil { log.Fatal(err) }
-	if err := DBValidator.RegisterValidation("phone_number", isPhoneNumber); err != nil { log.Fatal(err) }
+	if err := DBValidator.RegisterValidation("uuid", isValidateUUID);        err != nil { log.Fatal(err) } // 문자열 전용
+	if err := DBValidator.RegisterValidation("korean", isKoreanString);      err != nil { log.Fatal(err) } // 문자열 전용
+	if err := DBValidator.RegisterValidation("phone_number", isPhoneNumber); err != nil { log.Fatal(err) } // 문자열 전용
+	if err := DBValidator.RegisterValidation("range", isWithinRange);        err != nil { log.Fatal(err) } // 정수 전용
 }
 
 func isValidateUUID(fl validator.FieldLevel) bool {
@@ -44,4 +47,23 @@ func isKoreanString(fl validator.FieldLevel) bool {
 
 func isPhoneNumber(fl validator.FieldLevel) bool {
 	return phoneNumberRegex.MatchString(fl.Field().String())
+}
+
+func isWithinRange(fl validator.FieldLevel) bool {
+	_range := strings.Split(fl.Param(), "~")
+	if len(_range) != 2 {
+		log.Fatal("please set param of range like (int)~(int)")
+	}
+
+	start, err := strconv.Atoi(_range[0])
+	if err != nil {
+		log.Fatalf("please set param of range like (int)~(int), err: %v", err)
+	}
+	end, err := strconv.Atoi(_range[1])
+	if err != nil {
+		log.Fatalf("please set param of range like (int)~(int), err: %v", err)
+	}
+
+	field := int(fl.Field().Int())
+	return field >= start && field <= end
 }

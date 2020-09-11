@@ -2,6 +2,7 @@ package access
 
 import (
 	"auth/model"
+	"fmt"
 	"github.com/jinzhu/gorm"
 )
 
@@ -61,16 +62,19 @@ func (d *_default) GetTeacherUUIDsWithInform(inform *model.TeacherInform) (uuidA
 
 	if inform.Grade != emptyInt {
 		if int64(inform.Grade) == model.TeacherInformInstance.Grade.NullReplaceValue() {
-			inform.Grade = 0
+			cascadeTx = cascadeTx.Where("grade IS NULL")
+		} else {
+			cascadeTx = cascadeTx.Where("grade = ?", inform.Grade)
 		}
-		cascadeTx = cascadeTx.Where("grade = ?", inform.Grade)
 	}
 
 	if inform.Class != emptyInt {
 		if int64(inform.Class) == model.TeacherInformInstance.Class.NullReplaceValue() {
-			inform.Class = 0
+			fmt.Println(inform)
+			cascadeTx = cascadeTx.Where("class IS NULL")
+		} else {
+			cascadeTx = cascadeTx.Where("class = ?", inform.Class)
 		}
-		cascadeTx = cascadeTx.Where("class = ?", inform.Class)
 	}
 
 

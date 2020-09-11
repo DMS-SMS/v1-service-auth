@@ -28,6 +28,51 @@ func (d *_default) GetParentAuthWithID(parentID string) (auth *model.ParentAuth,
 	return
 }
 
+func (d *_default) CheckIfStudentAuthExists(uuid string) (exist bool, err error) {
+	studentAuth := new(model.StudentAuth)
+	studentAuthTable := d.tx.Where("uuid = ?", uuid).Find(studentAuth)
+	if studentAuthTable.Error != gorm.ErrRecordNotFound {
+		err = studentAuthTable.Error
+	}
+
+	if studentAuthTable.RowsAffected == 0 {
+		exist = false
+	} else {
+		exist = true
+	}
+	return
+}
+
+func (d *_default) CheckIfTeacherAuthExists(uuid string) (exist bool, err error) {
+	teacherAuth := new(model.TeacherAuth)
+	teacherAuthTable := d.tx.Where("uuid = ?", uuid).Find(teacherAuth)
+	if teacherAuthTable.Error != gorm.ErrRecordNotFound {
+		err = teacherAuthTable.Error
+	}
+
+	if teacherAuthTable.RowsAffected == 0 {
+		exist = false
+	} else {
+		exist = true
+	}
+	return
+}
+
+func (d *_default) CheckIfParentAuthExists(uuid string) (exist bool, err error) {
+	parentAuth := new(model.ParentAuth)
+	parentAuthTable := d.tx.Where("uuid = ?", uuid).Find(parentAuth)
+	if parentAuthTable.Error != gorm.ErrRecordNotFound {
+		err = parentAuthTable.Error
+	}
+
+	if parentAuthTable.RowsAffected == 0 {
+		exist = false
+	} else {
+		exist = true
+	}
+	return
+}
+
 func (d *_default) GetStudentUUIDsWithInform(inform *model.StudentInform) (uuidArr []string, err error) {
 	cascadeTx := d.tx.New()
 

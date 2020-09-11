@@ -1,8 +1,21 @@
 package model
 
 import (
+	"auth/tool/random"
 	"database/sql/driver"
 )
+
+var (
+	nullReplaceValueForGrade int64
+	nullReplaceValueForClass int64
+	nullReplaceValueForParentUUID string
+)
+
+func init() {
+	nullReplaceValueForGrade = random.Int64WithLength(10)
+	nullReplaceValueForClass = random.Int64WithLength(10)
+	nullReplaceValueForParentUUID = random.StringConsistOfIntWithLength(10)
+}
 
 // Grade 필드에서 사용할 사용자 정의 타입
 type grade int64
@@ -14,6 +27,7 @@ func (g grade) Value() (value driver.Value, err error) {
 }
 func (g *grade) Scan(src interface{}) (_ error) { *g = grade(src.(int64)); return }
 func (g grade) KeyName() string { return "grade" }
+func (g grade) NullReplaceValue() int64 { return nullReplaceValueForGrade  }
 
 // Class 필드에서 사용할 사용자 정의 타입
 type class int64
@@ -25,6 +39,7 @@ func (c class) Value() (value driver.Value, err error) {
 }
 func (c *class) Scan(src interface{}) (err error) { *c = class(src.(int64)); return }
 func (c class) KeyName() string { return "class" }
+func (c class) NullReplaceValue() int64 { return nullReplaceValueForClass  }
 
 // StudentNumber 필드에서 사용할 사용자 정의 타입
 type studentNumber int64
@@ -110,6 +125,7 @@ func (pu parentUUID) Value() (value driver.Value, err error) {
 }
 func (pu *parentUUID) Scan(src interface{}) (err error) { *pu = parentUUID(src.([]uint8)); return }
 func (pu parentUUID) KeyName() string { return "parent_uuid" }
+func (pu parentUUID) NullReplaceValue() string { return nullReplaceValueForParentUUID }
 
 // Name 필드에서 사용할 사용자 정의 타입
 type name string

@@ -54,3 +54,18 @@ func (d *_default) ModifyTeacherInform(uuid string, revisionInform *model.Teache
 	err = d.tx.Model(&model.TeacherInform{}).Where("teacher_uuid = ?", uuid).Updates(contextForUpdate).Error
 	return
 }
+
+func (d *_default) ModifyParentInform(uuid string, revisionInform *model.ParentInform) (err error) {
+	contextForUpdate := make(map[string]interface{}, 6)
+
+	if revisionInform.ParentUUID != emptyString {
+		err = errors.ParentUUIDCannotBeChanged
+		return
+	}
+
+	if revisionInform.Name != emptyString        { contextForUpdate[revisionInform.Name.KeyName()] = revisionInform.Name }
+	if revisionInform.PhoneNumber != emptyString { contextForUpdate[revisionInform.PhoneNumber.KeyName()] = revisionInform.PhoneNumber }
+
+	err = d.tx.Model(&model.ParentInform{}).Where("parent_uuid = ?", uuid).Updates(contextForUpdate).Error
+	return
+}

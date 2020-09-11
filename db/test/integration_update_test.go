@@ -351,7 +351,7 @@ func Test_Access_ModifyTeacherInform(t *testing.T) {
 			Name:          model.Name(test.Name),
 			PhoneNumber:   model.PhoneNumber(test.PhoneNumber),
 		}
-		err := access.ModifyTeacherInform(test.TeacherUUID, revisionInform)
+		err := access.ModifyTeacherInform(test.TeacherUUIDForArgs, revisionInform)
 
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
 	}

@@ -6,7 +6,6 @@ import (
 )
 
 type _default struct {
-	None
 	tx *gorm.DB
 }
 

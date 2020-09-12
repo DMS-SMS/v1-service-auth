@@ -8,7 +8,7 @@ import (
 type None struct {}
 
 // About Admin RPC Service
-func(n None) CreateNewAuth(context.Context, *proto.CreateNewAuthRequest, *proto.CreateNewAuthResponse) (err error) { return }
+func(n None) CreateNewStudent(context.Context, *proto.CreateNewStudentRequest, *proto.CreateNewStudentResponse) (err error) { return }
 func(n None) CreateNewTeacher(context.Context, *proto.CreateNewTeacherRequest, *proto.CreateNewTeacherResponse) (err error) { return }
 func(n None) CreateNewParent(context.Context, *proto.CreateNewParentRequest, *proto.CreateNewParentResponse) (err error) { return }
 

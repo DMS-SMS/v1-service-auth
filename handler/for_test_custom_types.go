@@ -20,16 +20,18 @@ type createNewStudentTest struct {
 }
 
 func (test *createNewStudentTest) ChangeEmptyValueToValidValue() {
-	if test.UUID == emptyString          { test.UUID = validAdminUUID }
-	if test.StudentID == emptyString     { test.StudentID = validStudentID }
-	if test.StudentPW == emptyString     { test.StudentPW = validStudentPW }
-	if test.ParentUUID == emptyString    { test.ParentUUID = validParentUUID }
-	if test.Grade == emptyUint32         { test.Grade = validGrade }
-	if test.Class == emptyUint32         { test.Class = validClass }
-	if test.StudentNumber == emptyUint32 { test.StudentNumber = validStudentNumber }
-	if test.Name == emptyString          { test.Name = validName }
-	if test.PhoneNumber == emptyString   { test.PhoneNumber = validPhoneNumber }
-	if string(test.Image) == emptyString { test.Image = validImageByteArr }
+	if test.UUID == emptyString              { test.UUID = validAdminUUID }
+	if test.StudentID == emptyString         { test.StudentID = validStudentID }
+	if test.StudentPW == emptyString         { test.StudentPW = validStudentPW }
+	if test.ParentUUID == emptyString        { test.ParentUUID = validParentUUID }
+	if test.Grade == emptyUint32             { test.Grade = validGrade }
+	if test.Class == emptyUint32             { test.Class = validClass }
+	if test.StudentNumber == emptyUint32     { test.StudentNumber = validStudentNumber }
+	if test.Name == emptyString              { test.Name = validName }
+	if test.PhoneNumber == emptyString       { test.PhoneNumber = validPhoneNumber }
+	if string(test.Image) == emptyString     { test.Image = validImageByteArr }
+	if test.XRequestID == emptyString        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == emptyString { test.SpanContextString = validSpanContextString }
 }
 
 func (test *createNewStudentTest) ChangeEmptyReplaceValueToEmptyValue() {
@@ -43,4 +45,6 @@ func (test *createNewStudentTest) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.Name == emptyReplaceValueForString               { test.Name = "" }
 	if test.PhoneNumber == emptyReplaceValueForString        { test.PhoneNumber = "" }
 	if string(test.Image) == emptyReplaceValueForString	     { test.Image = []byte{} }
+	if test.XRequestID == emptyReplaceValueForString         { test.XRequestID = "" }
+	if test.SpanContextString == emptyReplaceValueForString  { test.SpanContextString = "" }
 }

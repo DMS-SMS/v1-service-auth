@@ -11,7 +11,9 @@ type createNewStudentTest struct {
 	StudentNumber        uint32
 	Name, PhoneNumber    string
 	Image                []byte
-	ExpectMethod         map[method]returns
+	XRequestID           string
+	SpanContextString    string
+	ExpectedMethod       map[method]returns
 	ExpectedStatus       uint32
 	ExpectedCode         int32
 	ExpectedMessage      string

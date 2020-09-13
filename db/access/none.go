@@ -52,6 +52,6 @@ func (t None) ModifyTeacherInform(uuid string, revisionInform *model.TeacherInfo
 func (t None) ModifyParentInform(uuid string, revisionInform *model.ParentInform) (err error) { return }
 
 // 트랜잭션 관련 메서드
-func (t None) Begin(db *gorm.DB) {}
+func (t None) BeginTx() {}
 func (t None) Commit() *gorm.DB { return nil }
 func (t None) Rollback() *gorm.DB { return nil }

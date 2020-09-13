@@ -4,6 +4,7 @@ import (
 	"auth/model"
 	"fmt"
 	"github.com/stretchr/testify/mock"
+	"log"
 )
 
 type method string
@@ -68,7 +69,37 @@ func (test *createNewStudentTest) OnExpectMethods(mock *mock.Mock) {
 
 func (test *createNewStudentTest) onMethod(mock *mock.Mock, method method, returns returns) {
 	switch method {
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
 
+	case "CreateStudentAuth":
+		const studentAuthIndex = 0
+		const errorIndex = 1
+		if _, ok := returns[studentAuthIndex].(*model.StudentAuth); ok && returns[errorIndex] == nil {
+			modelToReturn := test.getStudentAuthModel()
+			modelToReturn.Model = createGormModelOnCurrentTime()
+			returns[studentAuthIndex] = modelToReturn
+		}
+		mock.On(string(method), test.getStudentAuthModel()).Return(returns...)
+
+	case "CreateStudentInform":
+		const studentInformIndex = 0
+		const errorIndex = 1
+		if _, ok := returns[studentInformIndex].(*model.StudentInform); ok && returns[errorIndex] == nil {
+			modelToReturn := test.getStudentInformModel()
+			modelToReturn.Model = createGormModelOnCurrentTime()
+			returns[studentInformIndex] = modelToReturn
+		}
+		mock.On(string(method), test.getStudentInformModel()).Return(returns...)
+
+	case "CheckIfStudentAuthExists":
+		mock.On(string(method), test.StudentUUID).Return(returns...)
+
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+
+	default:
+		log.Fatalf("this method cannot be registered, method name: %s", method)
 	}
 }
 

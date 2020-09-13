@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"auth/model"
+	"fmt"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -67,5 +69,26 @@ func (test *createNewStudentTest) OnExpectMethods(mock *mock.Mock) {
 func (test *createNewStudentTest) onMethod(mock *mock.Mock, method method, returns returns) {
 	switch method {
 
+	}
+}
+
+func (test *createNewStudentTest) getStudentAuthModel() *model.StudentAuth {
+	return &model.StudentAuth{
+		UUID:       model.UUID(test.StudentUUID),
+		StudentID:  model.StudentID(test.StudentID),
+		StudentPW:  model.StudentPW(test.StudentPW),
+		ParentUUID: model.ParentUUID(test.ParentUUID),
+	}
+}
+
+func (test *createNewStudentTest) getStudentInformModel() *model.StudentInform {
+	return &model.StudentInform{
+		StudentUUID:   model.StudentUUID(test.StudentUUID),
+		Grade:         model.Grade(int64(test.Grade)),
+		Class:         model.Class(int64(test.Class)),
+		StudentNumber: model.StudentNumber(int64(test.StudentNumber)),
+		Name:          model.Name(test.Name),
+		PhoneNumber:   model.PhoneNumber(test.PhoneNumber),
+		ProfileURI:    model.ProfileURI(fmt.Sprintf("example.com/profiles/%s", test.StudentUUID)),
 	}
 }

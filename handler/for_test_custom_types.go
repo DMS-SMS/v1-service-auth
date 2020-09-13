@@ -69,9 +69,6 @@ func (test *createNewStudentTest) OnExpectMethods(mock *mock.Mock) {
 
 func (test *createNewStudentTest) onMethod(mock *mock.Mock, method method, returns returns) {
 	switch method {
-	case "BeginTx":
-		mock.On(string(method)).Return(returns...)
-
 	case "CreateStudentAuth":
 		const studentAuthIndex = 0
 		const errorIndex = 1
@@ -95,7 +92,13 @@ func (test *createNewStudentTest) onMethod(mock *mock.Mock, method method, retur
 	case "CheckIfStudentAuthExists":
 		mock.On(string(method), test.StudentUUID).Return(returns...)
 
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+
 	case "Commit":
+		mock.On(string(method)).Return(returns...)
+
+	case "Rollback":
 		mock.On(string(method)).Return(returns...)
 
 	default:

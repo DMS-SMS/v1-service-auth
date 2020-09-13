@@ -24,13 +24,12 @@ func Test_default_CreateNewStudent(t *testing.T) {
 			},
 			ExpectedStatus:      http.StatusCreated,
 			ExpectedStudentUUID: studentUUIDRegexString,
-		},
-		{ // not admin uuid -> forbidden
-			UUID:           "NotAdminAuthUUID", // (admin-숫자 12개의 형식이여야 함)
+		}, { // not admin uuid -> forbidden
+			UUID:            "NotAdminAuthUUID", // (admin-숫자 12개의 형식이여야 함)
 			ExpectedMethods: map[method]returns{},
-			ExpectedStatus: http.StatusForbidden,
+			ExpectedStatus:  http.StatusForbidden,
 		}, { // invalid request value -> Proxy Authorization Required
-			StudentID:      "유효하지 않은 아이디", // ASCII, 4~16 사이 문자열이여야 함
+			StudentID: "유효하지 않은 아이디", // ASCII, 4~16 사이 문자열이여야 함
 			ExpectedMethods: map[method]returns{
 				"BeginTx":                  {},
 				"CheckIfStudentAuthExists": {false, nil},
@@ -38,8 +37,8 @@ func Test_default_CreateNewStudent(t *testing.T) {
 				"Rollback":                 {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusProxyAuthRequired,
-		}, {
-			Grade:          100, // 1~3 사이의 숫자여야 함
+		}, { // invalid request value -> Proxy Authorization Required
+			Grade: 100, // 1~3 사이의 숫자여야 함
 			ExpectedMethods: map[method]returns{
 				"BeginTx":                  {},
 				"CheckIfStudentAuthExists": {false, nil},
@@ -48,8 +47,8 @@ func Test_default_CreateNewStudent(t *testing.T) {
 				"Rollback":                 {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusProxyAuthRequired,
-		}, {
-			Name:           "Invalid Name", // 2~4 글자의 한글이어야 함
+		}, { // invalid request value -> Proxy Authorization Required
+			Name: "Invalid Name", // 2~4 글자의 한글이어야 함
 			ExpectedMethods: map[method]returns{
 				"BeginTx":                  {},
 				"CheckIfStudentAuthExists": {false, nil},
@@ -58,7 +57,24 @@ func Test_default_CreateNewStudent(t *testing.T) {
 				"Rollback":                 {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusProxyAuthRequired,
+		}, { // no exist X-Request-ID -> Proxy Authorization Required
+			XRequestID:      emptyReplaceValueForString,
+			ExpectedMethods: map[method]returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // invalid X-Request-ID -> Proxy Authorization Required
+			XRequestID:      "InvalidXRequestID",
+			ExpectedMethods: map[method]returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // no exist Span-Context -> Proxy Authorization Required
+			XRequestID: emptyReplaceValueForString,
+			ExpectedMethods: map[method]returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // invalid Span-Context -> Proxy Authorization Required
+			XRequestID:      "InvalidSpanContext",
+			ExpectedMethods: map[method]returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
 		},
+		// DB 제약 조건 관련 테스트 케이스 추가 (EX. 중복, 참조 X, NOT NULL 등등...)
 	}
 
 	for _, _ = range tests {

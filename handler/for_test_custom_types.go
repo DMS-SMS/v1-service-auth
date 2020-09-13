@@ -1,5 +1,7 @@
 package handler
 
+import "github.com/stretchr/testify/mock"
+
 type method string
 type returns []interface{}
 
@@ -13,10 +15,11 @@ type createNewStudentTest struct {
 	Image                []byte
 	XRequestID           string
 	SpanContextString    string
-	ExpectedMethod       map[method]returns
+	ExpectedMethods      map[method]returns
 	ExpectedStatus       uint32
 	ExpectedCode         int32
 	ExpectedMessage      string
+	ExpectedStudentUUID  string
 }
 
 func (test *createNewStudentTest) ChangeEmptyValueToValidValue() {
@@ -47,4 +50,16 @@ func (test *createNewStudentTest) ChangeEmptyReplaceValueToEmptyValue() {
 	if string(test.Image) == emptyReplaceValueForString	     { test.Image = []byte{} }
 	if test.XRequestID == emptyReplaceValueForString         { test.XRequestID = "" }
 	if test.SpanContextString == emptyReplaceValueForString  { test.SpanContextString = "" }
+}
+
+func (test *createNewStudentTest) OnExpectMethods(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *createNewStudentTest) onMethod(mock *mock.Mock, method method, returns returns) {
+	switch method {
+
+	}
 }

@@ -3,40 +3,45 @@ package db
 import (
 	"errors"
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"reflect"
 )
 
 type AccessorManage struct {
-	accessorType reflect.Type
-	dbForTx *gorm.DB
+	accessorType  reflect.Type
+	accessorValue reflect.Value
 }
 
-func NewAccessorManage(accessorType reflect.Type, dbForTx *gorm.DB) (manager AccessorManage, err error) {
-	if accessorType == nil || dbForTx == nil {
+func NewAccessorManage(accessor Accessor) (manager AccessorManage, err error) {
+	if accessor == nil {
 		err = errors.New(fmt.Sprintf("nil parameter is not allowed"))
 		return
 	}
 
-	if _, ok := reflect.New(accessorType).Elem().Interface().(Accessor); !ok {
-		err = errors.New(fmt.Sprintf("type %s is not an implement of db.Accessor", accessorType.String()))
-		return
+	accessorType := reflect.TypeOf(accessor)
+	accessorValue := reflect.ValueOf(accessor)
+
+	if accessorType.Kind() == reflect.Ptr {
+		accessorType = accessorType.Elem()
+		accessorValue = accessorValue.Elem()
 	}
 
 	manager = AccessorManage{
-		accessorType: accessorType,
-		dbForTx:      dbForTx,
+		accessorType:  accessorType,
+		accessorValue: accessorValue,
 	}
 	return
 }
 
 func (atm AccessorManage) BeginTx() (accessor Accessor, err error) {
-	if atm.accessorType == nil || atm.dbForTx == nil {
+	if atm.accessorType == nil {
 		err = errors.New("please create db.AccessorManage instance object through the constructor")
 		return
 	}
 
-	accessor = reflect.New(atm.accessorType.Elem()).Interface().(Accessor)
-	accessor.Begin(atm.dbForTx)
+	newAccessor := reflect.New(atm.accessorType)
+	newAccessor.Elem().Set(atm.accessorValue)
+
+	accessor = newAccessor.Interface().(Accessor)
+	accessor.Begin()
 	return
 }

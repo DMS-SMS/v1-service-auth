@@ -56,7 +56,7 @@ type Accessor interface {
 	// ---
 
 	// 트랜잭션 관련 메서드
-	Begin(db *gorm.DB)
+	BeginTx()
 	Commit() *gorm.DB
 	Rollback() *gorm.DB
 }

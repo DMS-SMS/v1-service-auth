@@ -158,8 +158,8 @@ func (m _mock) ModifyParentInform(uuid string, revisionInform *model.ParentInfor
 // ---
 
 // 트랜잭션 관련 메서드
-func (m _mock) Begin(db *gorm.DB) {
-	m.mock.Called(db)
+func (m _mock) BeginTx() {
+	m.mock.Called()
 }
 
 func (m _mock) Commit() *gorm.DB {

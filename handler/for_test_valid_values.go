@@ -3,6 +3,7 @@ package handler
 import (
 	"bufio"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
@@ -26,6 +27,7 @@ const (
 var (
 	validImageByteArr []byte
 	validSpanContextString string
+	validXRequestID string
 )
 
 func init() {
@@ -50,4 +52,6 @@ func init() {
 	fileReader := bufio.NewReader(file)
 	_, err = fileReader.Read(validImageByteArr)
 	if err != nil { log.Fatal(fmt.Sprintf("error while reading from image file, err: %v", err)) }
+
+	validXRequestID = uuid.New().String()
 }

@@ -10,7 +10,7 @@ type _mock struct {
 	mock *mock.Mock
 }
 
-func NewMock(mock *mock.Mock) _mock {
+func Mock(mock *mock.Mock) _mock {
 	return _mock{mock: mock}
 }
 

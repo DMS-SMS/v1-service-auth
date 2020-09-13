@@ -42,6 +42,6 @@ func (atm AccessorManage) BeginTx() (accessor Accessor, err error) {
 	newAccessor.Elem().Set(atm.accessorValue)
 
 	accessor = newAccessor.Interface().(Accessor)
-	accessor.Begin()
+	accessor.BeginTx()
 	return
 }

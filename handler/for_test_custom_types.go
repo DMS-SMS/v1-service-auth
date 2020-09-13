@@ -1,6 +1,8 @@
 package handler
 
-import "github.com/stretchr/testify/mock"
+import (
+	"github.com/stretchr/testify/mock"
+)
 
 type method string
 type returns []interface{}
@@ -13,6 +15,7 @@ type createNewStudentTest struct {
 	StudentNumber        uint32
 	Name, PhoneNumber    string
 	Image                []byte
+	StudentUUID          string
 	XRequestID           string
 	SpanContextString    string
 	ExpectedMethods      map[method]returns
@@ -23,6 +26,7 @@ type createNewStudentTest struct {
 }
 
 func (test *createNewStudentTest) ChangeEmptyValueToValidValue() {
+	//reflect.ValueOf(test).FieldByName().Type()
 	if test.UUID == emptyString              { test.UUID = validAdminUUID }
 	if test.StudentID == emptyString         { test.StudentID = validStudentID }
 	if test.StudentPW == emptyString         { test.StudentPW = validStudentPW }
@@ -33,6 +37,7 @@ func (test *createNewStudentTest) ChangeEmptyValueToValidValue() {
 	if test.Name == emptyString              { test.Name = validName }
 	if test.PhoneNumber == emptyString       { test.PhoneNumber = validPhoneNumber }
 	if string(test.Image) == emptyString     { test.Image = validImageByteArr }
+	if test.StudentUUID == emptyString       { test.StudentUUID = validStudentUUID }
 	if test.XRequestID == emptyString        { test.XRequestID = validXRequestID }
 	if test.SpanContextString == emptyString { test.SpanContextString = validSpanContextString }
 }
@@ -48,6 +53,7 @@ func (test *createNewStudentTest) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.Name == emptyReplaceValueForString               { test.Name = "" }
 	if test.PhoneNumber == emptyReplaceValueForString        { test.PhoneNumber = "" }
 	if string(test.Image) == emptyReplaceValueForString	     { test.Image = []byte{} }
+	if test.StudentUUID == emptyReplaceValueForString        { test.StudentUUID = "" }
 	if test.XRequestID == emptyReplaceValueForString         { test.XRequestID = "" }
 	if test.SpanContextString == emptyReplaceValueForString  { test.SpanContextString = "" }
 }

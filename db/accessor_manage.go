@@ -13,7 +13,7 @@ type AccessorManage struct {
 }
 
 func NewAccessorManage(accessorType reflect.Type, dbForTx *gorm.DB) (manager AccessorManage, err error) {
-	if accessorType == nil || dbForTx == nil {
+	if accessorType == nil {
 		err = errors.New(fmt.Sprintf("nil parameter is not allowed"))
 		return
 	}
@@ -31,7 +31,7 @@ func NewAccessorManage(accessorType reflect.Type, dbForTx *gorm.DB) (manager Acc
 }
 
 func (atm AccessorManage) BeginTx() (accessor Accessor, err error) {
-	if atm.accessorType == nil || atm.dbForTx == nil {
+	if atm.accessorType == nil {
 		err = errors.New("please create db.AccessorManage instance object through the constructor")
 		return
 	}

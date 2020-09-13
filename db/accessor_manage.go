@@ -38,7 +38,10 @@ func (atm AccessorManage) BeginTx() (accessor Accessor, err error) {
 		return
 	}
 
-	accessor = reflect.New(atm.accessorType.Elem()).Interface().(Accessor)
-	accessor.Begin(atm.dbForTx)
+	newAccessor := reflect.New(atm.accessorType)
+	newAccessor.Elem().Set(atm.accessorValue)
+
+	accessor = newAccessor.Interface().(Accessor)
+	accessor.Begin()
 	return
 }

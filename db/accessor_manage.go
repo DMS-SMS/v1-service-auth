@@ -3,29 +3,31 @@ package db
 import (
 	"errors"
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"reflect"
 )
 
 type AccessorManage struct {
-	accessorType reflect.Type
-	dbForTx *gorm.DB
+	accessorType  reflect.Type
+	accessorValue reflect.Value
 }
 
-func NewAccessorManage(accessorType reflect.Type, dbForTx *gorm.DB) (manager AccessorManage, err error) {
-	if accessorType == nil {
+func NewAccessorManage(accessor Accessor) (manager AccessorManage, err error) {
+	if accessor == nil {
 		err = errors.New(fmt.Sprintf("nil parameter is not allowed"))
 		return
 	}
 
-	if _, ok := reflect.New(accessorType).Elem().Interface().(Accessor); !ok {
-		err = errors.New(fmt.Sprintf("type %s is not an implement of db.Accessor", accessorType.String()))
-		return
+	accessorType := reflect.TypeOf(accessor)
+	accessorValue := reflect.ValueOf(accessor)
+
+	if accessorType.Kind() == reflect.Ptr {
+		accessorType = accessorType.Elem()
+		accessorValue = accessorValue.Elem()
 	}
 
 	manager = AccessorManage{
-		accessorType: accessorType,
-		dbForTx:      dbForTx,
+		accessorType:  accessorType,
+		accessorValue: accessorValue,
 	}
 	return
 }

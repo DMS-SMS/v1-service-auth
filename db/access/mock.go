@@ -4,15 +4,14 @@ import (
 	"auth/model"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/mock"
-	"reflect"
 )
 
 type _mock struct {
 	mock *mock.Mock
 }
 
-func MockReflectType() reflect.Type {
-	return reflect.TypeOf(_mock{})
+func Mock(mock *mock.Mock) _mock {
+	return _mock{mock: mock}
 }
 
 // 계정 생성 메서드

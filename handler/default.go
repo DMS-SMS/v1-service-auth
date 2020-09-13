@@ -25,8 +25,14 @@ func newDefault(setters ...FieldSetter) (h *_default) {
 	return
 }
 
-func Manager(manager db.AccessorManage) FieldSetter {
+func Manager(m db.AccessorManage) FieldSetter {
 	return func(h *_default) {
-		h.manager = manager
+		h.manager = m
+	}
+}
+
+func Tracer(t opentracing.Tracer) FieldSetter {
+	return func(h *_default) {
+		h.tracer = t
 	}
 }

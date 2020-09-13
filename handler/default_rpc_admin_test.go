@@ -1,32 +1,67 @@
 package handler
 
 import (
-	"auth/db"
-	"auth/db/access"
-	"fmt"
-	"github.com/stretchr/testify/mock"
-	jaegercfg "github.com/uber/jaeger-client-go/config"
-	"log"
+	"auth/model"
+	"github.com/go-playground/validator/v10"
+	"github.com/jinzhu/gorm"
+	"net/http"
+	"testing"
+
 	//proto "auth/proto/golang/auth"
 )
 
-var (
-	defaultHandler *_default
-	mockForAccessor *mock.Mock
-)
+func Test_default_CreateNewStudent(t *testing.T) {
+	const studentUUIDRegexString = "^student-\\d{12}"
 
-func init() {
-	mockForAccessor = new(mock.Mock)
+	tests := []createNewStudentTest{
+		{ // success case
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfStudentAuthExists": {false, nil},
+				"CreateStudentAuth":        {&model.StudentAuth{}, nil},
+				"CreateStudentInform":      {&model.StudentInform{}, nil},
+				"Commit":                   {&gorm.DB{}},
+			},
+			ExpectedStatus:      http.StatusCreated,
+			ExpectedStudentUUID: studentUUIDRegexString,
+		},
+		{ // not admin uuid -> forbidden
+			UUID:           "NotAdminAuthUUID", // (admin-숫자 12개의 형식이여야 함)
+			ExpectedMethods: map[method]returns{},
+			ExpectedStatus: http.StatusForbidden,
+		}, { // invalid request value -> Proxy Authorization Required
+			StudentID:      "유효하지 않은 아이디", // ASCII, 4~16 사이 문자열이여야 함
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfStudentAuthExists": {false, nil},
+				"CreateStudentAuth":        {&model.StudentAuth{}, (validator.ValidationErrors)(nil)},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusProxyAuthRequired,
+		}, {
+			Grade:          100, // 1~3 사이의 숫자여야 함
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfStudentAuthExists": {false, nil},
+				"CreateStudentAuth":        {&model.StudentAuth{}, nil},
+				"CreateStudentInform":      {&model.StudentInform{}, (validator.ValidationErrors)(nil)},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusProxyAuthRequired,
+		}, {
+			Name:           "Invalid Name", // 2~4 글자의 한글이어야 함
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfStudentAuthExists": {false, nil},
+				"CreateStudentAuth":        {&model.StudentAuth{}, nil},
+				"CreateStudentInform":      {&model.StudentInform{}, (validator.ValidationErrors)(nil)},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusProxyAuthRequired,
+		},
+	}
 
-	exampleTracerForRPCService, closer, err := jaegercfg.Configuration{ServiceName: "DMS.SMS.v1.service.auth"}.NewTracer()
-	if err != nil { log.Fatal(fmt.Sprintf("error while creating new tracer for service, err: %v", err)) }
-	defer func() { _ = closer.Close() }()
+	for _, _ = range tests {
 
-	mockAccessManager, err := db.NewAccessorManage(access.Mock(mockForAccessor))
-	if err != nil { log.Fatal(fmt.Sprintf("error while creating new access manage with mock, err: %v", err)) }
-
-	defaultHandler = &_default{
-		manager: mockAccessManager,
-		tracer:  exampleTracerForRPCService,
 	}
 }

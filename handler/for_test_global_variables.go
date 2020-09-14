@@ -14,17 +14,17 @@ import (
 
 var (
 	defaultHandler *_default
-	mockForAccessor *mock.Mock
+	mockForDB *mock.Mock
 )
 
 func init() {
-	mockForAccessor = new(mock.Mock)
+	mockForDB = new(mock.Mock)
 
 	exampleTracerForRPCService, closer, err := jaegercfg.Configuration{ServiceName: "DMS.SMS.v1.service.auth"}.NewTracer()
 	if err != nil { log.Fatal(fmt.Sprintf("error while creating new tracer for service, err: %v", err)) }
 	defer func() { _ = closer.Close() }()
 
-	mockAccessManager, err := db.NewAccessorManage(access.Mock(mockForAccessor))
+	mockAccessManager, err := db.NewAccessorManage(access.Mock(mockForDB))
 	if err != nil { log.Fatal(fmt.Sprintf("error while creating new access manage with mock, err: %v", err)) }
 
 	defaultHandler = &_default{

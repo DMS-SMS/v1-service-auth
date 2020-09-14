@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+var parserRegex = regexp.MustCompile("`.*?`")
+
 func ParseFKConstraintFailErrorFrom(mysqlErr *mysql.MySQLError) (fk FKInform, ref RefInform, err error) {
 	const (
 		dbNameIndex = iota
@@ -23,8 +25,7 @@ func ParseFKConstraintFailErrorFrom(mysqlErr *mysql.MySQLError) (fk FKInform, re
 		return
 	}
 
-	regex := regexp.MustCompile("`.*?`")
-	matched := regex.FindAllString(mysqlErr.Message, -1)
+	matched := parserRegex.FindAllString(mysqlErr.Message, -1)
 	for i := range matched {
 		matched[i] = strings.Trim(matched[i], "`")
 	}

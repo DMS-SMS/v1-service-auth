@@ -2,6 +2,7 @@ package handler
 
 import (
 	"auth/model"
+	proto "auth/proto/golang/auth"
 	"fmt"
 	"github.com/stretchr/testify/mock"
 	"log"
@@ -61,7 +62,7 @@ func (test *createNewStudentTest) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.SpanContextString == emptyReplaceValueForString  { test.SpanContextString = "" }
 }
 
-func (test *createNewStudentTest) OnExpectMethods(mock *mock.Mock) {
+func (test *createNewStudentTest) OnExpectMethodsTo(mock *mock.Mock) {
 	for method, returns := range test.ExpectedMethods {
 		test.onMethod(mock, method, returns)
 	}
@@ -125,4 +126,17 @@ func (test *createNewStudentTest) getStudentInformModel() *model.StudentInform {
 		PhoneNumber:   model.PhoneNumber(test.PhoneNumber),
 		ProfileURI:    model.ProfileURI(fmt.Sprintf("example.com/profiles/%s", test.StudentUUID)),
 	}
+}
+
+func (test *createNewStudentTest) SetRequestContextOf(req *proto.CreateNewStudentRequest) {
+	req.UUID = test.UUID
+	req.StudentID = test.StudentID
+	req.StudentPW = test.StudentPW
+	req.ParentUUID = test.ParentUUID
+	req.Grade = test.Grade
+	req.Class = test.Class
+	req.StudentNumber = test.StudentNumber
+	req.Name = test.Name
+	req.PhoneNumber = test.PhoneNumber
+	req.Image = test.Image
 }

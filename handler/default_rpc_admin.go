@@ -5,9 +5,12 @@ import (
 	proto "auth/proto/golang/auth"
 	"auth/tool/mysqlerr"
 	"auth/tool/random"
+	"bytes"
 	"context"
 	"fmt"
 	mysqlcode "github.com/VividCortex/mysqlerr"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/go-playground/validator/v10"
 	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
@@ -154,6 +157,19 @@ func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStude
 				resp.Status = http.StatusInternalServerError
 				resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected FK constraint fail, FK name: " + fkInform.AttrName)
 			}
+			return
+		}
+	}
+
+	if h.awsSession != nil {
+		_, err = s3.New(h.awsSession).PutObject(&s3.PutObjectInput{
+			Bucket: aws.String("dms-sms"),
+			Key:    aws.String(fmt.Sprintf("profiles/%s", string(resultAuth.UUID))),
+			Body:   bytes.NewReader(req.Image),
+		})
+		if err != nil {
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to upload profile to s3, err: " + err.Error())
 			return
 		}
 	}

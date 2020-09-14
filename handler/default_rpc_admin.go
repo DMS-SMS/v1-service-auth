@@ -1,18 +1,29 @@
 package handler
 
 import (
+	"auth/model"
 	proto "auth/proto/golang/auth"
+	"auth/tool/mysqlerr"
+	"auth/tool/random"
 	"context"
 	"fmt"
+	mysqlcode "github.com/VividCortex/mysqlerr"
+	"github.com/go-playground/validator/v10"
+	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	"github.com/micro/go-micro/v2/metadata"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/uber/jaeger-client-go"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 )
 
 func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStudentRequest, resp *proto.CreateNewStudentResponse) (_ error) {
 	const (
 		proxyAuthRequiredMessageFormat = "proxy auth required (reason: %s)"
+		internalServerErrorFormat = "internal server error (reason: %s)"
+		conflictErrorFormat = "conflict (reason: %s)"
 	)
 
 	md, ok := metadata.FromContext(ctx)
@@ -47,6 +58,104 @@ func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStude
 		resp.Status = http.StatusProxyAuthRequired
 		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "Span-Context invalid, err: " + err.Error())
 		return
+	}
+
+	access, err := h.manager.BeginTx()
+	if err != nil {
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())
+		return
+	}
+
+	sUUID, ok := md.Get("StudentUUID")
+	if !ok {
+		sUUID = fmt.Sprintf("student-%s", random.StringConsistOfIntWithLength(12))
+	}
+
+	for {
+		spanForDB := h.tracer.StartSpan("CheckIfStudentAuthExists", opentracing.ChildOf(parentSpan))
+		exist, err := access.CheckIfStudentAuthExists(sUUID)
+		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Bool("exist", exist), log.Error(err))
+		spanForDB.Finish()
+		if err != nil {
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " + err.Error())
+			return
+		}
+		if !exist {
+			break
+		}
+		sUUID = fmt.Sprintf("student-%s", random.StringConsistOfIntWithLength(12))
+		continue
+	}
+
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.StudentPW), 2)
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to hash pw, err: " + err.Error())
+		return
+	}
+
+	spanForDB := h.tracer.StartSpan("CreateStudentAuth", opentracing.ChildOf(parentSpan))
+	resultAuth, err := access.CreateStudentAuth(&model.StudentAuth{
+		UUID:       model.UUID(req.UUID),
+		StudentID:  model.StudentID(req.StudentID),
+		StudentPW:  model.StudentPW(string(hashedBytes)),
+		ParentUUID: model.ParentUUID(req.ParentUUID),
+	})
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedAuth", resultAuth), log.Error(err))
+	spanForDB.Finish()
+
+	switch assertedError := err.(type) {
+	case nil:
+		break
+
+	case validator.ValidationErrors:
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for student auth model, err: " + err.Error())
+		return
+
+	case *mysql.MySQLError:
+		access.Rollback()
+		switch assertedError.Number{
+		case mysqlcode.ER_DUP_ENTRY:
+			key, entry, err := mysqlerr.ParseDuplicateEntryErrorFrom(assertedError)
+			if err != nil {
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to parse duplicate error, err: " + err.Error())
+				return
+			}
+			switch key {
+			case model.StudentAuthInstance.StudentID.KeyName():
+				resp.Status = http.StatusConflict
+				resp.Code = CodeStudentIDDuplicate
+				resp.Message = fmt.Sprintf(conflictErrorFormat, "student id duplicate, entry: " + entry)
+			default:
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected duplicate error, key: " + key)
+			}
+			return
+		case mysqlcode.ER_NO_REFERENCED_ROW_2:
+			fkInform, _, err := mysqlerr.ParseFKConstraintFailErrorFrom(assertedError)
+			if err != nil {
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to parse fk contraint error, err: " + err.Error())
+				return
+			}
+			switch fkInform.ConstraintName {
+			case model.StudentAuthInstance.ParentUUIDConstraintName():
+				resp.Status = http.StatusConflict
+				resp.Code = CodeParentUUIDNoExist
+				resp.Message = fmt.Sprintf(conflictErrorFormat, "FK constraint fail, FK name: " + fkInform.AttrName)
+			default:
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected FK constraint fail, FK name: " + fkInform.AttrName)
+			}
+			return
+		}
 	}
 
 	return

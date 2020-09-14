@@ -2,13 +2,14 @@ package handler
 
 import (
 	"auth/model"
+	proto "auth/proto/golang/auth"
 	"auth/tool/mysqlerr"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/jinzhu/gorm"
 	"net/http"
 	"testing"
-
-	//proto "auth/proto/golang/auth"
 )
 
 func Test_default_CreateNewStudent(t *testing.T) {
@@ -121,7 +122,22 @@ func Test_default_CreateNewStudent(t *testing.T) {
 		},
 	}
 
-	for _, _ = range tests {
+	for _, test := range tests {
+		test.ChangeEmptyValueToValidValue()
+		test.ChangeEmptyReplaceValueToEmptyValue()
+		test.OnExpectMethodsTo(mockForDB)
 
+		req := new(proto.CreateNewStudentRequest)
+		test.SetRequestContextOf(req)
+		ctx := test.GetMetadataContext()
+
+		resp := new(proto.CreateNewStudentResponse)
+		_ = defaultHandler.CreateNewStudent(ctx, req, resp)
+
+		assert.Equal(t, test.ExpectedStatus, resp.Status, "status assertion error")
+		assert.Equal(t, test.ExpectedCode, resp.Code, "code assertion error")
+		assert.Equal(t, test.ExpectedStudentUUID, resp.CreatedStudentUUID, "student uuid assertion error")
 	}
+
+	mockForDB.AssertExpectations(t)
 }

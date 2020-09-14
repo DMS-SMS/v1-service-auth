@@ -43,7 +43,7 @@ func init() {
 	exampleSpanForRPCService := exampleTracerForRPCService.StartSpan("CreateNewStudent", opentracing.ChildOf(exampleSpanForAPIGateway.Context()))
 	validSpanContextString = exampleSpanForRPCService.Context().(jaeger.SpanContext).String()
 
-	absPath, err := filepath.Abs("./images_for_test/doraemon.png")
+	absPath, err := filepath.Abs("./image/doraemon.png")
 	if err != nil { log.Fatal(fmt.Sprintf("error while getting abstract file path, err: %v", err)) }
 	file, err := os.Open(absPath)
 	if err != nil { log.Fatal(fmt.Sprintf("error while opening new test image files, err: %v", err)) }

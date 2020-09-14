@@ -16,16 +16,19 @@ func Mock(mock *mock.Mock) _mock {
 
 // 계정 생성 메서드
 func (m _mock) CreateStudentAuth(auth *model.StudentAuth) (resultAuth *model.StudentAuth, err error) {
+	auth.StudentPW = ""
 	args := m.mock.Called(auth)
 	return args.Get(0).(*model.StudentAuth), args.Error(1)
 }
 
 func (m _mock) CreateTeacherAuth(auth *model.TeacherAuth) (resultAuth *model.TeacherAuth, err error) {
+	auth.TeacherPW = ""
 	args := m.mock.Called(auth)
 	return args.Get(0).(*model.TeacherAuth), args.Error(1)
 }
 
 func (m _mock) CreateParentAuth(auth *model.ParentAuth) (resultAuth *model.ParentAuth, err error) {
+	auth.ParentPW = ""
 	args := m.mock.Called(auth)
 	return args.Get(0).(*model.ParentAuth), args.Error(1)
 }

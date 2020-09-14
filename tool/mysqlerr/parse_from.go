@@ -8,16 +8,16 @@ import (
 	"strings"
 )
 
-const (
-	dbNameIndex = iota
-	tableNameIndex
-	constraintNameIndex
-	attrNameIndex
-	refTableNameIndex
-	refAttrNameIndex
-)
-
 func ParseFKConstraintFailErrorFrom(mysqlErr *mysql.MySQLError) (fk FKInform, ref RefInform, err error) {
+	const (
+		dbNameIndex = iota
+		tableNameIndex
+		constraintNameIndex
+		attrNameIndex
+		refTableNameIndex
+		refAttrNameIndex
+	)
+
 	if mysqlErr == nil || mysqlErr.Number != mysqlerr.ER_NO_REFERENCED_ROW_2 {
 		err = errors.New("parameter must be an FK Construct Fail Error")
 		return

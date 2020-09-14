@@ -2,13 +2,16 @@ package handler
 
 import (
 	"auth/db"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/opentracing/opentracing-go"
+	"log"
 )
 
 type _default struct {
 	None
-	manager db.AccessorManage
-	tracer  opentracing.Tracer
+	manager    db.AccessorManage
+	tracer     opentracing.Tracer
+	awsSession *session.Session
 }
 
 type FieldSetter func(*_default)
@@ -22,6 +25,10 @@ func newDefault(setters ...FieldSetter) (h *_default) {
 	for _, setter := range setters {
 		setter(h)
 	}
+
+	if h.tracer == nil || h.awsSession == nil {
+		log.Fatal("please set all field using FieldSetter")
+	}
 	return
 }
 
@@ -34,5 +41,11 @@ func Manager(m db.AccessorManage) FieldSetter {
 func Tracer(t opentracing.Tracer) FieldSetter {
 	return func(h *_default) {
 		h.tracer = t
+	}
+}
+
+func AWSSession(s *session.Session) FieldSetter {
+	return func(h *_default) {
+		h.awsSession = s
 	}
 }

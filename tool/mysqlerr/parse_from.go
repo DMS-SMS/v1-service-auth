@@ -10,6 +10,27 @@ import (
 
 var parserRegex = regexp.MustCompile("`.*?`")
 
+func ParseDuplicateEntryErrorFrom(mysqlErr *mysql.MySQLError) (key, entry string, err error) {
+	const (
+		indexEntry = iota
+		indexKey
+	)
+
+	if mysqlErr == nil || mysqlErr.Number != mysqlerr.ER_DUP_ENTRY {
+		err = errors.New("parameter must be Duplicate Entry Error")
+		return
+	}
+
+	matched := parserRegex.FindAllString(mysqlErr.Message, -1)
+	for i := range matched {
+		matched[i] = strings.Trim(matched[i], "`")
+	}
+
+	key = matched[indexKey]
+	entry = matched[indexEntry]
+	return
+}
+
 func ParseFKConstraintFailErrorFrom(mysqlErr *mysql.MySQLError) (fk FKInform, ref RefInform, err error) {
 	const (
 		dbNameIndex = iota

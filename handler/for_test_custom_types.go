@@ -3,7 +3,9 @@ package handler
 import (
 	"auth/model"
 	proto "auth/proto/golang/auth"
+	"context"
 	"fmt"
+	"github.com/micro/go-micro/v2/metadata"
 	"github.com/stretchr/testify/mock"
 	"log"
 )
@@ -139,4 +141,12 @@ func (test *createNewStudentTest) SetRequestContextOf(req *proto.CreateNewStuden
 	req.Name = test.Name
 	req.PhoneNumber = test.PhoneNumber
 	req.Image = test.Image
+}
+
+func (test *createNewStudentTest) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+	ctx = metadata.Set(ctx, "StudentUUID", test.StudentUUID)
+	return
 }

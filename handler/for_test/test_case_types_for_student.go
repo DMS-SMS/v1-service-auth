@@ -1,6 +1,10 @@
 package test
 
-import "github.com/stretchr/testify/mock"
+import (
+	proto "auth/proto/golang/auth"
+	"context"
+	"github.com/stretchr/testify/mock"
+)
 
 type LoginStudentAuthCase struct {
 	StudentID, StudentPW        string
@@ -45,4 +49,18 @@ func (test *LoginStudentAuthCase) onMethod(mock *mock.Mock, method Method, retur
 	case "Rollback":
 		mock.On(string(method)).Return(returns...)
 	}
+}
+
+func (test *LoginStudentAuthCase) SetRequestContextOf(req *proto.LoginStudentAuthRequest) {
+	req.StudentID = test.StudentID
+	req.StudentPW = test.StudentPW
+}
+
+func (test *LoginStudentAuthCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+
+	ctx = context.WithValue(ctx, "X-Request-Id", test.XRequestID)
+	ctx = context.WithValue(ctx, "Span-Context", test.SpanContextString)
+
+	return
 }

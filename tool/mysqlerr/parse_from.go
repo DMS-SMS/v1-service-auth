@@ -25,6 +25,11 @@ func ParseDuplicateEntryErrorFrom(mysqlErr *mysql.MySQLError) (key, entry string
 	}
 
 	matched := regexForDuplicateError.FindAllString(mysqlErr.Message, -1)
+	if len(matched) != 2 {
+		err = errors.New("this parameter is incorrect for the Duplicate Entry Error format")
+		return
+	}
+
 	for i := range matched {
 		matched[i] = strings.Trim(matched[i], "'")
 	}
@@ -50,13 +55,13 @@ func ParseFKConstraintFailErrorFrom(mysqlErr *mysql.MySQLError) (fk FKInform, re
 	}
 
 	matched := regexForFKConstraintFail.FindAllString(mysqlErr.Message, -1)
-	for i := range matched {
-		matched[i] = strings.Trim(matched[i], "`")
-	}
-
 	if len(matched) != 6 {
 		err = errors.New("this parameter is incorrect for the FK Construct Fail Error format")
 		return
+	}
+
+	for i := range matched {
+		matched[i] = strings.Trim(matched[i], "`")
 	}
 
 	fk = FKInform{

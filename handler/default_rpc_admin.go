@@ -382,3 +382,158 @@ func (h _default) CreateNewTeacher(ctx context.Context, req *proto.CreateNewTeac
 
 	return
 }
+
+func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParentRequest, resp *proto.CreateNewParentResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	if !adminUUIDRegex.MatchString(req.UUID) {
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not admin")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access, err := h.accessManage.BeginTx()
+	if err != nil {
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())
+		return
+	}
+
+	pUUID, ok := ctx.Value("ParentUUID").(string)
+	if !ok || pUUID == "" {
+		pUUID = fmt.Sprintf("parent-%s", random.StringConsistOfIntWithLength(12))
+	}
+
+	for {
+		spanForDB := h.tracer.StartSpan("CheckIfParentAuthExists", opentracing.ChildOf(parentSpan))
+		exist, err := access.CheckIfParentAuthExists(pUUID)
+		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Bool("exist", exist), log.Error(err))
+		spanForDB.Finish()
+		if err != nil {
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " + err.Error())
+			return
+		}
+		if !exist {
+			break
+		}
+		pUUID = fmt.Sprintf("parent-%s", random.StringConsistOfIntWithLength(12))
+		continue
+	}
+
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.ParentPW), 1)
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to hash pw, err: " + err.Error())
+		return
+	}
+
+	spanForDB := h.tracer.StartSpan("CreateParentAuth", opentracing.ChildOf(parentSpan))
+	resultAuth, err := access.CreateParentAuth(&model.ParentAuth{
+		UUID:     model.UUID(pUUID),
+		ParentID: model.ParentID(req.ParentID),
+		ParentPW: model.ParentPW(string(hashedBytes)),
+	})
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedAuth", resultAuth), log.Error(err))
+	spanForDB.Finish()
+
+	switch assertedError := err.(type) {
+	case nil:
+		break
+
+	case validator.ValidationErrors:
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for teacher auth model, err: " + err.Error())
+		return
+
+	case *mysql.MySQLError:
+		access.Rollback()
+		switch assertedError.Number {
+		case mysqlcode.ER_DUP_ENTRY:
+			key, entry, err := mysqlerr.ParseDuplicateEntryErrorFrom(assertedError)
+			if err != nil {
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to parse duplicate error, err: " + err.Error())
+				return
+			}
+			switch key {
+			case model.ParentAuthInstance.ParentID.KeyName():
+				resp.Status = http.StatusConflict
+				resp.Code = CodeParentIDDuplicate
+				resp.Message = fmt.Sprintf(conflictErrorFormat, "parent id duplicate, entry: " + entry)
+			default:
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected duplicate error, key: " + key)
+			}
+			return
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected CreateTeacberAuth error, err: " + assertedError.Error())
+			return
+		}
+	}
+
+	spanForDB = h.tracer.StartSpan("CreateParentInform", opentracing.ChildOf(parentSpan))
+	resultInform, err := access.CreateParentInform(&model.ParentInform{
+		ParentUUID:  model.ParentUUID(string(resultAuth.UUID)),
+		Name:        model.Name(req.Name),
+		PhoneNumber: model.PhoneNumber(req.PhoneNumber),
+	})
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedInform", resultInform), log.Error(err))
+	spanForDB.Finish()
+
+	switch assertedError := err.(type) {
+	case nil:
+		break
+
+	case validator.ValidationErrors:
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for teacher inform, err: " + err.Error())
+		return
+
+	case *mysql.MySQLError:
+		access.Rollback()
+		switch assertedError.Number {
+		case mysqlcode.ER_DUP_ENTRY:
+			key, entry, err := mysqlerr.ParseDuplicateEntryErrorFrom(assertedError)
+			if err != nil {
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to parse duplicate error, err: " + err.Error())
+				return
+			}
+			switch key {
+			case model.ParentInformInstance.PhoneNumber.KeyName():
+				resp.Status = http.StatusConflict
+				resp.Code = CodeParentPhoneNumberDuplicate
+				resp.Message = fmt.Sprintf(conflictErrorFormat, "phone number duplicate, entry: " + entry)
+			default:
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected duplicate error, key: " + key)
+			}
+			return
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected CreateTeacherInform error, err: " + assertedError.Error())
+			return
+		}
+	}
+
+	access.Commit()
+	resp.Status = http.StatusCreated
+	resp.Message = "new parent create success"
+	resp.CreatedParentUUID = pUUID
+
+	return
+}

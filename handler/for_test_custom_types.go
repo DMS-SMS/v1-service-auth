@@ -255,6 +255,7 @@ func (test *createNewTeacherTest) getTeacherInformModel() *model.TeacherInform {
 		PhoneNumber:   model.PhoneNumber(test.PhoneNumber),
 	}
 }
+
 func (test *createNewTeacherTest) SetRequestContextOf(req *proto.CreateNewTeacherRequest) {
 	req.UUID = test.UUID
 	req.TeacherID = test.TeacherID
@@ -308,6 +309,51 @@ func (test *createNewParentTest) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.ParentUUID == emptyReplaceValueForString         { test.ParentUUID = "" }
 	if test.XRequestID == emptyReplaceValueForString         { test.XRequestID = "" }
 	if test.SpanContextString == emptyReplaceValueForString  { test.SpanContextString = "" }
+}
+
+func (test *createNewParentTest) OnExpectMethodsTo(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *createNewParentTest) onMethod(mock *mock.Mock, method method, returns returns) {
+	switch method {
+	case "CreateParentAuth":
+		const indexParentAuth = 0
+		const indexError = 1
+		if _, ok := returns[indexParentAuth].(*model.ParentAuth); ok && returns[indexError] == nil {
+			modelToReturn := test.getParentAuthModel()
+			modelToReturn.Model = createGormModelOnCurrentTime()
+			returns[indexParentAuth] = modelToReturn
+		}
+		mock.On(string(method), test.getParentAuthModel()).Return(returns...)
+
+	case "CreateParentInform":
+		const indexParentInform = 0
+		const indexError = 1
+		if _, ok := returns[indexParentInform].(*model.TeacherInform); ok && returns[indexError] == nil {
+			modelToReturn := test.getParentInformModel()
+			modelToReturn.Model = createGormModelOnCurrentTime()
+			returns[indexParentInform] = modelToReturn
+		}
+		mock.On(string(method), test.getParentInformModel()).Return(returns...)
+
+	case "CheckIfTParentAuthExists":
+		mock.On(string(method), test.ParentUUID).Return(returns...)
+
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+
+	default:
+		log.Fatalf("this method cannot be registered, method name: %s", method)
+	}
 }
 
 func (test *createNewParentTest) getParentAuthModel() *model.ParentAuth {

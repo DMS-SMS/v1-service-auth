@@ -53,9 +53,9 @@ func (test *createNewStudentTest) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.StudentID == emptyReplaceValueForString          { test.StudentID = "" }
 	if test.StudentPW == emptyReplaceValueForString          { test.StudentPW = "" }
 	if test.ParentUUID == emptyReplaceValueForString         { test.ParentUUID = "" }
-	if test.Grade == uint32(emptyReplaceValueForInt)         { test.Grade = 0 }
-	if test.Class == uint32(emptyReplaceValueForInt)         { test.Class = 0 }
-	if test.StudentNumber == uint32(emptyReplaceValueForInt) { test.StudentNumber = 0 }
+	if test.Grade == emptyReplaceValueForUint32              { test.Grade = 0 }
+	if test.Class == emptyReplaceValueForUint32              { test.Class = 0 }
+	if test.StudentNumber == emptyReplaceValueForUint32      { test.StudentNumber = 0 }
 	if test.Name == emptyReplaceValueForString               { test.Name = "" }
 	if test.PhoneNumber == emptyReplaceValueForString        { test.PhoneNumber = "" }
 	if string(test.Image) == emptyReplaceValueForString	     { test.Image = []byte{} }
@@ -184,8 +184,8 @@ func (test *createNewTeacherTest) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.UUID == emptyReplaceValueForString               { test.UUID = "" }
 	if test.TeacherID == emptyReplaceValueForString          { test.TeacherID = "" }
 	if test.TeacherPW == emptyReplaceValueForString          { test.TeacherPW = "" }
-	if test.Grade == uint32(emptyReplaceValueForInt)         { test.Grade = 0 }
-	if test.Class == uint32(emptyReplaceValueForInt)         { test.Class = 0 }
+	if test.Grade == emptyReplaceValueForUint32              { test.Grade = 0 }
+	if test.Class == emptyReplaceValueForUint32              { test.Class = 0 }
 	if test.Name == emptyReplaceValueForString               { test.Name = "" }
 	if test.PhoneNumber == emptyReplaceValueForString        { test.PhoneNumber = "" }
 	if test.TeacherUUID == emptyReplaceValueForString        { test.TeacherUUID = "" }

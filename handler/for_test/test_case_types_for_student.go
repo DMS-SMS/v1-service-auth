@@ -1,5 +1,7 @@
 package test
 
+import "github.com/stretchr/testify/mock"
+
 type LoginStudentAuthCase struct {
 	StudentID, StudentPW        string
 	XRequestID                  string
@@ -24,4 +26,23 @@ func (test *LoginStudentAuthCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.StudentPW == EmptyReplaceValueForString         { test.StudentPW = "" }
 	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
 	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+}
+
+func (test *LoginStudentAuthCase) OnExpectMethods(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *LoginStudentAuthCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+	switch method {
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "GetStudentAuthWithID":
+		mock.On(string(method), test.StudentID).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	}
 }

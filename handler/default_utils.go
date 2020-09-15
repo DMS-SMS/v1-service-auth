@@ -7,7 +7,7 @@ import (
 	"github.com/uber/jaeger-client-go"
 )
 
-func (_ *_default) getContextFromMetadata(ctx context.Context) (parsedCtx context.Context, proxyAuthenticated bool, reason string) {
+func (_ _default) getContextFromMetadata(ctx context.Context) (parsedCtx context.Context, proxyAuthenticated bool, reason string) {
 	md, ok := metadata.FromContext(ctx)
 	if !ok {
 		proxyAuthenticated = false

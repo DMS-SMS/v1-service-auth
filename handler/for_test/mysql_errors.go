@@ -1,4 +1,4 @@
-package handler
+package test
 
 import (
 	"auth/model"
@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	studentAuthParentUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
+	StudentAuthParentUUIDFKConstraintFailError = mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
 		DBName:         strings.ToLower("SMS_Auth_Test_DB"),
 		TableName:      model.StudentAuthInstance.TableName(),
 		ConstraintName: model.StudentAuthInstance.ParentUUIDConstraintName(),

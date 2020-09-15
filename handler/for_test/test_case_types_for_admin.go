@@ -10,8 +10,8 @@ import (
 	"log"
 )
 
-type method string
-type returns []interface{}
+type Method string
+type Returns []interface{}
 
 type CreateNewStudentTest struct {
 	UUID                 string
@@ -24,7 +24,7 @@ type CreateNewStudentTest struct {
 	StudentUUID          string
 	XRequestID           string
 	SpanContextString    string
-	ExpectedMethods      map[method]returns
+	ExpectedMethods      map[Method]Returns
 	ExpectedStatus       uint32
 	ExpectedCode         int32
 	ExpectedMessage      string
@@ -33,35 +33,35 @@ type CreateNewStudentTest struct {
 
 func (test *CreateNewStudentTest) ChangeEmptyValueToValidValue() {
 	//reflect.ValueOf(test).FieldByName().Type()
-	if test.UUID == emptyString              { test.UUID = validAdminUUID }
-	if test.StudentID == emptyString         { test.StudentID = validStudentID }
-	if test.StudentPW == emptyString         { test.StudentPW = validStudentPW }
-	if test.ParentUUID == emptyString        { test.ParentUUID = validParentUUID() }
-	if test.Grade == emptyUint32             { test.Grade = validGrade }
-	if test.Class == emptyUint32             { test.Class = validClass }
-	if test.StudentNumber == emptyUint32     { test.StudentNumber = validStudentNumber }
-	if test.Name == emptyString              { test.Name = validName }
-	if test.PhoneNumber == emptyString       { test.PhoneNumber = validPhoneNumber }
-	if string(test.Image) == emptyString     { test.Image = validImageByteArr }
-	if test.StudentUUID == emptyString       { test.StudentUUID = validStudentUUID() }
-	if test.XRequestID == emptyString        { test.XRequestID = validXRequestID }
-	if test.SpanContextString == emptyString { test.SpanContextString = validSpanContextString }
+	if test.UUID == EmptyString              { test.UUID = validAdminUUID }
+	if test.StudentID == EmptyString         { test.StudentID = validStudentID }
+	if test.StudentPW == EmptyString         { test.StudentPW = validStudentPW }
+	if test.ParentUUID == EmptyString        { test.ParentUUID = validParentUUID() }
+	if test.Grade == EmptyUint32             { test.Grade = validGrade }
+	if test.Class == EmptyUint32             { test.Class = validClass }
+	if test.StudentNumber == EmptyUint32     { test.StudentNumber = validStudentNumber }
+	if test.Name == EmptyString              { test.Name = validName }
+	if test.PhoneNumber == EmptyString       { test.PhoneNumber = validPhoneNumber }
+	if string(test.Image) == EmptyString     { test.Image = validImageByteArr }
+	if test.StudentUUID == EmptyString       { test.StudentUUID = validStudentUUID() }
+	if test.XRequestID == EmptyString        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == EmptyString { test.SpanContextString = validSpanContextString }
 }
 
 func (test *CreateNewStudentTest) ChangeEmptyReplaceValueToEmptyValue() {
-	if test.UUID == emptyReplaceValueForString               { test.UUID = "" }
-	if test.StudentID == emptyReplaceValueForString          { test.StudentID = "" }
-	if test.StudentPW == emptyReplaceValueForString          { test.StudentPW = "" }
-	if test.ParentUUID == emptyReplaceValueForString         { test.ParentUUID = "" }
-	if test.Grade == emptyReplaceValueForUint32              { test.Grade = 0 }
-	if test.Class == emptyReplaceValueForUint32              { test.Class = 0 }
-	if test.StudentNumber == emptyReplaceValueForUint32      { test.StudentNumber = 0 }
-	if test.Name == emptyReplaceValueForString               { test.Name = "" }
-	if test.PhoneNumber == emptyReplaceValueForString        { test.PhoneNumber = "" }
-	if string(test.Image) == emptyReplaceValueForString	     { test.Image = []byte{} }
-	if test.StudentUUID == emptyReplaceValueForString        { test.StudentUUID = "" }
-	if test.XRequestID == emptyReplaceValueForString         { test.XRequestID = "" }
-	if test.SpanContextString == emptyReplaceValueForString  { test.SpanContextString = "" }
+	if test.UUID == EmptyReplaceValueForString               { test.UUID = "" }
+	if test.StudentID == EmptyReplaceValueForString          { test.StudentID = "" }
+	if test.StudentPW == EmptyReplaceValueForString          { test.StudentPW = "" }
+	if test.ParentUUID == EmptyReplaceValueForString         { test.ParentUUID = "" }
+	if test.Grade == EmptyReplaceValueForUint32              { test.Grade = 0 }
+	if test.Class == EmptyReplaceValueForUint32              { test.Class = 0 }
+	if test.StudentNumber == EmptyReplaceValueForUint32      { test.StudentNumber = 0 }
+	if test.Name == EmptyReplaceValueForString               { test.Name = "" }
+	if test.PhoneNumber == EmptyReplaceValueForString        { test.PhoneNumber = "" }
+	if string(test.Image) == EmptyReplaceValueForString	     { test.Image = []byte{} }
+	if test.StudentUUID == EmptyReplaceValueForString        { test.StudentUUID = "" }
+	if test.XRequestID == EmptyReplaceValueForString         { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString  { test.SpanContextString = "" }
 }
 
 func (test *CreateNewStudentTest) OnExpectMethodsTo(mock *mock.Mock) {
@@ -70,7 +70,7 @@ func (test *CreateNewStudentTest) OnExpectMethodsTo(mock *mock.Mock) {
 	}
 }
 
-func (test *CreateNewStudentTest) onMethod(mock *mock.Mock, method method, returns returns) {
+func (test *CreateNewStudentTest) onMethod(mock *mock.Mock, method Method, returns Returns) {
 	switch method {
 	case "CreateStudentAuth":
 		const studentAuthIndex = 0
@@ -159,7 +159,7 @@ type CreateNewTeacherTest struct {
 	TeacherUUID          string
 	XRequestID           string
 	SpanContextString    string
-	ExpectedMethods      map[method]returns
+	ExpectedMethods      map[Method]Returns
 	ExpectedStatus       uint32
 	ExpectedCode         int32
 	ExpectedMessage      string
@@ -168,29 +168,29 @@ type CreateNewTeacherTest struct {
 
 func (test *CreateNewTeacherTest) ChangeEmptyValueToValidValue() {
 	//reflect.ValueOf(test).FieldByName().Type()
-	if test.UUID == emptyString              { test.UUID = validAdminUUID }
-	if test.TeacherID == emptyString         { test.TeacherID = validTeacherID }
-	if test.TeacherPW == emptyString         { test.TeacherPW = validTeacherPW }
-	if test.Grade == emptyUint32             { test.Grade = validGrade }
-	if test.Class == emptyUint32             { test.Class = validClass }
-	if test.Name == emptyString              { test.Name = validName }
-	if test.PhoneNumber == emptyString       { test.PhoneNumber = validPhoneNumber }
-	if test.TeacherUUID == emptyString       { test.TeacherUUID = validTeacherUUID() }
-	if test.XRequestID == emptyString        { test.XRequestID = validXRequestID }
-	if test.SpanContextString == emptyString { test.SpanContextString = validSpanContextString }
+	if test.UUID == EmptyString              { test.UUID = validAdminUUID }
+	if test.TeacherID == EmptyString         { test.TeacherID = validTeacherID }
+	if test.TeacherPW == EmptyString         { test.TeacherPW = validTeacherPW }
+	if test.Grade == EmptyUint32             { test.Grade = validGrade }
+	if test.Class == EmptyUint32             { test.Class = validClass }
+	if test.Name == EmptyString              { test.Name = validName }
+	if test.PhoneNumber == EmptyString       { test.PhoneNumber = validPhoneNumber }
+	if test.TeacherUUID == EmptyString       { test.TeacherUUID = validTeacherUUID() }
+	if test.XRequestID == EmptyString        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == EmptyString { test.SpanContextString = validSpanContextString }
 }
 
 func (test *CreateNewTeacherTest) ChangeEmptyReplaceValueToEmptyValue() {
-	if test.UUID == emptyReplaceValueForString               { test.UUID = "" }
-	if test.TeacherID == emptyReplaceValueForString          { test.TeacherID = "" }
-	if test.TeacherPW == emptyReplaceValueForString          { test.TeacherPW = "" }
-	if test.Grade == emptyReplaceValueForUint32              { test.Grade = 0 }
-	if test.Class == emptyReplaceValueForUint32              { test.Class = 0 }
-	if test.Name == emptyReplaceValueForString               { test.Name = "" }
-	if test.PhoneNumber == emptyReplaceValueForString        { test.PhoneNumber = "" }
-	if test.TeacherUUID == emptyReplaceValueForString        { test.TeacherUUID = "" }
-	if test.XRequestID == emptyReplaceValueForString         { test.XRequestID = "" }
-	if test.SpanContextString == emptyReplaceValueForString  { test.SpanContextString = "" }
+	if test.UUID == EmptyReplaceValueForString               { test.UUID = "" }
+	if test.TeacherID == EmptyReplaceValueForString          { test.TeacherID = "" }
+	if test.TeacherPW == EmptyReplaceValueForString          { test.TeacherPW = "" }
+	if test.Grade == EmptyReplaceValueForUint32              { test.Grade = 0 }
+	if test.Class == EmptyReplaceValueForUint32              { test.Class = 0 }
+	if test.Name == EmptyReplaceValueForString               { test.Name = "" }
+	if test.PhoneNumber == EmptyReplaceValueForString        { test.PhoneNumber = "" }
+	if test.TeacherUUID == EmptyReplaceValueForString        { test.TeacherUUID = "" }
+	if test.XRequestID == EmptyReplaceValueForString         { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString  { test.SpanContextString = "" }
 }
 
 func (test *CreateNewTeacherTest) OnExpectMethodsTo(mock *mock.Mock) {
@@ -199,7 +199,7 @@ func (test *CreateNewTeacherTest) OnExpectMethodsTo(mock *mock.Mock) {
 	}
 }
 
-func (test *CreateNewTeacherTest) onMethod(mock *mock.Mock, method method, returns returns) {
+func (test *CreateNewTeacherTest) onMethod(mock *mock.Mock, method Method, returns Returns) {
 	switch method {
 	case "CreateTeacherAuth":
 		const indexTeacherAuth = 0
@@ -281,7 +281,7 @@ type CreateNewParentTest struct {
 	ParentUUID          string
 	XRequestID          string
 	SpanContextString   string
-	ExpectedMethods     map[method]returns
+	ExpectedMethods     map[Method]Returns
 	ExpectedStatus      uint32
 	ExpectedCode        int32
 	ExpectedMessage     string
@@ -290,25 +290,25 @@ type CreateNewParentTest struct {
 
 func (test *CreateNewParentTest) ChangeEmptyValueToValidValue() {
 	//reflect.ValueOf(test).FieldByName().Type()
-	if test.UUID == emptyString              { test.UUID = validAdminUUID }
-	if test.ParentID == emptyString          { test.ParentID = validParentID }
-	if test.ParentPW == emptyString          { test.ParentPW = validParentPW }
-	if test.Name == emptyString              { test.Name = validName }
-	if test.PhoneNumber == emptyString       { test.PhoneNumber = validPhoneNumber }
-	if test.ParentUUID == emptyString        { test.ParentUUID = validParentUUID() }
-	if test.XRequestID == emptyString        { test.XRequestID = validXRequestID }
-	if test.SpanContextString == emptyString { test.SpanContextString = validSpanContextString }
+	if test.UUID == EmptyString              { test.UUID = validAdminUUID }
+	if test.ParentID == EmptyString          { test.ParentID = validParentID }
+	if test.ParentPW == EmptyString          { test.ParentPW = validParentPW }
+	if test.Name == EmptyString              { test.Name = validName }
+	if test.PhoneNumber == EmptyString       { test.PhoneNumber = validPhoneNumber }
+	if test.ParentUUID == EmptyString        { test.ParentUUID = validParentUUID() }
+	if test.XRequestID == EmptyString        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == EmptyString { test.SpanContextString = validSpanContextString }
 }
 
 func (test *CreateNewParentTest) ChangeEmptyReplaceValueToEmptyValue() {
-	if test.UUID == emptyReplaceValueForString               { test.UUID = "" }
-	if test.ParentID == emptyReplaceValueForString           { test.ParentID = "" }
-	if test.ParentPW == emptyReplaceValueForString           { test.ParentPW = "" }
-	if test.Name == emptyReplaceValueForString               { test.Name = "" }
-	if test.PhoneNumber == emptyReplaceValueForString        { test.PhoneNumber = "" }
-	if test.ParentUUID == emptyReplaceValueForString         { test.ParentUUID = "" }
-	if test.XRequestID == emptyReplaceValueForString         { test.XRequestID = "" }
-	if test.SpanContextString == emptyReplaceValueForString  { test.SpanContextString = "" }
+	if test.UUID == EmptyReplaceValueForString               { test.UUID = "" }
+	if test.ParentID == EmptyReplaceValueForString           { test.ParentID = "" }
+	if test.ParentPW == EmptyReplaceValueForString           { test.ParentPW = "" }
+	if test.Name == EmptyReplaceValueForString               { test.Name = "" }
+	if test.PhoneNumber == EmptyReplaceValueForString        { test.PhoneNumber = "" }
+	if test.ParentUUID == EmptyReplaceValueForString         { test.ParentUUID = "" }
+	if test.XRequestID == EmptyReplaceValueForString         { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString  { test.SpanContextString = "" }
 }
 
 func (test *CreateNewParentTest) OnExpectMethodsTo(mock *mock.Mock) {
@@ -317,7 +317,7 @@ func (test *CreateNewParentTest) OnExpectMethodsTo(mock *mock.Mock) {
 	}
 }
 
-func (test *CreateNewParentTest) onMethod(mock *mock.Mock, method method, returns returns) {
+func (test *CreateNewParentTest) onMethod(mock *mock.Mock, method Method, returns Returns) {
 	switch method {
 	case "CreateParentAuth":
 		const indexParentAuth = 0

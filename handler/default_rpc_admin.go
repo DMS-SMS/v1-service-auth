@@ -225,3 +225,55 @@ func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStude
 
 	return
 }
+
+func (h _default) CreateNewTeacher(ctx context.Context, req *proto.CreateNewTeacherRequest, resp *proto.CreateNewTeacherResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	if !adminUUIDRegex.MatchString(req.UUID) {
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not admin")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access, err := h.accessManage.BeginTx()
+	if err != nil {
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())
+		return
+	}
+
+	tUUID, ok := ctx.Value("TeacherUUID").(string)
+	if !ok || tUUID == "" {
+		tUUID = fmt.Sprintf("teacher-%s", random.StringConsistOfIntWithLength(12))
+	}
+
+	for {
+		spanForDB := h.tracer.StartSpan("CheckIfTeacherAuthExists", opentracing.ChildOf(parentSpan))
+		exist, err := access.CheckIfTeacherAuthExists(tUUID)
+		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Bool("exist", exist), log.Error(err))
+		spanForDB.Finish()
+		if err != nil {
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " + err.Error())
+			return
+		}
+		if !exist {
+			break
+		}
+		tUUID = fmt.Sprintf("teacher-%s", random.StringConsistOfIntWithLength(12))
+		continue
+	}
+	
+
+
+	return
+}

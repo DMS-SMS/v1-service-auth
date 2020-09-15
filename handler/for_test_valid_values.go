@@ -15,8 +15,12 @@ import (
 const (
 	validAdminUUID = "admin-111111111111"
 	validParentUUID = "parent-111111111111"
+
 	validStudentID = "jinhong0719"
 	validStudentPW = ""
+	validTeacherID = "teacherID"
+	validTeacherPW = ""
+
 	validGrade = 2
 	validClass = 2
 	validStudentNumber = 7
@@ -60,5 +64,12 @@ var studentUUIDNumber = 111111111111
 func validStudentUUID() (sUUID string) {
 	sUUID = fmt.Sprintf("student-%d", studentUUIDNumber)
 	studentUUIDNumber++
+	return
+}
+
+var teacherUUIDNumber = 111111111111
+func validTeacherUUID() (sUUID string) {
+	sUUID = fmt.Sprintf("teacher-%d", teacherUUIDNumber)
+	teacherUUIDNumber++
 	return
 }

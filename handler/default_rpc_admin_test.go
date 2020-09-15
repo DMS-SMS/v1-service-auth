@@ -197,6 +197,33 @@ func Test_default_CreateNewStudent(t *testing.T) {
 				"Rollback":                 {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateStudentInform return invalid duplicate error
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfStudentAuthExists": {false, nil},
+				"CreateStudentAuth":        {&model.StudentAuth{}, nil},
+				"CreateStudentInform":      {&model.StudentInform{}, &mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "InvalidMessage"}},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateStudentInform return unexpected duplicate error
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfStudentAuthExists": {false, nil},
+				"CreateStudentAuth":        {&model.StudentAuth{}, nil},
+				"CreateStudentInform":      {&model.StudentInform{}, mysqlerr.DuplicateEntry("UnexpectedKey", "duplicated")},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateStudentInform return unexpected error code
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfStudentAuthExists": {false, nil},
+				"CreateStudentAuth":        {&model.StudentAuth{}, nil},
+				"CreateStudentInform":      {&model.StudentInform{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
 		},
 	}
 

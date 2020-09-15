@@ -193,6 +193,51 @@ func (test *createNewTeacherTest) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.SpanContextString == emptyReplaceValueForString  { test.SpanContextString = "" }
 }
 
+func (test *createNewTeacherTest) OnExpectMethodsTo(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *createNewTeacherTest) onMethod(mock *mock.Mock, method method, returns returns) {
+	switch method {
+	case "CreateTeacherAuth":
+		const indexTeacherAuth = 0
+		const indexError = 1
+		if _, ok := returns[indexTeacherAuth].(*model.TeacherAuth); ok && returns[indexError] == nil {
+			modelToReturn := test.getTeacherAuthModel()
+			modelToReturn.Model = createGormModelOnCurrentTime()
+			returns[indexTeacherAuth] = modelToReturn
+		}
+		mock.On(string(method), test.getTeacherAuthModel()).Return(returns...)
+
+	case "CreateTeacherInform":
+		const indexTeacherInform = 0
+		const indexError = 1
+		if _, ok := returns[indexTeacherInform].(*model.TeacherInform); ok && returns[indexError] == nil {
+			modelToReturn := test.getTeacherInformModel()
+			modelToReturn.Model = createGormModelOnCurrentTime()
+			returns[indexTeacherInform] = modelToReturn
+		}
+		mock.On(string(method), test.getTeacherInformModel()).Return(returns...)
+
+	case "CheckIfTeacherAuthExists":
+		mock.On(string(method), test.TeacherUUID).Return(returns...)
+
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+
+	default:
+		log.Fatalf("this method cannot be registered, method name: %s", method)
+	}
+}
+
 func (test *createNewTeacherTest) getTeacherAuthModel() *model.TeacherAuth {
 	return &model.TeacherAuth{
 		UUID:       model.UUID(test.TeacherUUID),

@@ -3,13 +3,10 @@ package handler
 import (
 	"auth/db"
 	"auth/db/access"
-	"auth/tool/random"
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/mock"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	"log"
-	"time"
 )
 
 var (
@@ -30,15 +27,5 @@ func init() {
 	defaultHandler = &_default{
 		accessManage: mockAccessManage,
 		tracer:       exampleTracerForRPCService,
-	}
-}
-
-func createGormModelOnCurrentTime() gorm.Model {
-	currentTime := time.Now()
-	return gorm.Model{
-		ID:        uint(random.Int64WithLength(3)),
-		CreatedAt: currentTime,
-		UpdatedAt: currentTime,
-		DeletedAt: nil,
 	}
 }

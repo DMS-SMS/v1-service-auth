@@ -23,6 +23,10 @@ import (
 	"regexp"
 )
 
+var (
+	adminUUIDRegex = regexp.MustCompile("^admin-\\d{12}")
+)
+
 func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStudentRequest, resp *proto.CreateNewStudentResponse) (_ error) {
 	const (
 		forbiddenMessageFormat = "forbidden (reason: %s)"
@@ -31,7 +35,6 @@ func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStude
 		conflictErrorFormat = "conflict (reason: %s)"
 	)
 
-	adminUUIDRegex := regexp.MustCompile("^admin-\\d{12}")
 	if !adminUUIDRegex.MatchString(req.UUID) {
 		resp.Status = http.StatusForbidden
 		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not admin")

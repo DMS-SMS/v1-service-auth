@@ -165,3 +165,30 @@ type createNewTeacherTest struct {
 	ExpectedMessage      string
 	ExpectedStudentUUID  string
 }
+
+func (test *createNewTeacherTest) ChangeEmptyValueToValidValue() {
+	//reflect.ValueOf(test).FieldByName().Type()
+	if test.UUID == emptyString              { test.UUID = validAdminUUID }
+	if test.TeacherID == emptyString         { test.TeacherID = validTeacherID }
+	if test.TeacherPW == emptyString         { test.TeacherPW = validTeacherPW }
+	if test.Grade == emptyUint32             { test.Grade = validGrade }
+	if test.Class == emptyUint32             { test.Class = validClass }
+	if test.Name == emptyString              { test.Name = validName }
+	if test.PhoneNumber == emptyString       { test.PhoneNumber = validPhoneNumber }
+	if test.TeacherUUID == emptyString       { test.TeacherUUID = validTeacherUUID() }
+	if test.XRequestID == emptyString        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == emptyString { test.SpanContextString = validSpanContextString }
+}
+
+func (test *createNewTeacherTest) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.UUID == emptyReplaceValueForString               { test.UUID = "" }
+	if test.TeacherID == emptyReplaceValueForString          { test.TeacherID = "" }
+	if test.TeacherPW == emptyReplaceValueForString          { test.TeacherPW = "" }
+	if test.Grade == uint32(emptyReplaceValueForInt)         { test.Grade = 0 }
+	if test.Class == uint32(emptyReplaceValueForInt)         { test.Class = 0 }
+	if test.Name == emptyReplaceValueForString               { test.Name = "" }
+	if test.PhoneNumber == emptyReplaceValueForString        { test.PhoneNumber = "" }
+	if test.TeacherUUID == emptyReplaceValueForString        { test.TeacherUUID = "" }
+	if test.XRequestID == emptyReplaceValueForString         { test.XRequestID = "" }
+	if test.SpanContextString == emptyReplaceValueForString  { test.SpanContextString = "" }
+}

@@ -21,18 +21,18 @@ import (
 	"regexp"
 )
 
+const (
+	forbiddenMessageFormat = "forbidden (reason: %s)"
+	proxyAuthRequiredMessageFormat = "proxy auth required (reason: %s)"
+	internalServerErrorFormat = "internal server error (reason: %s)"
+	conflictErrorFormat = "conflict (reason: %s)"
+)
+
 var (
 	adminUUIDRegex = regexp.MustCompile("^admin-\\d{12}")
 )
 
 func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStudentRequest, resp *proto.CreateNewStudentResponse) (_ error) {
-	const (
-		forbiddenMessageFormat = "forbidden (reason: %s)"
-		proxyAuthRequiredMessageFormat = "proxy auth required (reason: %s)"
-		internalServerErrorFormat = "internal server error (reason: %s)"
-		conflictErrorFormat = "conflict (reason: %s)"
-	)
-
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired

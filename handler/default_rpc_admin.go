@@ -273,7 +273,59 @@ func (h _default) CreateNewTeacher(ctx context.Context, req *proto.CreateNewTeac
 		continue
 	}
 	
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.TeacherPW), 1)
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to hash pw, err: " + err.Error())
+		return
+	}
 
+	spanForDB := h.tracer.StartSpan("CreateTeacherAuth", opentracing.ChildOf(parentSpan))
+	resultAuth, err := access.CreateTeacherAuth(&model.TeacherAuth{
+		UUID:       model.UUID(tUUID),
+		TeacherID:  model.TeacherID(req.TeacherID),
+		TeacherPW:  model.TeacherPW(string(hashedBytes)),
+	})
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedAuth", resultAuth), log.Error(err))
+	spanForDB.Finish()
+
+	switch assertedError := err.(type) {
+	case nil:
+		break
+
+	case validator.ValidationErrors:
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for teacher auth model, err: " + err.Error())
+		return
+
+	case *mysql.MySQLError:
+		access.Rollback()
+		switch assertedError.Number {
+		case mysqlcode.ER_DUP_ENTRY:
+			key, entry, err := mysqlerr.ParseDuplicateEntryErrorFrom(assertedError)
+			if err != nil {
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to parse duplicate error, err: " + err.Error())
+				return
+			}
+			switch key {
+			case model.TeacherAuthInstance.TeacherID.KeyName():
+				resp.Status = http.StatusConflict
+				resp.Code = CodeTeacherIDDuplicate
+				resp.Message = fmt.Sprintf(conflictErrorFormat, "teacher id duplicate, entry: " + entry)
+			default:
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected duplicate error, key: " + key)
+			}
+			return
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected CreateTeacberAuth error, err: " + assertedError.Error())
+			return
+		}
+	}
 
 	return
 }

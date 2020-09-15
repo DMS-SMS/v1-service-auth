@@ -255,3 +255,20 @@ func (test *createNewTeacherTest) getTeacherInformModel() *model.TeacherInform {
 		PhoneNumber:   model.PhoneNumber(test.PhoneNumber),
 	}
 }
+func (test *createNewTeacherTest) SetRequestContextOf(req *proto.CreateNewTeacherRequest) {
+	req.UUID = test.UUID
+	req.TeacherID = test.TeacherID
+	req.TeacherPW = test.TeacherPW
+	req.Grade = test.Grade
+	req.Class = test.Class
+	req.Name = test.Name
+	req.PhoneNumber = test.PhoneNumber
+}
+
+func (test *createNewTeacherTest) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+	ctx = metadata.Set(ctx, "TeacherUUID", test.TeacherUUID)
+	return
+}

@@ -231,7 +231,7 @@ func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStude
 				resp.Message = fmt.Sprintf(conflictErrorFormat, "student number duplicate, entry: " + entry)
 			case model.StudentInformInstance.PhoneNumber.KeyName():
 				resp.Status = http.StatusConflict
-				resp.Code = CodePhoneNumberDuplicate
+				resp.Code = CodeStudentPhoneNumberDuplicate
 				resp.Message = fmt.Sprintf(conflictErrorFormat, "phone number duplicate entry: " + entry)
 			default:
 				resp.Status = http.StatusInternalServerError

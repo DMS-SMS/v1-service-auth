@@ -135,7 +135,7 @@ func Test_default_CreateNewStudent(t *testing.T) {
 				"Rollback":                 {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodePhoneNumberDuplicate,
+			ExpectedCode:   CodeStudentPhoneNumberDuplicate,
 		}, { // CheckIfStudentAuthExists error occur
 			ExpectedMethods: map[method]returns{
 				"BeginTx":                  {},

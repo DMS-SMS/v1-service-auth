@@ -33,7 +33,7 @@ import (
 func Test_default_CreateNewStudent(t *testing.T) {
 	const studentUUIDRegexString = "^student-\\d{12}"
 
-	tests := []test.CreateNewStudentTest{
+	tests := []test.CreateNewStudentCase{
 		{ // success case
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
@@ -252,7 +252,7 @@ func Test_default_CreateNewStudent(t *testing.T) {
 func Test_default_CreateNewTeacher(t *testing.T) {
 	const teacherUUIDRegexString = "^teacher-\\d{12}"
 
-	tests := []test.CreateNewTeacherTest{
+	tests := []test.CreateNewTeacherCase{
 		{ // success case
 			Grade: test.EmptyReplaceValueForUint32,
 			Class: test.EmptyReplaceValueForUint32,
@@ -419,7 +419,7 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 func Test_default_CreateNewParent(t *testing.T) {
 	const parentUUIDRegexString = "^parent-\\d{12}"
 
-	tests := []test.CreateNewParentTest{
+	tests := []test.CreateNewParentCase{
 		{ // success case
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                 {},

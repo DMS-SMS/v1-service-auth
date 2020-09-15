@@ -13,7 +13,7 @@ import (
 type Method string
 type Returns []interface{}
 
-type CreateNewStudentTest struct {
+type CreateNewStudentCase struct {
 	UUID                 string
 	StudentID, StudentPW string
 	ParentUUID           string
@@ -31,7 +31,7 @@ type CreateNewStudentTest struct {
 	ExpectedStudentUUID  string
 }
 
-func (test *CreateNewStudentTest) ChangeEmptyValueToValidValue() {
+func (test *CreateNewStudentCase) ChangeEmptyValueToValidValue() {
 	//reflect.ValueOf(test).FieldByName().Type()
 	if test.UUID == EmptyString              { test.UUID = validAdminUUID }
 	if test.StudentID == EmptyString         { test.StudentID = validStudentID }
@@ -48,7 +48,7 @@ func (test *CreateNewStudentTest) ChangeEmptyValueToValidValue() {
 	if test.SpanContextString == EmptyString { test.SpanContextString = validSpanContextString }
 }
 
-func (test *CreateNewStudentTest) ChangeEmptyReplaceValueToEmptyValue() {
+func (test *CreateNewStudentCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.UUID == EmptyReplaceValueForString               { test.UUID = "" }
 	if test.StudentID == EmptyReplaceValueForString          { test.StudentID = "" }
 	if test.StudentPW == EmptyReplaceValueForString          { test.StudentPW = "" }
@@ -64,13 +64,13 @@ func (test *CreateNewStudentTest) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.SpanContextString == EmptyReplaceValueForString  { test.SpanContextString = "" }
 }
 
-func (test *CreateNewStudentTest) OnExpectMethodsTo(mock *mock.Mock) {
+func (test *CreateNewStudentCase) OnExpectMethodsTo(mock *mock.Mock) {
 	for method, returns := range test.ExpectedMethods {
 		test.onMethod(mock, method, returns)
 	}
 }
 
-func (test *CreateNewStudentTest) onMethod(mock *mock.Mock, method Method, returns Returns) {
+func (test *CreateNewStudentCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
 	switch method {
 	case "CreateStudentAuth":
 		const studentAuthIndex = 0
@@ -109,7 +109,7 @@ func (test *CreateNewStudentTest) onMethod(mock *mock.Mock, method Method, retur
 	}
 }
 
-func (test *CreateNewStudentTest) getStudentAuthModel() *model.StudentAuth {
+func (test *CreateNewStudentCase) getStudentAuthModel() *model.StudentAuth {
 	return &model.StudentAuth{
 		UUID:       model.UUID(test.StudentUUID),
 		StudentID:  model.StudentID(test.StudentID),
@@ -118,7 +118,7 @@ func (test *CreateNewStudentTest) getStudentAuthModel() *model.StudentAuth {
 	}
 }
 
-func (test *CreateNewStudentTest) getStudentInformModel() *model.StudentInform {
+func (test *CreateNewStudentCase) getStudentInformModel() *model.StudentInform {
 	return &model.StudentInform{
 		StudentUUID:   model.StudentUUID(test.StudentUUID),
 		Grade:         model.Grade(int64(test.Grade)),
@@ -130,7 +130,7 @@ func (test *CreateNewStudentTest) getStudentInformModel() *model.StudentInform {
 	}
 }
 
-func (test *CreateNewStudentTest) SetRequestContextOf(req *proto.CreateNewStudentRequest) {
+func (test *CreateNewStudentCase) SetRequestContextOf(req *proto.CreateNewStudentRequest) {
 	req.UUID = test.UUID
 	req.StudentID = test.StudentID
 	req.StudentPW = test.StudentPW
@@ -143,7 +143,7 @@ func (test *CreateNewStudentTest) SetRequestContextOf(req *proto.CreateNewStuden
 	req.Image = test.Image
 }
 
-func (test *CreateNewStudentTest) GetMetadataContext() (ctx context.Context) {
+func (test *CreateNewStudentCase) GetMetadataContext() (ctx context.Context) {
 	ctx = context.Background()
 	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
 	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
@@ -151,7 +151,7 @@ func (test *CreateNewStudentTest) GetMetadataContext() (ctx context.Context) {
 	return
 }
 
-type CreateNewTeacherTest struct {
+type CreateNewTeacherCase struct {
 	UUID                 string
 	TeacherID, TeacherPW string
 	Grade, Class         uint32
@@ -166,7 +166,7 @@ type CreateNewTeacherTest struct {
 	ExpectedStudentUUID  string
 }
 
-func (test *CreateNewTeacherTest) ChangeEmptyValueToValidValue() {
+func (test *CreateNewTeacherCase) ChangeEmptyValueToValidValue() {
 	//reflect.ValueOf(test).FieldByName().Type()
 	if test.UUID == EmptyString              { test.UUID = validAdminUUID }
 	if test.TeacherID == EmptyString         { test.TeacherID = validTeacherID }
@@ -180,7 +180,7 @@ func (test *CreateNewTeacherTest) ChangeEmptyValueToValidValue() {
 	if test.SpanContextString == EmptyString { test.SpanContextString = validSpanContextString }
 }
 
-func (test *CreateNewTeacherTest) ChangeEmptyReplaceValueToEmptyValue() {
+func (test *CreateNewTeacherCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.UUID == EmptyReplaceValueForString               { test.UUID = "" }
 	if test.TeacherID == EmptyReplaceValueForString          { test.TeacherID = "" }
 	if test.TeacherPW == EmptyReplaceValueForString          { test.TeacherPW = "" }
@@ -193,13 +193,13 @@ func (test *CreateNewTeacherTest) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.SpanContextString == EmptyReplaceValueForString  { test.SpanContextString = "" }
 }
 
-func (test *CreateNewTeacherTest) OnExpectMethodsTo(mock *mock.Mock) {
+func (test *CreateNewTeacherCase) OnExpectMethodsTo(mock *mock.Mock) {
 	for method, returns := range test.ExpectedMethods {
 		test.onMethod(mock, method, returns)
 	}
 }
 
-func (test *CreateNewTeacherTest) onMethod(mock *mock.Mock, method Method, returns Returns) {
+func (test *CreateNewTeacherCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
 	switch method {
 	case "CreateTeacherAuth":
 		const indexTeacherAuth = 0
@@ -238,7 +238,7 @@ func (test *CreateNewTeacherTest) onMethod(mock *mock.Mock, method Method, retur
 	}
 }
 
-func (test *CreateNewTeacherTest) getTeacherAuthModel() *model.TeacherAuth {
+func (test *CreateNewTeacherCase) getTeacherAuthModel() *model.TeacherAuth {
 	return &model.TeacherAuth{
 		UUID:       model.UUID(test.TeacherUUID),
 		TeacherID:  model.TeacherID(test.TeacherID),
@@ -246,7 +246,7 @@ func (test *CreateNewTeacherTest) getTeacherAuthModel() *model.TeacherAuth {
 	}
 }
 
-func (test *CreateNewTeacherTest) getTeacherInformModel() *model.TeacherInform {
+func (test *CreateNewTeacherCase) getTeacherInformModel() *model.TeacherInform {
 	return &model.TeacherInform{
 		TeacherUUID:   model.TeacherUUID(test.TeacherUUID),
 		Grade:         model.Grade(int64(test.Grade)),
@@ -256,7 +256,7 @@ func (test *CreateNewTeacherTest) getTeacherInformModel() *model.TeacherInform {
 	}
 }
 
-func (test *CreateNewTeacherTest) SetRequestContextOf(req *proto.CreateNewTeacherRequest) {
+func (test *CreateNewTeacherCase) SetRequestContextOf(req *proto.CreateNewTeacherRequest) {
 	req.UUID = test.UUID
 	req.TeacherID = test.TeacherID
 	req.TeacherPW = test.TeacherPW
@@ -266,7 +266,7 @@ func (test *CreateNewTeacherTest) SetRequestContextOf(req *proto.CreateNewTeache
 	req.PhoneNumber = test.PhoneNumber
 }
 
-func (test *CreateNewTeacherTest) GetMetadataContext() (ctx context.Context) {
+func (test *CreateNewTeacherCase) GetMetadataContext() (ctx context.Context) {
 	ctx = context.Background()
 	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
 	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
@@ -274,7 +274,7 @@ func (test *CreateNewTeacherTest) GetMetadataContext() (ctx context.Context) {
 	return
 }
 
-type CreateNewParentTest struct {
+type CreateNewParentCase struct {
 	UUID                string
 	ParentID, ParentPW  string
 	Name, PhoneNumber   string
@@ -288,7 +288,7 @@ type CreateNewParentTest struct {
 	ExpectedStudentUUID string
 }
 
-func (test *CreateNewParentTest) ChangeEmptyValueToValidValue() {
+func (test *CreateNewParentCase) ChangeEmptyValueToValidValue() {
 	//reflect.ValueOf(test).FieldByName().Type()
 	if test.UUID == EmptyString              { test.UUID = validAdminUUID }
 	if test.ParentID == EmptyString          { test.ParentID = validParentID }
@@ -300,7 +300,7 @@ func (test *CreateNewParentTest) ChangeEmptyValueToValidValue() {
 	if test.SpanContextString == EmptyString { test.SpanContextString = validSpanContextString }
 }
 
-func (test *CreateNewParentTest) ChangeEmptyReplaceValueToEmptyValue() {
+func (test *CreateNewParentCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.UUID == EmptyReplaceValueForString               { test.UUID = "" }
 	if test.ParentID == EmptyReplaceValueForString           { test.ParentID = "" }
 	if test.ParentPW == EmptyReplaceValueForString           { test.ParentPW = "" }
@@ -311,13 +311,13 @@ func (test *CreateNewParentTest) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.SpanContextString == EmptyReplaceValueForString  { test.SpanContextString = "" }
 }
 
-func (test *CreateNewParentTest) OnExpectMethodsTo(mock *mock.Mock) {
+func (test *CreateNewParentCase) OnExpectMethodsTo(mock *mock.Mock) {
 	for method, returns := range test.ExpectedMethods {
 		test.onMethod(mock, method, returns)
 	}
 }
 
-func (test *CreateNewParentTest) onMethod(mock *mock.Mock, method Method, returns Returns) {
+func (test *CreateNewParentCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
 	switch method {
 	case "CreateParentAuth":
 		const indexParentAuth = 0
@@ -356,7 +356,7 @@ func (test *CreateNewParentTest) onMethod(mock *mock.Mock, method Method, return
 	}
 }
 
-func (test *CreateNewParentTest) getParentAuthModel() *model.ParentAuth {
+func (test *CreateNewParentCase) getParentAuthModel() *model.ParentAuth {
 	return &model.ParentAuth{
 		UUID:     model.UUID(test.ParentUUID),
 		ParentID: model.ParentID(test.ParentID),
@@ -364,7 +364,7 @@ func (test *CreateNewParentTest) getParentAuthModel() *model.ParentAuth {
 	}
 }
 
-func (test *CreateNewParentTest) getParentInformModel() *model.ParentInform {
+func (test *CreateNewParentCase) getParentInformModel() *model.ParentInform {
 	return &model.ParentInform{
 		ParentUUID:  model.ParentUUID(test.ParentUUID),
 		Name:        model.Name(test.Name),
@@ -372,7 +372,7 @@ func (test *CreateNewParentTest) getParentInformModel() *model.ParentInform {
 	}
 }
 
-func (test *CreateNewParentTest) SetRequestContextOf(req *proto.CreateNewParentRequest) {
+func (test *CreateNewParentCase) SetRequestContextOf(req *proto.CreateNewParentRequest) {
 	req.UUID = test.UUID
 	req.ParentID = test.ParentID
 	req.ParentPW = test.ParentPW
@@ -380,7 +380,7 @@ func (test *CreateNewParentTest) SetRequestContextOf(req *proto.CreateNewParentR
 	req.PhoneNumber = test.PhoneNumber
 }
 
-func (test *CreateNewParentTest) GetMetadataContext() (ctx context.Context) {
+func (test *CreateNewParentCase) GetMetadataContext() (ctx context.Context) {
 	ctx = context.Background()
 	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
 	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)

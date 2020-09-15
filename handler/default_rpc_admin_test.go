@@ -550,7 +550,20 @@ func Test_default_CreateNewParent(t *testing.T) {
 		},
 	}
 
-	for _, _ = range tests {
+	for _, test := range tests {
+		test.ChangeEmptyValueToValidValue()
+		test.ChangeEmptyReplaceValueToEmptyValue()
+		test.OnExpectMethodsTo(mockForDB)
 
+		req := new(proto.CreateNewParentRequest)
+		test.SetRequestContextOf(req)
+		ctx := test.GetMetadataContext()
+
+		resp := new(proto.CreateNewParentResponse)
+		_ = defaultHandler.CreateNewParent(ctx, req, resp)
+
+		assert.Equalf(t, int(test.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", test, resp.Message)
+		assert.Equalf(t, test.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", test, resp.Message)
+		assert.Regexpf(t, test.ExpectedStudentUUID, resp.CreatedParentUUID, "parent uuid assertion error (test case: %v, message: %s)", test, resp.Message)
 	}
 }

@@ -4,13 +4,27 @@ import (
 	"auth/model"
 	proto "auth/proto/golang/auth"
 	"auth/tool/mysqlerr"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/go-playground/validator/v10"
 	"github.com/jinzhu/gorm"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 )
+
+//func init() {
+//	s, err := session.NewSession(&aws.Config{
+//		Credentials: credentials.NewStaticCredentials("eks-user-1-id", "eks-user-1-key", ""),
+//		Region:      aws.String("ap-northeast-2"),
+//	})
+//	if err != nil { panic(err) }
+//
+//	_, err = s3.New(s).PutObject(&s3.PutObjectInput{
+//		Bucket:      aws.String("dms-sms"),
+//		Key:         aws.String(fmt.Sprintf("profiles/%s", "student-111111111111")),
+//		Body:        bytes.NewReader(validImageByteArr),
+//	})
+//	if err != nil { panic(err) }
+//}
 
 func Test_default_CreateNewStudent(t *testing.T) {
 	const studentUUIDRegexString = "^student-\\d{12}"
@@ -134,9 +148,10 @@ func Test_default_CreateNewStudent(t *testing.T) {
 		resp := new(proto.CreateNewStudentResponse)
 		_ = defaultHandler.CreateNewStudent(ctx, req, resp)
 
-		assert.Equal(t, test.ExpectedStatus, resp.Status, "status assertion error")
-		assert.Equal(t, test.ExpectedCode, resp.Code, "code assertion error")
-		assert.Equal(t, test.ExpectedStudentUUID, resp.CreatedStudentUUID, "student uuid assertion error")
+		test.Image = nil
+		assert.Equalf(t, int(test.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", test, resp.Message)
+		assert.Equalf(t, test.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", test, resp.Message)
+		assert.Regexpf(t, test.ExpectedStudentUUID, resp.CreatedStudentUUID, "student uuid assertion error (test case: %v, message: %s)", test, resp.Message)
 	}
 
 	mockForDB.AssertExpectations(t)

@@ -36,7 +36,7 @@ func (test *createNewStudentTest) ChangeEmptyValueToValidValue() {
 	if test.UUID == emptyString              { test.UUID = validAdminUUID }
 	if test.StudentID == emptyString         { test.StudentID = validStudentID }
 	if test.StudentPW == emptyString         { test.StudentPW = validStudentPW }
-	if test.ParentUUID == emptyString        { test.ParentUUID = validParentUUID }
+	if test.ParentUUID == emptyString        { test.ParentUUID = validParentUUID() }
 	if test.Grade == emptyUint32             { test.Grade = validGrade }
 	if test.Class == emptyUint32             { test.Class = validClass }
 	if test.StudentNumber == emptyUint32     { test.StudentNumber = validStudentNumber }
@@ -274,16 +274,38 @@ func (test *createNewTeacherTest) GetMetadataContext() (ctx context.Context) {
 }
 
 type createNewParentTest struct {
-	UUID                 string
-	TeacherID, TeacherPW string
-	Grade, Class         uint32
-	Name, PhoneNumber    string
-	TeacherUUID          string
-	XRequestID           string
-	SpanContextString    string
-	ExpectedMethods      map[method]returns
-	ExpectedStatus       uint32
-	ExpectedCode         int32
-	ExpectedMessage      string
-	ExpectedStudentUUID  string
+	UUID                string
+	ParentID, ParentPW  string
+	Grade, Class        uint32
+	ParentUUID          string
+	XRequestID          string
+	SpanContextString   string
+	ExpectedMethods     map[method]returns
+	ExpectedStatus      uint32
+	ExpectedCode        int32
+	ExpectedMessage     string
+	ExpectedStudentUUID string
+}
+
+func (test *createNewParentTest) ChangeEmptyValueToValidValue() {
+	//reflect.ValueOf(test).FieldByName().Type()
+	if test.UUID == emptyString              { test.UUID = validAdminUUID }
+	if test.ParentID == emptyString          { test.ParentID = validParentID }
+	if test.ParentPW == emptyString          { test.ParentPW = validParentPW }
+	if test.Grade == emptyUint32             { test.Grade = validGrade }
+	if test.Class == emptyUint32             { test.Class = validClass }
+	if test.ParentUUID == emptyString        { test.ParentUUID = validParentUUID() }
+	if test.XRequestID == emptyString        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == emptyString { test.SpanContextString = validSpanContextString }
+}
+
+func (test *createNewParentTest) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.UUID == emptyReplaceValueForString               { test.UUID = "" }
+	if test.ParentID == emptyReplaceValueForString           { test.ParentID = "" }
+	if test.ParentPW == emptyReplaceValueForString           { test.ParentPW = "" }
+	if test.Grade == emptyReplaceValueForUint32              { test.Grade = 0 }
+	if test.Class == emptyReplaceValueForUint32              { test.Class = 0 }
+	if test.ParentUUID == emptyReplaceValueForString         { test.ParentUUID = "" }
+	if test.XRequestID == emptyReplaceValueForString         { test.XRequestID = "" }
+	if test.SpanContextString == emptyReplaceValueForString  { test.SpanContextString = "" }
 }

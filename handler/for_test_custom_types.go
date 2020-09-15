@@ -43,7 +43,7 @@ func (test *createNewStudentTest) ChangeEmptyValueToValidValue() {
 	if test.Name == emptyString              { test.Name = validName }
 	if test.PhoneNumber == emptyString       { test.PhoneNumber = validPhoneNumber }
 	if string(test.Image) == emptyString     { test.Image = validImageByteArr }
-	if test.StudentUUID == emptyString       { test.StudentUUID = validStudentUUID }
+	if test.StudentUUID == emptyString       { test.StudentUUID = validStudentUUID() }
 	if test.XRequestID == emptyString        { test.XRequestID = validXRequestID }
 	if test.SpanContextString == emptyString { test.SpanContextString = validSpanContextString }
 }
@@ -126,7 +126,7 @@ func (test *createNewStudentTest) getStudentInformModel() *model.StudentInform {
 		StudentNumber: model.StudentNumber(int64(test.StudentNumber)),
 		Name:          model.Name(test.Name),
 		PhoneNumber:   model.PhoneNumber(test.PhoneNumber),
-		ProfileURI:    model.ProfileURI(fmt.Sprintf("example.com/profiles/%s", test.StudentUUID)),
+		ProfileURI:    model.ProfileURI(fmt.Sprintf("profiles/%s", test.StudentUUID)),
 	}
 }
 

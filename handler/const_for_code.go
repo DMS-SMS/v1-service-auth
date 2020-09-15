@@ -5,9 +5,10 @@ const (
 	CodeParentUUIDNoExist = -102
 	CodeStudentNumberDuplicate = -103
 	CodeStudentPhoneNumberDuplicate = -104
-)
 
-const (
 	CodeTeacherIDDuplicate = -201
 	CodeTeacherPhoneNumberDuplicate = -202
+
+	CodeParentIDDuplicate = -301
+	CodeParentPhoneNumberDuplicate = -302
 )

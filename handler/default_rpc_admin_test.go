@@ -395,7 +395,22 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 		},
 	}
 
-	for _, _ = range tests {
+	for _, test := range tests {
+		test.ChangeEmptyValueToValidValue()
+		test.ChangeEmptyReplaceValueToEmptyValue()
+		test.OnExpectMethodsTo(mockForDB)
 
+		req := new(proto.CreateNewTeacherRequest)
+		test.SetRequestContextOf(req)
+		ctx := test.GetMetadataContext()
+
+		resp := new(proto.CreateNewTeacherResponse)
+		_ = defaultHandler.CreateNewTeacher(ctx, req, resp)
+
+		assert.Equalf(t, int(test.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", test, resp.Message)
+		assert.Equalf(t, test.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", test, resp.Message)
+		assert.Regexpf(t, test.ExpectedStudentUUID, resp.CreatedTeacherUUID, "teacher uuid assertion error (test case: %v, message: %s)", test, resp.Message)
 	}
+
+	mockForDB.AssertExpectations(t)
 }

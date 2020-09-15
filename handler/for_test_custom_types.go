@@ -192,3 +192,21 @@ func (test *createNewTeacherTest) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.XRequestID == emptyReplaceValueForString         { test.XRequestID = "" }
 	if test.SpanContextString == emptyReplaceValueForString  { test.SpanContextString = "" }
 }
+
+func (test *createNewTeacherTest) getTeacherAuthModel() *model.TeacherAuth {
+	return &model.TeacherAuth{
+		UUID:       model.UUID(test.TeacherUUID),
+		TeacherID:  model.TeacherID(test.TeacherID),
+		TeacherPW:  model.TeacherPW(test.TeacherPW),
+	}
+}
+
+func (test *createNewTeacherTest) getTeacherInformModel() *model.TeacherInform {
+	return &model.TeacherInform{
+		TeacherUUID:   model.TeacherUUID(test.TeacherUUID),
+		Grade:         model.Grade(int64(test.Grade)),
+		Class:         model.Class(int64(test.Class)),
+		Name:          model.Name(test.Name),
+		PhoneNumber:   model.PhoneNumber(test.PhoneNumber),
+	}
+}

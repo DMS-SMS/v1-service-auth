@@ -414,3 +414,143 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 
 	mockForDB.AssertExpectations(t)
 }
+
+func Test_default_CreateNewParent(t *testing.T) {
+	const parentUUIDRegexString = "^parent-\\d{12}"
+
+	tests := []createNewParentTest{
+		{ // success case
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                 {},
+				"CheckIfParentAuthExists": {false, nil},
+				"CreateParentAuth":        {&model.ParentAuth{}, nil},
+				"CreateParentInform":      {&model.TeacherInform{}, nil},
+				"Commit":                  {&gorm.DB{}},
+			},
+			ExpectedStatus:      http.StatusCreated,
+			ExpectedStudentUUID: parentUUIDRegexString,
+		}, { // not admin uuid -> forbidden
+			UUID:            "NotAdminAuthUUID", // (admin-숫자 12개의 형식이여야 함)
+			ExpectedMethods: map[method]returns{},
+			ExpectedStatus:  http.StatusForbidden,
+		}, { // invalid request value -> Proxy Authorization Required
+			ParentID: "유효하지 않은 아이디", // ASCII, 4~16 사이 문자열이여야 함
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                 {},
+				"CheckIfParentAuthExists": {false, nil},
+				"CreateParentAuth":        {&model.ParentAuth{}, (validator.ValidationErrors)(nil)},
+				"Rollback":                {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusProxyAuthRequired,
+		}, { // invalid request value -> Proxy Authorization Required
+			Name: "Invalid Name", // 2~4 글자의 한글이어야 함
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                 {},
+				"CheckIfParentAuthExists": {false, nil},
+				"CreateParentAuth":        {&model.ParentAuth{}, nil},
+				"CreateParentInform":      {&model.TeacherInform{}, (validator.ValidationErrors)(nil)},
+				"Rollback":                {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusProxyAuthRequired,
+		}, { // no exist X-Request-ID -> Proxy Authorization Required
+			XRequestID:      emptyReplaceValueForString,
+			ExpectedMethods: map[method]returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // invalid X-Request-ID -> Proxy Authorization Required
+			XRequestID:      "InvalidXRequestID",
+			ExpectedMethods: map[method]returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // no exist Span-Context -> Proxy Authorization Required
+			SpanContextString: emptyReplaceValueForString,
+			ExpectedMethods:   map[method]returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // invalid Span-Context -> Proxy Authorization Required
+			SpanContextString: "InvalidSpanContext",
+			ExpectedMethods:   map[method]returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // student id duplicate -> Conflict -201
+			ParentID: "duplicateID",
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                 {},
+				"CheckIfParentAuthExists": {false, nil},
+				"CreateParentAuth":        {&model.ParentAuth{}, mysqlerr.DuplicateEntry(model.ParentAuthInstance.ParentID.KeyName(), "duplicateID")},
+				"Rollback":                {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusConflict,
+			ExpectedCode:   CodeParentIDDuplicate,
+		}, { // phone number duplicate -> Conflict -202
+			PhoneNumber: "01088378347",
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                 {},
+				"CheckIfParentAuthExists": {false, nil},
+				"CreateParentAuth":        {&model.ParentAuth{}, nil},
+				"CreateParentInform":      {&model.ParentInform{}, mysqlerr.DuplicateEntry(model.ParentInformInstance.PhoneNumber.KeyName(), "01088378347")},
+				"Rollback":                {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusConflict,
+			ExpectedCode:   CodeParentPhoneNumberDuplicate,
+		}, { // CheckIfTeacherAuthExists error occur
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfParentAuthExists": {false, errors.New("unexpected error from DB Connection")},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateTeacherAuth return invalid duplicate error
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                 {},
+				"CheckIfParentAuthExists": {false, nil},
+				"CreateParentAuth":        {&model.ParentAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "InvalidMessage"}},
+				"Rollback":                {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateTeacherAuth return unexpected key duplicate error
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                 {},
+				"CheckIfParentAuthExists": {false, nil},
+				"CreateParentAuth":        {&model.ParentAuth{}, mysqlerr.DuplicateEntry("UnexpectedKey", "error")},
+				"Rollback":                {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateTeacherAuth return unexpected error code
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                 {},
+				"CheckIfParentAuthExists": {false, nil},
+				"CreateParentAuth":        {&model.ParentAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
+				"Rollback":                {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateTeacherInform return invalid duplicate error
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                 {},
+				"CheckIfParentAuthExists": {false, nil},
+				"CreateParentAuth":        {&model.ParentAuth{}, nil},
+				"CreateParentInform":      {&model.ParentInform{}, &mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "InvalidMessage"}},
+				"Rollback":                {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateTeacherInform return unexpected duplicate error
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                 {},
+				"CheckIfParentAuthExists": {false, nil},
+				"CreateParentAuth":        {&model.ParentAuth{}, nil},
+				"CreateParentInform":      {&model.ParentInform{}, mysqlerr.DuplicateEntry("UnexpectedKey", "duplicated")},
+				"Rollback":                {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateTeacherInform return unexpected error code
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                 {},
+				"CheckIfParentAuthExists": {false, nil},
+				"CreateParentAuth":        {&model.ParentAuth{}, nil},
+				"CreateParentInform":      {&model.ParentInform{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
+				"Rollback":                {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		},
+	}
+
+	for _, _ = range tests {
+
+	}
+}

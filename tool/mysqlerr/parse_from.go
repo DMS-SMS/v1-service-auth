@@ -8,7 +8,10 @@ import (
 	"strings"
 )
 
-var parserRegex = regexp.MustCompile("`.*?`")
+var (
+	regexForDuplicateError = regexp.MustCompile("'.*?'")
+	regexForFKConstraintFail = regexp.MustCompile("`.*?`")
+)
 
 func ParseDuplicateEntryErrorFrom(mysqlErr *mysql.MySQLError) (key, entry string, err error) {
 	const (
@@ -21,9 +24,9 @@ func ParseDuplicateEntryErrorFrom(mysqlErr *mysql.MySQLError) (key, entry string
 		return
 	}
 
-	matched := parserRegex.FindAllString(mysqlErr.Message, -1)
+	matched := regexForDuplicateError.FindAllString(mysqlErr.Message, -1)
 	for i := range matched {
-		matched[i] = strings.Trim(matched[i], "`")
+		matched[i] = strings.Trim(matched[i], "'")
 	}
 
 	key = matched[indexKey]
@@ -46,7 +49,7 @@ func ParseFKConstraintFailErrorFrom(mysqlErr *mysql.MySQLError) (fk FKInform, re
 		return
 	}
 
-	matched := parserRegex.FindAllString(mysqlErr.Message, -1)
+	matched := regexForFKConstraintFail.FindAllString(mysqlErr.Message, -1)
 	for i := range matched {
 		matched[i] = strings.Trim(matched[i], "`")
 	}

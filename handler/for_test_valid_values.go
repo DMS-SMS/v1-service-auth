@@ -14,10 +14,9 @@ import (
 
 const (
 	validAdminUUID = "admin-111111111111"
-	validStudentUUID = "student-111111111111"
 	validParentUUID = "parent-111111111111"
 	validStudentID = "jinhong0719"
-	validStudentPW = "testPW"
+	validStudentPW = ""
 	validGrade = 2
 	validClass = 2
 	validStudentNumber = 7
@@ -55,4 +54,11 @@ func init() {
 	if err != nil { log.Fatal(fmt.Sprintf("error while reading from image file, err: %v", err)) }
 
 	validXRequestID = uuid.New().String()
+}
+
+var studentUUIDNumber = 111111111111
+func validStudentUUID() (sUUID string) {
+	sUUID = fmt.Sprintf("student-%d", studentUUIDNumber)
+	studentUUIDNumber++
+	return
 }

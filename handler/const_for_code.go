@@ -9,6 +9,5 @@ const (
 
 const (
 	CodeTeacherIDDuplicate = -201
-	CodeClassDuplicate = -202
-	CodeTeacherPhoneNumberDuplicate = -203
+	CodeTeacherPhoneNumberDuplicate = -202
 )

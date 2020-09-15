@@ -424,7 +424,7 @@ func Test_default_CreateNewParent(t *testing.T) {
 				"BeginTx":                 {},
 				"CheckIfParentAuthExists": {false, nil},
 				"CreateParentAuth":        {&model.ParentAuth{}, nil},
-				"CreateParentInform":      {&model.TeacherInform{}, nil},
+				"CreateParentInform":      {&model.ParentInform{}, nil},
 				"Commit":                  {&gorm.DB{}},
 			},
 			ExpectedStatus:      http.StatusCreated,
@@ -448,7 +448,7 @@ func Test_default_CreateNewParent(t *testing.T) {
 				"BeginTx":                 {},
 				"CheckIfParentAuthExists": {false, nil},
 				"CreateParentAuth":        {&model.ParentAuth{}, nil},
-				"CreateParentInform":      {&model.TeacherInform{}, (validator.ValidationErrors)(nil)},
+				"CreateParentInform":      {&model.ParentInform{}, (validator.ValidationErrors)(nil)},
 				"Rollback":                {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusProxyAuthRequired,
@@ -566,4 +566,6 @@ func Test_default_CreateNewParent(t *testing.T) {
 		assert.Equalf(t, test.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", test, resp.Message)
 		assert.Regexpf(t, test.ExpectedStudentUUID, resp.CreatedParentUUID, "parent uuid assertion error (test case: %v, message: %s)", test, resp.Message)
 	}
+
+	mockForDB.AssertExpectations(t)
 }

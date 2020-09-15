@@ -332,14 +332,14 @@ func (test *createNewParentTest) onMethod(mock *mock.Mock, method method, return
 	case "CreateParentInform":
 		const indexParentInform = 0
 		const indexError = 1
-		if _, ok := returns[indexParentInform].(*model.TeacherInform); ok && returns[indexError] == nil {
+		if _, ok := returns[indexParentInform].(*model.ParentInform); ok && returns[indexError] == nil {
 			modelToReturn := test.getParentInformModel()
 			modelToReturn.Model = createGormModelOnCurrentTime()
 			returns[indexParentInform] = modelToReturn
 		}
 		mock.On(string(method), test.getParentInformModel()).Return(returns...)
 
-	case "CheckIfTParentAuthExists":
+	case "CheckIfParentAuthExists":
 		mock.On(string(method), test.ParentUUID).Return(returns...)
 
 	case "BeginTx":

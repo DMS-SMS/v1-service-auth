@@ -35,46 +35,21 @@ func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStude
 		conflictErrorFormat = "conflict (reason: %s)"
 	)
 
+	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
 	if !adminUUIDRegex.MatchString(req.UUID) {
 		resp.Status = http.StatusForbidden
 		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not admin")
 		return
 	}
 
-	md, ok := metadata.FromContext(ctx)
-	if !ok {
-		resp.Status = http.StatusProxyAuthRequired
-		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "metadata not exists")
-		return
-	}
-
-	reqID, ok := md.Get("X-Request-Id")
-	if !ok {
-		resp.Status = http.StatusProxyAuthRequired
-		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "X-Request-Id not exists")
-		return
-	}
-
-	_, err := uuid.Parse(reqID)
-	if err != nil {
-		resp.Status = http.StatusProxyAuthRequired
-		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "X-Request-ID invalid, err: " + err.Error())
-		return
-	}
-
-	spanCtx, ok := md.Get("Span-Context")
-	if !ok {
-		resp.Status = http.StatusProxyAuthRequired
-		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "Span-Context not exists")
-		return
-	}
-
-	parentSpan, err := jaeger.ContextFromString(spanCtx)
-	if err != nil {
-		resp.Status = http.StatusProxyAuthRequired
-		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "Span-Context invalid, err: " + err.Error())
-		return
-	}
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
 
 	access, err := h.manager.BeginTx()
 	if err != nil {
@@ -83,8 +58,8 @@ func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStude
 		return
 	}
 
-	sUUID, ok := md.Get("StudentUUID")
-	if !ok {
+	sUUID, ok := ctx.Value("StudentUUID").(string)
+	if !ok || sUUID == "" {
 		sUUID = fmt.Sprintf("student-%s", random.StringConsistOfIntWithLength(12))
 	}
 

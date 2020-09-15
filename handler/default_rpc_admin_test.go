@@ -247,3 +247,155 @@ func Test_default_CreateNewStudent(t *testing.T) {
 
 	mockForDB.AssertExpectations(t)
 }
+
+func Test_default_CreateNewTeacher(t *testing.T) {
+	const teacherUUIDRegexString = "^teacher-\\d{12}"
+
+	tests := []createNewTeacherTest{
+		{ // success case
+			Grade: emptyReplaceValueForUint32,
+			Class: emptyReplaceValueForUint32,
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfTeacherAuthExists": {false, nil},
+				"CreateTeacherAuth":        {&model.TeacherAuth{}, nil},
+				"CreateTeacherInform":      {&model.TeacherInform{}, nil},
+				"Commit":                   {&gorm.DB{}},
+			},
+			ExpectedStatus:      http.StatusCreated,
+			ExpectedStudentUUID: teacherUUIDRegexString,
+		}, { // not admin uuid -> forbidden
+			UUID:            "NotAdminAuthUUID", // (admin-숫자 12개의 형식이여야 함)
+			ExpectedMethods: map[method]returns{},
+			ExpectedStatus:  http.StatusForbidden,
+		}, { // invalid request value -> Proxy Authorization Required
+			TeacherID: "유효하지 않은 아이디", // ASCII, 4~16 사이 문자열이여야 함
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfTeacherAuthExists": {false, nil},
+				"CreateTeacherAuth":        {&model.TeacherAuth{}, (validator.ValidationErrors)(nil)},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusProxyAuthRequired,
+		}, { // invalid request value -> Proxy Authorization Required
+			Grade: 100, // 1~3 사이의 숫자여야 함
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfTeacherAuthExists": {false, nil},
+				"CreateTeacherAuth":        {&model.TeacherAuth{}, nil},
+				"CreateTeacherInform":      {&model.TeacherInform{}, (validator.ValidationErrors)(nil)},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusProxyAuthRequired,
+		}, { // invalid request value -> Proxy Authorization Required
+			Name: "Invalid Name", // 2~4 글자의 한글이어야 함
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfTeacherAuthExists": {false, nil},
+				"CreateTeacherAuth":        {&model.TeacherAuth{}, nil},
+				"CreateTeacherInform":      {&model.TeacherInform{}, (validator.ValidationErrors)(nil)},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusProxyAuthRequired,
+		}, { // no exist X-Request-ID -> Proxy Authorization Required
+			XRequestID:      emptyReplaceValueForString,
+			ExpectedMethods: map[method]returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // invalid X-Request-ID -> Proxy Authorization Required
+			XRequestID:      "InvalidXRequestID",
+			ExpectedMethods: map[method]returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // no exist Span-Context -> Proxy Authorization Required
+			SpanContextString: emptyReplaceValueForString,
+			ExpectedMethods:   map[method]returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // invalid Span-Context -> Proxy Authorization Required
+			SpanContextString: "InvalidSpanContext",
+			ExpectedMethods:   map[method]returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // student id duplicate -> Conflict -201
+			TeacherID: "duplicateID",
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfTeacherAuthExists": {false, nil},
+				"CreateTeacherAuth":        {&model.TeacherAuth{}, mysqlerr.DuplicateEntry(model.TeacherAuthInstance.TeacherID.KeyName(), "duplicateID")},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusConflict,
+			ExpectedCode:   CodeTeacherIDDuplicate,
+		}, { // phone number duplicate -> Conflict -202
+			PhoneNumber: "01088378347",
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfTeacherAuthExists": {false, nil},
+				"CreateTeacherAuth":        {&model.TeacherAuth{}, nil},
+				"CreateTeacherInform":      {&model.TeacherInform{}, mysqlerr.DuplicateEntry(model.TeacherInformInstance.PhoneNumber.KeyName(), "01088378347")},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusConflict,
+			ExpectedCode:   CodeTeacherPhoneNumberDuplicate,
+		}, { // CheckIfTeacherAuthExists error occur
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfTeacherAuthExists": {false, errors.New("unexpected error from DB Connection")},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateTeacherAuth return invalid duplicate error
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfTeacherAuthExists": {false, nil},
+				"CreateTeacherAuth":        {&model.TeacherAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "InvalidMessage"}},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateTeacherAuth return unexpected key duplicate error
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfTeacherAuthExists": {false, nil},
+				"CreateTeacherAuth":        {&model.TeacherAuth{}, mysqlerr.DuplicateEntry("UnexpectedKey", "error")},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateTeacherAuth return unexpected error code
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfTeacherAuthExists": {false, nil},
+				"CreateTeacherAuth":        {&model.TeacherAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateTeacherInform return invalid duplicate error
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfTeacherAuthExists": {false, nil},
+				"CreateTeacherAuth":        {&model.TeacherAuth{}, nil},
+				"CreateTeacherInform":      {&model.TeacherInform{}, &mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "InvalidMessage"}},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateTeacherInform return unexpected duplicate error
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfTeacherAuthExists": {false, nil},
+				"CreateTeacherAuth":        {&model.TeacherAuth{}, nil},
+				"CreateTeacherInform":      {&model.TeacherInform{}, mysqlerr.DuplicateEntry("UnexpectedKey", "duplicated")},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateTeacherInform return unexpected error code
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfTeacherAuthExists": {false, nil},
+				"CreateTeacherAuth":        {&model.TeacherAuth{}, nil},
+				"CreateTeacherInform":      {&model.TeacherInform{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		},
+	}
+
+	for _, _ = range tests {
+
+	}
+}

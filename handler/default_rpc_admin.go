@@ -49,7 +49,7 @@ func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStude
 	reqID := ctx.Value("X-Request-Id").(string)
 	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
 
-	access, err := h.manager.BeginTx()
+	access, err := h.accessManage.BeginTx()
 	if err != nil {
 		resp.Status = http.StatusInternalServerError
 		resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())

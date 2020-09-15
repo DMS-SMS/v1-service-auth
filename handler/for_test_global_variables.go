@@ -24,12 +24,12 @@ func init() {
 	if err != nil { log.Fatal(fmt.Sprintf("error while creating new tracer for service, err: %v", err)) }
 	defer func() { _ = closer.Close() }()
 
-	mockAccessManager, err := db.NewAccessorManage(access.Mock(mockForDB))
+	mockAccessManage, err := db.NewAccessorManage(access.Mock(mockForDB))
 	if err != nil { log.Fatal(fmt.Sprintf("error while creating new access manage with mock, err: %v", err)) }
 
 	defaultHandler = &_default{
-		manager: mockAccessManager,
-		tracer:  exampleTracerForRPCService,
+		accessManage: mockAccessManage,
+		tracer:       exampleTracerForRPCService,
 	}
 }
 

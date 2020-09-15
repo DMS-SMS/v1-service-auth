@@ -9,9 +9,9 @@ import (
 
 type _default struct {
 	None
-	manager    db.AccessorManage
-	tracer     opentracing.Tracer
-	awsSession *session.Session
+	accessManage db.AccessorManage
+	tracer       opentracing.Tracer
+	awsSession   *session.Session
 }
 
 type FieldSetter func(*_default)
@@ -32,9 +32,9 @@ func newDefault(setters ...FieldSetter) (h *_default) {
 	return
 }
 
-func Manager(m db.AccessorManage) FieldSetter {
+func Manager(am db.AccessorManage) FieldSetter {
 	return func(h *_default) {
-		h.manager = m
+		h.accessManage = am
 	}
 }
 

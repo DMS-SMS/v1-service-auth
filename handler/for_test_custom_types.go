@@ -276,7 +276,7 @@ func (test *createNewTeacherTest) GetMetadataContext() (ctx context.Context) {
 type createNewParentTest struct {
 	UUID                string
 	ParentID, ParentPW  string
-	Grade, Class        uint32
+	Name, PhoneNumber   string
 	ParentUUID          string
 	XRequestID          string
 	SpanContextString   string
@@ -292,8 +292,8 @@ func (test *createNewParentTest) ChangeEmptyValueToValidValue() {
 	if test.UUID == emptyString              { test.UUID = validAdminUUID }
 	if test.ParentID == emptyString          { test.ParentID = validParentID }
 	if test.ParentPW == emptyString          { test.ParentPW = validParentPW }
-	if test.Grade == emptyUint32             { test.Grade = validGrade }
-	if test.Class == emptyUint32             { test.Class = validClass }
+	if test.Name == emptyString              { test.Name = validName }
+	if test.PhoneNumber == emptyString       { test.PhoneNumber = validPhoneNumber }
 	if test.ParentUUID == emptyString        { test.ParentUUID = validParentUUID() }
 	if test.XRequestID == emptyString        { test.XRequestID = validXRequestID }
 	if test.SpanContextString == emptyString { test.SpanContextString = validSpanContextString }
@@ -303,9 +303,25 @@ func (test *createNewParentTest) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.UUID == emptyReplaceValueForString               { test.UUID = "" }
 	if test.ParentID == emptyReplaceValueForString           { test.ParentID = "" }
 	if test.ParentPW == emptyReplaceValueForString           { test.ParentPW = "" }
-	if test.Grade == emptyReplaceValueForUint32              { test.Grade = 0 }
-	if test.Class == emptyReplaceValueForUint32              { test.Class = 0 }
+	if test.Name == emptyReplaceValueForString               { test.Name = "" }
+	if test.PhoneNumber == emptyReplaceValueForString        { test.PhoneNumber = "" }
 	if test.ParentUUID == emptyReplaceValueForString         { test.ParentUUID = "" }
 	if test.XRequestID == emptyReplaceValueForString         { test.XRequestID = "" }
 	if test.SpanContextString == emptyReplaceValueForString  { test.SpanContextString = "" }
+}
+
+func (test *createNewParentTest) getParentAuthModel() *model.ParentAuth {
+	return &model.ParentAuth{
+		UUID:     model.UUID(test.ParentUUID),
+		ParentID: model.ParentID(test.ParentID),
+		ParentPW: model.ParentPW(test.ParentPW),
+	}
+}
+
+func (test *createNewParentTest) getParentInformModel() *model.ParentInform {
+	return &model.ParentInform{
+		ParentUUID:  model.ParentUUID(test.ParentUUID),
+		Name:        model.Name(test.Name),
+		PhoneNumber: model.PhoneNumber(test.PhoneNumber),
+	}
 }

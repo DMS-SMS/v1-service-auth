@@ -20,14 +20,23 @@ import (
 	"github.com/uber/jaeger-client-go"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"regexp"
 )
 
 func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStudentRequest, resp *proto.CreateNewStudentResponse) (_ error) {
 	const (
+		forbiddenMessageFormat = "forbidden (reason: %s)"
 		proxyAuthRequiredMessageFormat = "proxy auth required (reason: %s)"
 		internalServerErrorFormat = "internal server error (reason: %s)"
 		conflictErrorFormat = "conflict (reason: %s)"
 	)
+
+	adminUUIDRegex := regexp.MustCompile("^admin-\\d{12}")
+	if !adminUUIDRegex.MatchString(req.UUID) {
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not admin")
+		return
+	}
 
 	md, ok := metadata.FromContext(ctx)
 	if !ok {
@@ -47,6 +56,7 @@ func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStude
 	if err != nil {
 		resp.Status = http.StatusProxyAuthRequired
 		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "X-Request-ID invalid, err: " + err.Error())
+		return
 	}
 
 	spanCtx, ok := md.Get("Span-Context")
@@ -93,7 +103,7 @@ func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStude
 		continue
 	}
 
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.StudentPW), 2)
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.StudentPW), 1)
 	if err != nil {
 		access.Rollback()
 		resp.Status = http.StatusInternalServerError
@@ -103,7 +113,7 @@ func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStude
 
 	spanForDB := h.tracer.StartSpan("CreateStudentAuth", opentracing.ChildOf(parentSpan))
 	resultAuth, err := access.CreateStudentAuth(&model.StudentAuth{
-		UUID:       model.UUID(req.UUID),
+		UUID:       model.UUID(sUUID),
 		StudentID:  model.StudentID(req.StudentID),
 		StudentPW:  model.StudentPW(string(hashedBytes)),
 		ParentUUID: model.ParentUUID(req.ParentUUID),
@@ -158,6 +168,10 @@ func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStude
 				resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected FK constraint fail, FK name: " + fkInform.AttrName)
 			}
 			return
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected CreateStudentAuth error, err: " + assertedError.Error())
+			return
 		}
 	}
 
@@ -173,6 +187,65 @@ func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStude
 			return
 		}
 	}
+
+	spanForDB = h.tracer.StartSpan("CreateStudentInform", opentracing.ChildOf(parentSpan))
+	resultInform, err := access.CreateStudentInform(&model.StudentInform{
+		StudentUUID:   model.StudentUUID(string(resultAuth.UUID)),
+		Grade:         model.Grade(int64(req.Grade)),
+		Class:         model.Class(int64(req.Class)),
+		StudentNumber: model.StudentNumber(int64(req.StudentNumber)),
+		Name:          model.Name(req.Name),
+		PhoneNumber:   model.PhoneNumber(req.PhoneNumber),
+		ProfileURI:    model.ProfileURI(fmt.Sprintf("profiles/%s", string(resultAuth.UUID))),
+	})
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedInform", resultInform), log.Error(err))
+	spanForDB.Finish()
+
+	switch assertedError := err.(type) {
+	case nil:
+		break
+
+	case validator.ValidationErrors:
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for student inform, err: " + err.Error())
+		return
+
+	case *mysql.MySQLError:
+		access.Rollback()
+		switch assertedError.Number {
+		case mysqlcode.ER_DUP_ENTRY:
+			key, entry, err := mysqlerr.ParseDuplicateEntryErrorFrom(assertedError)
+			if err != nil {
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to parse duplicate error, err: " + err.Error())
+				return
+			}
+			switch key {
+			case model.StudentInformInstance.StudentNumber.KeyName():
+				resp.Status = http.StatusConflict
+				resp.Code = CodeStudentNumberDuplicate
+				resp.Message = fmt.Sprintf(conflictErrorFormat, "student number duplicate, entry: " + entry)
+			case model.StudentInformInstance.PhoneNumber.KeyName():
+				resp.Status = http.StatusConflict
+				resp.Code = CodePhoneNumberDuplicate
+				resp.Message = fmt.Sprintf(conflictErrorFormat, "phone number duplicate entry: " + entry)
+			default:
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected duplicate error, key: " + key)
+			}
+			return
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected CreateStudentInform error, err: " + assertedError.Error())
+			return
+		}
+	}
+
+	access.Commit()
+	resp.Status = http.StatusCreated
+	resp.Message = "new student create success"
+	resp.CreatedStudentUUID = sUUID
 
 	return
 }

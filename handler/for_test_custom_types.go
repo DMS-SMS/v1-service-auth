@@ -272,3 +272,18 @@ func (test *createNewTeacherTest) GetMetadataContext() (ctx context.Context) {
 	ctx = metadata.Set(ctx, "TeacherUUID", test.TeacherUUID)
 	return
 }
+
+type createNewParentTest struct {
+	UUID                 string
+	TeacherID, TeacherPW string
+	Grade, Class         uint32
+	Name, PhoneNumber    string
+	TeacherUUID          string
+	XRequestID           string
+	SpanContextString    string
+	ExpectedMethods      map[method]returns
+	ExpectedStatus       uint32
+	ExpectedCode         int32
+	ExpectedMessage      string
+	ExpectedStudentUUID  string
+}

@@ -371,3 +371,19 @@ func (test *createNewParentTest) getParentInformModel() *model.ParentInform {
 		PhoneNumber: model.PhoneNumber(test.PhoneNumber),
 	}
 }
+
+func (test *createNewParentTest) SetRequestContextOf(req *proto.CreateNewParentRequest) {
+	req.UUID = test.UUID
+	req.ParentID = test.ParentID
+	req.ParentPW = test.ParentPW
+	req.Name = test.Name
+	req.PhoneNumber = test.PhoneNumber
+}
+
+func (test *createNewParentTest) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+	ctx = metadata.Set(ctx, "ParentUUID", test.ParentUUID)
+	return
+}

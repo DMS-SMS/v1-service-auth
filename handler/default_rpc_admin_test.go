@@ -4,7 +4,10 @@ import (
 	"auth/model"
 	proto "auth/proto/golang/auth"
 	"auth/tool/mysqlerr"
+	"errors"
+	mysqlcode "github.com/VividCortex/mysqlerr"
 	"github.com/go-playground/validator/v10"
+	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -82,13 +85,13 @@ func Test_default_CreateNewStudent(t *testing.T) {
 			ExpectedMethods: map[method]returns{},
 			ExpectedStatus:  http.StatusProxyAuthRequired,
 		}, { // no exist Span-Context -> Proxy Authorization Required
-			XRequestID: emptyReplaceValueForString,
-			ExpectedMethods: map[method]returns{},
-			ExpectedStatus:  http.StatusProxyAuthRequired,
+			SpanContextString: emptyReplaceValueForString,
+			ExpectedMethods:   map[method]returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
 		}, { // invalid Span-Context -> Proxy Authorization Required
-			XRequestID:      "InvalidSpanContext",
-			ExpectedMethods: map[method]returns{},
-			ExpectedStatus:  http.StatusProxyAuthRequired,
+			SpanContextString: "InvalidSpanContext",
+			ExpectedMethods:   map[method]returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
 		}, { // student id duplicate -> Conflict -101
 			StudentID: "jinhong0719",
 			ExpectedMethods: map[method]returns{
@@ -133,6 +136,67 @@ func Test_default_CreateNewStudent(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   CodePhoneNumberDuplicate,
+		}, { // CheckIfStudentAuthExists error occur
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfStudentAuthExists": {false, errors.New("unexpected error from DB Connection")},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateStudentAuth return invalid duplicate error
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfStudentAuthExists": {false, nil},
+				"CreateStudentAuth":        {&model.StudentAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "InvalidMessage"}},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateStudentAuth return unexpected key duplicate error
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfStudentAuthExists": {false, nil},
+				"CreateStudentAuth":        {&model.StudentAuth{}, mysqlerr.DuplicateEntry("UnexpectedKey", "error")},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateStudentAuth return invalid Fk Constraint Fail error
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfStudentAuthExists": {false, nil},
+				"CreateStudentAuth":        {&model.StudentAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_NO_REFERENCED_ROW_2, Message: "InvalidMessage"}},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateStudentAuth return unexpected constraint name error
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfStudentAuthExists": {false, nil},
+				"CreateStudentAuth":        {&model.StudentAuth{}, mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
+					ConstraintName: "unexpected constraint name",
+					AttrName:       "unexpected attr",
+				}, mysqlerr.RefInform{})},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateStudentAuth return unexpected constraint name error
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfStudentAuthExists": {false, nil},
+				"CreateStudentAuth":        {&model.StudentAuth{}, mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
+					ConstraintName: "unexpected constraint name",
+					AttrName:       "unexpected attr",
+				}, mysqlerr.RefInform{})},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateStudentAuth return unexpected error code
+			ExpectedMethods: map[method]returns{
+				"BeginTx":                  {},
+				"CheckIfStudentAuthExists": {false, nil},
+				"CreateStudentAuth":        {&model.StudentAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
 		},
 	}
 

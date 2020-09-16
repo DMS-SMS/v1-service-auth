@@ -7,11 +7,21 @@ import (
 	"github.com/stretchr/testify/mock"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	"log"
+	"regexp"
 )
 
 var (
 	defaultHandler *_default
 	mockForDB *mock.Mock
+
+	adminUUIDRegex = regexp.MustCompile("^admin-\\d{12}")
+)
+
+const (
+	forbiddenMessageFormat = "forbidden (reason: %s)"
+	proxyAuthRequiredMessageFormat = "proxy auth required (reason: %s)"
+	internalServerErrorFormat = "internal server error (reason: %s)"
+	conflictErrorFormat = "conflict (reason: %s)"
 )
 
 func init() {

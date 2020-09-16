@@ -3,6 +3,8 @@ package test
 import (
 	proto "auth/proto/golang/auth"
 	"context"
+	"fmt"
+	"github.com/micro/go-micro/v2/metadata"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -59,8 +61,8 @@ func (test *LoginStudentAuthCase) SetRequestContextOf(req *proto.LoginStudentAut
 func (test *LoginStudentAuthCase) GetMetadataContext() (ctx context.Context) {
 	ctx = context.Background()
 
-	ctx = context.WithValue(ctx, "X-Request-Id", test.XRequestID)
-	ctx = context.WithValue(ctx, "Span-Context", test.SpanContextString)
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
 
 	return
 }

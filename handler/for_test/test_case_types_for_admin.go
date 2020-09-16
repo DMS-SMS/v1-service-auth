@@ -339,7 +339,7 @@ func (test *CreateNewParentCase) onMethod(mock *mock.Mock, method Method, return
 		}
 		mock.On(string(method), test.getParentInformModel()).Return(returns...)
 
-	case "GerParentAuthWithUUID":
+	case "GetParentAuthWithUUID":
 		mock.On(string(method), test.ParentUUID).Return(returns...)
 
 	case "BeginTx":

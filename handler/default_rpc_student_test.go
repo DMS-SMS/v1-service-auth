@@ -112,10 +112,13 @@ func Test_default_ChangeStudentPW(t *testing.T) {
 			CurrentPW:   "testPW",
 			RevisionPW:  "NewPassword",
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                {},
-				"GetStudentAuthWithUUID": {&model.StudentAuth{StudentPW: model.StudentPW(string(hashedTestPW))}, nil},
-				"ChangeStudentPW":        {nil},
-				"Commit":                 {&gorm.DB{}},
+				"BeginTx": {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{
+					UUID:      "student-111111111111",
+					StudentPW: model.StudentPW(string(hashedTestPW)),
+				}, nil},
+				"ChangeStudentPW": {nil},
+				"Commit":          {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusOK,
 		}, { // no exist X-Request-ID -> Proxy Authorization Required
@@ -163,9 +166,12 @@ func Test_default_ChangeStudentPW(t *testing.T) {
 			CurrentPW:   "testPW",
 			RevisionPW:  "NewPassword",
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                {},
-				"GetStudentAuthWithUUID": {&model.StudentAuth{StudentPW: "NotEqualPassword"}, nil},
-				"Rollback":               {&gorm.DB{}},
+				"BeginTx": {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{
+					UUID:      "student-111111111116",
+					StudentPW: "NotEqualPassword",
+				}, nil},
+				"Rollback": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   CodeIncorrectStudentPWForChange,
@@ -186,16 +192,31 @@ func Test_default_ChangeStudentPW(t *testing.T) {
 			CurrentPW:   "testPW",
 			RevisionPW:  "NewPassword",
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                {},
-				"GetStudentAuthWithUUID": {&model.StudentAuth{StudentPW: model.StudentPW(string(hashedTestPW))}, nil},
-				"ChangeStudentPW":        {errors.New("DB not connected")},
-				"Rollback":               {&gorm.DB{}},
+				"BeginTx": {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{
+					UUID:      "student-111111111118",
+					StudentPW: model.StudentPW(string(hashedTestPW)),
+				}, nil},
+				"ChangeStudentPW": {errors.New("DB not connected")},
+				"Rollback":        {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		},
 	}
 
 	for _, testCase := range tests {
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethods(mockForDB)
 
+		req := new(proto.ChangeStudentPWRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		resp := new(proto.ChangeStudentPWResponse)
+		_ = defaultHandler.ChangeStudentPW(ctx, req, resp)
+
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
 	}
 }

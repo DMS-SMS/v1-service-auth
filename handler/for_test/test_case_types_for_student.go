@@ -67,7 +67,7 @@ func (test *LoginStudentAuthCase) GetMetadataContext() (ctx context.Context) {
 }
 
 type ChangeStudentPWCase struct {
-	UUID, StudentID       string
+	UUID, StudentUUID     string
 	CurrentPW, RevisionPW string
 	XRequestID            string
 	SpanContextString     string
@@ -89,10 +89,30 @@ func (test *ChangeStudentPWCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
 }
 
+func (test *ChangeStudentPWCase) OnExpectMethods(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *ChangeStudentPWCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+	switch method {
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "GetStudentAuthWithUUID": // 추가 구현 필요
+		mock.On(string(method), test.StudentUUID).Return(returns...)
+	case "ChangeStudentPW":
+		mock.On(string(method), test.StudentUUID, test.RevisionPW).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	}
+}
 
 func (test *ChangeStudentPWCase) SetRequestContextOf(req *proto.ChangeStudentPWRequest) {
 	req.UUID = test.UUID
-	req.StudentID = test.StudentID
+	req.StudentUUID = test.StudentUUID
 	req.CurrentPW = test.CurrentPW
 	req.RevisionPW = test.RevisionPW
 }

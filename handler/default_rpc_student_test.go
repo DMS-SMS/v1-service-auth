@@ -103,19 +103,21 @@ func Test_default_LoginStudentAuth(t *testing.T) {
 }
 
 func Test_default_ChangeStudentPW(t *testing.T) {
-	hashedTestPW, _ := bcrypt.GenerateFromPassword([]byte("testPW"), 1)
+	hashedTestPW1, _ := bcrypt.GenerateFromPassword([]byte("testPW1"), 1)
+	hashedTestPW2, _ := bcrypt.GenerateFromPassword([]byte("testPW2"), 1)
+
 
 	tests := []test.ChangeStudentPWCase{
 		{ // success case
 			UUID:        "student-111111111111",
 			StudentUUID: "student-111111111111",
-			CurrentPW:   "testPW",
+			CurrentPW:   "testPW1",
 			RevisionPW:  "NewPassword",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
 				"GetStudentAuthWithUUID": {&model.StudentAuth{
 					UUID:      "student-111111111111",
-					StudentPW: model.StudentPW(string(hashedTestPW)),
+					StudentPW: model.StudentPW(string(hashedTestPW1)),
 				}, nil},
 				"ChangeStudentPW": {nil},
 				"Commit":          {&gorm.DB{}},
@@ -140,19 +142,19 @@ func Test_default_ChangeStudentPW(t *testing.T) {
 		}, { // forbidden (not student)
 			UUID:           "parent-111111111112",
 			StudentUUID:    "parent-111111111112",
-			CurrentPW:      "testPW",
+			CurrentPW:      "testPW1",
 			RevisionPW:     "NewPassword",
 			ExpectedStatus: http.StatusForbidden,
 		}, { // forbidden (not my auth)
 			UUID:           "student-111111111113",
 			StudentUUID:    "student-111111111114",
-			CurrentPW:      "testPW",
+			CurrentPW:      "testPW1",
 			RevisionPW:     "NewPassword",
 			ExpectedStatus: http.StatusForbidden,
 		}, { // not exists student
 			UUID:           "student-111111111115",
 			StudentUUID:    "student-111111111115",
-			CurrentPW:      "testPW",
+			CurrentPW:      "testPW1",
 			RevisionPW:     "NewPassword",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                {},
@@ -163,13 +165,13 @@ func Test_default_ChangeStudentPW(t *testing.T) {
 		}, { // 현재 Password 불일치
 			UUID:        "student-111111111116",
 			StudentUUID: "student-111111111116",
-			CurrentPW:   "testPW",
+			CurrentPW:   "testPW1",
 			RevisionPW:  "NewPassword",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
 				"GetStudentAuthWithUUID": {&model.StudentAuth{
 					UUID:      "student-111111111116",
-					StudentPW: "NotEqualPassword",
+					StudentPW: model.StudentPW(string(hashedTestPW2)),
 				}, nil},
 				"Rollback": {&gorm.DB{}},
 			},
@@ -178,7 +180,7 @@ func Test_default_ChangeStudentPW(t *testing.T) {
 		}, { // GetStudentAuthWithUUID 에러 반환
 			UUID:        "student-111111111117",
 			StudentUUID: "student-111111111117",
-			CurrentPW:   "testPW",
+			CurrentPW:   "testPW1",
 			RevisionPW:  "NewPassword",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                {},
@@ -189,15 +191,29 @@ func Test_default_ChangeStudentPW(t *testing.T) {
 		}, { // ChangeStudentPW 에러 반환
 			UUID:        "student-111111111118",
 			StudentUUID: "student-111111111118",
-			CurrentPW:   "testPW",
+			CurrentPW:   "testPW1",
 			RevisionPW:  "NewPassword",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
 				"GetStudentAuthWithUUID": {&model.StudentAuth{
 					UUID:      "student-111111111118",
-					StudentPW: model.StudentPW(string(hashedTestPW)),
+					StudentPW: model.StudentPW(string(hashedTestPW1)),
 				}, nil},
 				"ChangeStudentPW": {errors.New("DB not connected")},
+				"Rollback":        {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // GetStudentAuthWithUUID Short Hashed PW 반환
+			UUID:        "student-111111111119",
+			StudentUUID: "student-111111111119",
+			CurrentPW:   "testPW1",
+			RevisionPW:  "NewPassword",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{
+					UUID:      "student-111111111119",
+					StudentPW: "TooShortHashedPasword",
+				}, nil},
 				"Rollback":        {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,

@@ -54,7 +54,7 @@ func(h _default) LoginStudentAuth(ctx context.Context, req *proto.LoginStudentAu
 		switch err {
 		case bcrypt.ErrMismatchedHashAndPassword:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeIncorrectStudentPW
+			resp.Code = CodeIncorrectStudentPWForLogin
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "mismatched hash and password")
 		default:
 			resp.Status = http.StatusInternalServerError

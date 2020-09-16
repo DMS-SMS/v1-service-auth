@@ -78,7 +78,7 @@ func Test_default_LoginStudentAuth(t *testing.T) {
 				"Rollback": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeIncorrectStudentPW,
+			ExpectedCode:   CodeIncorrectStudentPWForLogin,
 		},
 	}
 

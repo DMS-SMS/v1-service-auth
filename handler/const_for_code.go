@@ -13,5 +13,5 @@ const (
 	CodeParentPhoneNumberDuplicate = -302
 
 	CodeStudentIDNoExist = -401
-	CodeIncorrectStudentPW = -402
+	CodeIncorrectStudentPWForLogin = -402
 )

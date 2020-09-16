@@ -59,7 +59,7 @@ func ParseFKConstraintFailErrorFrom(mysqlErr *mysql.MySQLError) (fk FKInform, re
 		err = errors.New("this parameter is incorrect for the FK Construct Fail Error format")
 		return
 	}
-
+  
 	for i := range matched {
 		matched[i] = strings.Trim(matched[i], "`")
 	}

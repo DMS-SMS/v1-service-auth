@@ -22,9 +22,11 @@ var (
 
 const (
 	forbiddenMessageFormat = "forbidden (reason: %s)"
+	notFoundMessageFormat = "not found (reason: %s)"
 	proxyAuthRequiredMessageFormat = "proxy auth required (reason: %s)"
-	internalServerErrorFormat = "internal server error (reason: %s)"
 	conflictErrorFormat = "conflict (reason: %s)"
+	internalServerErrorFormat = "internal server error (reason: %s)"
+
 )
 
 func init() {

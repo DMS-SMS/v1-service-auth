@@ -3,7 +3,9 @@ package handler
 import (
 	test "auth/handler/for_test"
 	"auth/model"
+	proto "auth/proto/golang/auth"
 	"github.com/jinzhu/gorm"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 )
@@ -66,7 +68,22 @@ func Test_default_LoginStudentAuth(t *testing.T) {
 		},
 	}
 
-	for _, _ = range tests {
-		
+	for _, testCase := range tests {
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethods(mockForDB)
+
+		var req = new(proto.LoginStudentAuthRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		var resp = new(proto.LoginStudentAuthResponse)
+		_ = defaultHandler.LoginStudentAuth(ctx, req, resp)
+
+		assert.Equalf(t, testCase.ExpectedStatus, resp.Status, "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedLoggedInStudentUUID, resp.LoggedInStudentUUID, "student uuid assertion error (test case: %v, message: %s)", testCase, resp.Message)
 	}
+
+	mockForDB.AssertExpectations(t)
 }

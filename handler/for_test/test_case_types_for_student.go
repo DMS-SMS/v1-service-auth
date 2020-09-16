@@ -69,10 +69,39 @@ func (test *LoginStudentAuthCase) GetMetadataContext() (ctx context.Context) {
 type ChangeStudentPWCase struct {
 	UUID, StudentID       string
 	CurrentPW, RevisionPW string
-	XRequestID                  string
-	SpanContextString           string
-	ExpectedMethods             map[Method]Returns
-	ExpectedStatus              uint32
-	ExpectedCode                int32
-	ExpectedMessage             string
+	XRequestID            string
+	SpanContextString     string
+	ExpectedMethods       map[Method]Returns
+	ExpectedStatus        uint32
+	ExpectedCode          int32
+	ExpectedMessage       string
+}
+
+func (test *ChangeStudentPWCase) ChangeEmptyValueToValidValue() {
+	if test.UUID == ""              { test.UUID = validAdminUUID }
+	if test.SpanContextString == "" { test.SpanContextString = validSpanContextString }
+	if test.XRequestID == ""        { test.XRequestID = validXRequestID }
+}
+
+func (test *ChangeStudentPWCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.UUID == EmptyReplaceValueForString              { test.UUID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+}
+
+
+func (test *ChangeStudentPWCase) SetRequestContextOf(req *proto.ChangeStudentPWRequest) {
+	req.UUID = test.UUID
+	req.StudentID = test.StudentID
+	req.CurrentPW = test.CurrentPW
+	req.RevisionPW = test.RevisionPW
+}
+
+func (test *ChangeStudentPWCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+
+	return
 }

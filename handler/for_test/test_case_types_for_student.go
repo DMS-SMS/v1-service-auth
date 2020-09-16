@@ -78,13 +78,11 @@ type ChangeStudentPWCase struct {
 }
 
 func (test *ChangeStudentPWCase) ChangeEmptyValueToValidValue() {
-	if test.UUID == ""              { test.UUID = validAdminUUID }
 	if test.SpanContextString == "" { test.SpanContextString = validSpanContextString }
 	if test.XRequestID == ""        { test.XRequestID = validXRequestID }
 }
 
 func (test *ChangeStudentPWCase) ChangeEmptyReplaceValueToEmptyValue() {
-	if test.UUID == EmptyReplaceValueForString              { test.UUID = "" }
 	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
 	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
 }
@@ -102,7 +100,7 @@ func (test *ChangeStudentPWCase) onMethod(mock *mock.Mock, method Method, return
 	case "GetStudentAuthWithUUID": // 추가 구현 필요
 		mock.On(string(method), test.StudentUUID).Return(returns...)
 	case "ChangeStudentPW":
-		mock.On(string(method), test.StudentUUID, test.RevisionPW).Return(returns...)
+		mock.On(string(method), test.StudentUUID, "").Return(returns...)
 	case "Commit":
 		mock.On(string(method)).Return(returns...)
 	case "Rollback":

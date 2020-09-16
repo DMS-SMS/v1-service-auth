@@ -4,26 +4,30 @@ import (
 	test "auth/handler/for_test"
 	"auth/model"
 	proto "auth/proto/golang/auth"
+	"errors"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"testing"
 )
 
 func Test_default_LoginStudentAuth(t *testing.T) {
+	hashedByte, _ := bcrypt.GenerateFromPassword([]byte("testPW"), 1)
+
 	tests := []test.LoginStudentAuthCase{
 		{ // success case
-			StudentID: "jinhong0719",
+			StudentID: "jinhong07191",
 			StudentPW: "testPW",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
 				"GetStudentAuthWithID": {&model.StudentAuth{
 					UUID:       "student-111111111111", // 중복 X !!
 					StudentID:  "jinhong0719",
-					StudentPW:  "testPW",
+					StudentPW:  model.StudentPW(string(hashedByte)),
 					ParentUUID: "parent-111111111111",
 				}, nil},
-				"Commit": {},
+				"Commit": {&gorm.DB{}},
 			},
 			ExpectedStatus:              http.StatusOK,
 			ExpectedLoggedInStudentUUID: "student-111111111111",
@@ -44,27 +48,37 @@ func Test_default_LoginStudentAuth(t *testing.T) {
 			ExpectedMethods:   map[test.Method]test.Returns{},
 			ExpectedStatus:    http.StatusProxyAuthRequired,
 		}, { // Student ID no exists
-			StudentID: "jinhong0719",
+			StudentID: "jinhong07192",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":              {},
 				"GetStudentAuthWithID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
-				"Commit":               {},
+				"Rollback":             {&gorm.DB{}},
 			},
-			ExpectedStatus: CodeStudentIDNoExist,
+			ExpectedStatus: http.StatusConflict,
+			ExpectedCode:   CodeStudentIDNoExist,
+		}, { // GetStudentAuthWithID unexpected error
+			StudentID: "jinhong07193",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":              {},
+				"GetStudentAuthWithID": {&model.StudentAuth{}, errors.New("unexpected error")},
+				"Rollback":             {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
 		}, { // incorrect Student PW
-			StudentID: "jinhong0719",
+			StudentID: "jinhong07194",
 			StudentPW: "incorrectPW",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
 				"GetStudentAuthWithID": {&model.StudentAuth{
 					UUID:       "student-111111111111", // 중복 X !!
-					StudentID:  "jinhong0719",
-					StudentPW:  "testPW",
+					StudentID:  "jinhong07194",
+					StudentPW:  model.StudentPW(string(hashedByte)),
 					ParentUUID: "parent-111111111111",
 				}, nil},
-				"Commit": {},
+				"Rollback": {&gorm.DB{}},
 			},
-			ExpectedStatus: CodeIncorrectStudentPW,
+			ExpectedStatus: http.StatusConflict,
+			ExpectedCode:   CodeIncorrectStudentPW,
 		},
 	}
 
@@ -80,8 +94,8 @@ func Test_default_LoginStudentAuth(t *testing.T) {
 		var resp = new(proto.LoginStudentAuthResponse)
 		_ = defaultHandler.LoginStudentAuth(ctx, req, resp)
 
-		assert.Equalf(t, testCase.ExpectedStatus, resp.Status, "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
-		assert.Equalf(t, testCase.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, testCase.ExpectedLoggedInStudentUUID, resp.LoggedInStudentUUID, "student uuid assertion error (test case: %v, message: %s)", testCase, resp.Message)
 	}
 

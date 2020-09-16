@@ -63,7 +63,7 @@ func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStude
 	}
 
 	for {
-		spanForDB := h.tracer.StartSpan("CheckIfStudentAuthExists", opentracing.ChildOf(parentSpan))
+		spanForDB := h.tracer.StartSpan("GetStudentAuthWithUUID", opentracing.ChildOf(parentSpan))
 		selectedAuth, err := access.GetStudentAuthWithUUID(sUUID)
 		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("selectedAuth", selectedAuth), log.Error(err))
 		spanForDB.Finish()
@@ -257,18 +257,18 @@ func (h _default) CreateNewTeacher(ctx context.Context, req *proto.CreateNewTeac
 	}
 
 	for {
-		spanForDB := h.tracer.StartSpan("CheckIfTeacherAuthExists", opentracing.ChildOf(parentSpan))
-		exist, err := access.CheckIfTeacherAuthExists(tUUID)
-		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Bool("exist", exist), log.Error(err))
+		spanForDB := h.tracer.StartSpan("GetTeacherAuthWithUUID", opentracing.ChildOf(parentSpan))
+		selectedAuth, err := access.GetTeacherAuthWithUUID(tUUID)
+		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("selectedAuth", selectedAuth), log.Error(err))
 		spanForDB.Finish()
+		if err == gorm.ErrRecordNotFound {
+			break
+		}
 		if err != nil {
 			access.Rollback()
 			resp.Status = http.StatusInternalServerError
 			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " + err.Error())
 			return
-		}
-		if !exist {
-			break
 		}
 		tUUID = fmt.Sprintf("teacher-%s", random.StringConsistOfIntWithLength(12))
 		continue
@@ -414,18 +414,18 @@ func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParen
 	}
 
 	for {
-		spanForDB := h.tracer.StartSpan("CheckIfParentAuthExists", opentracing.ChildOf(parentSpan))
-		exist, err := access.CheckIfParentAuthExists(pUUID)
-		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Bool("exist", exist), log.Error(err))
+		spanForDB := h.tracer.StartSpan("GetParentAuthWithUUID", opentracing.ChildOf(parentSpan))
+		selectedAuth, err := access.GetParentAuthWithUUID(pUUID)
+		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("selectedAuth", selectedAuth), log.Error(err))
 		spanForDB.Finish()
+		if err == gorm.ErrRecordNotFound {
+			break
+		}
 		if err != nil {
 			access.Rollback()
 			resp.Status = http.StatusInternalServerError
 			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " + err.Error())
 			return
-		}
-		if !exist {
-			break
 		}
 		pUUID = fmt.Sprintf("parent-%s", random.StringConsistOfIntWithLength(12))
 		continue

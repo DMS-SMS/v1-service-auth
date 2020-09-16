@@ -3,7 +3,6 @@ package test
 import (
 	proto "auth/proto/golang/auth"
 	"context"
-	"fmt"
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/stretchr/testify/mock"
 )
@@ -65,4 +64,15 @@ func (test *LoginStudentAuthCase) GetMetadataContext() (ctx context.Context) {
 	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
 
 	return
+}
+
+type ChangeStudentPWCase struct {
+	UUID, StudentID       string
+	CurrentPW, RevisionPW string
+	XRequestID                  string
+	SpanContextString           string
+	ExpectedMethods             map[Method]Returns
+	ExpectedStatus              uint32
+	ExpectedCode                int32
+	ExpectedMessage             string
 }

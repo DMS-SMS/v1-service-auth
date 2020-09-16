@@ -67,14 +67,17 @@ func (m _mock) GetParentAuthWithUUID(uuid string) (*model.ParentAuth, error) {
 
 // 비밀번호 변경 메서드
 func (m _mock) ChangeStudentPW(uuid string, studentPW string) error {
+	studentPW = ""
 	return m.mock.Called(uuid, studentPW).Error(0)
 }
 
 func (m _mock) ChangeTeacherPW(uuid string, teacherPW string) error {
+	teacherPW = ""
 	return m.mock.Called(uuid, teacherPW).Error(0)
 }
 
 func (m _mock) ChangeParentPW(uuid string, parentPW string) error {
+	parentPW = ""
 	return m.mock.Called(uuid, parentPW).Error(0)
 }
 

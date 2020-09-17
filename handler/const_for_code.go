@@ -24,4 +24,6 @@ const (
 	CodeIncorrectStudentPWForChange = -701
 
 	CodeIncorrectTeacherPWForChange = -801
+
+	CodeIncorrectParentPWForChange = -901
 )

@@ -63,3 +63,14 @@ func (test *LoginTeacherAuthCase) GetMetadataContext() (ctx context.Context) {
 
 	return
 }
+
+type ChangeTeacherPWCase struct {
+	UUID, TeacherUUID     string
+	CurrentPW, RevisionPW string
+	XRequestID            string
+	SpanContextString     string
+	ExpectedMethods       map[Method]Returns
+	ExpectedStatus        uint32
+	ExpectedCode          int32
+	ExpectedMessage       string
+}

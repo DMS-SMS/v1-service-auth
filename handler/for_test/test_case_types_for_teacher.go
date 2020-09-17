@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type LoginStudentAuthCase struct {
-	StudentID, StudentPW        string
+type LoginTeacherAuthCase struct {
+	TeacherID, TeacherPW        string
 	XRequestID                  string
 	SpanContextString           string
 	ExpectedMethods             map[Method]Returns
@@ -17,35 +17,33 @@ type LoginStudentAuthCase struct {
 	ExpectedCode                int32
 	ExpectedMessage             string
 	ExpectedAccessToken			string
-	ExpectedLoggedInStudentUUID string
+	ExpectedLoggedInTeacherUUID string
 }
 
-func (test *LoginStudentAuthCase) ChangeEmptyValueToValidValue() {
-	if test.StudentID == ""         { test.StudentID = validStudentID }
-	if test.StudentPW == ""         { test.StudentPW = validStudentPW }
+func (test *LoginTeacherAuthCase) ChangeEmptyValueToValidValue() {
+	if test.TeacherID == ""         { test.TeacherID = validTeacherID }
+	if test.TeacherPW == ""         { test.TeacherPW = validTeacherPW }
 	if test.SpanContextString == "" { test.SpanContextString = validSpanContextString }
 	if test.XRequestID == ""        { test.XRequestID = validXRequestID }
 }
 
-func (test *LoginStudentAuthCase) ChangeEmptyReplaceValueToEmptyValue() {
-	if test.StudentID == EmptyReplaceValueForString         { test.StudentID = "" }
-	if test.StudentPW == EmptyReplaceValueForString         { test.StudentPW = "" }
+func (test *LoginTeacherAuthCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
 	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
 }
 
-func (test *LoginStudentAuthCase) OnExpectMethods(mock *mock.Mock) {
+func (test *LoginTeacherAuthCase) OnExpectMethods(mock *mock.Mock) {
 	for method, returns := range test.ExpectedMethods {
 		test.onMethod(mock, method, returns)
 	}
 }
 
-func (test *LoginStudentAuthCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+func (test *LoginTeacherAuthCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
 	switch method {
 	case "BeginTx":
 		mock.On(string(method)).Return(returns...)
-	case "GetStudentAuthWithID":
-		mock.On(string(method), test.StudentID).Return(returns...)
+	case "GetTeacherAuthWithID":
+		mock.On(string(method), test.TeacherID).Return(returns...)
 	case "Commit":
 		mock.On(string(method)).Return(returns...)
 	case "Rollback":
@@ -53,12 +51,12 @@ func (test *LoginStudentAuthCase) onMethod(mock *mock.Mock, method Method, retur
 	}
 }
 
-func (test *LoginStudentAuthCase) SetRequestContextOf(req *proto.LoginStudentAuthRequest) {
-	req.StudentID = test.StudentID
-	req.StudentPW = test.StudentPW
+func (test *LoginTeacherAuthCase) SetRequestContextOf(req *proto.LoginTeacherAuthRequest) {
+	req.TeacherID = test.TeacherID
+	req.TeacherPW = test.TeacherPW
 }
 
-func (test *LoginStudentAuthCase) GetMetadataContext() (ctx context.Context) {
+func (test *LoginTeacherAuthCase) GetMetadataContext() (ctx context.Context) {
 	ctx = context.Background()
 
 	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
@@ -67,8 +65,8 @@ func (test *LoginStudentAuthCase) GetMetadataContext() (ctx context.Context) {
 	return
 }
 
-type ChangeStudentPWCase struct {
-	UUID, StudentUUID     string
+type ChangeTeacherPWCase struct {
+	UUID, TeacherUUID     string
 	CurrentPW, RevisionPW string
 	XRequestID            string
 	SpanContextString     string
@@ -78,30 +76,30 @@ type ChangeStudentPWCase struct {
 	ExpectedMessage       string
 }
 
-func (test *ChangeStudentPWCase) ChangeEmptyValueToValidValue() {
+func (test *ChangeTeacherPWCase) ChangeEmptyValueToValidValue() {
 	if test.SpanContextString == "" { test.SpanContextString = validSpanContextString }
 	if test.XRequestID == ""        { test.XRequestID = validXRequestID }
 }
 
-func (test *ChangeStudentPWCase) ChangeEmptyReplaceValueToEmptyValue() {
+func (test *ChangeTeacherPWCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
 	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
 }
 
-func (test *ChangeStudentPWCase) OnExpectMethods(mock *mock.Mock) {
+func (test *ChangeTeacherPWCase) OnExpectMethods(mock *mock.Mock) {
 	for method, returns := range test.ExpectedMethods {
 		test.onMethod(mock, method, returns)
 	}
 }
 
-func (test *ChangeStudentPWCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+func (test *ChangeTeacherPWCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
 	switch method {
 	case "BeginTx":
 		mock.On(string(method)).Return(returns...)
-	case "GetStudentAuthWithUUID": // 추가 구현 필요
-		mock.On(string(method), test.StudentUUID).Return(returns...)
-	case "ChangeStudentPW":
-		mock.On(string(method), test.StudentUUID, "").Return(returns...)
+	case "GetTeacherAuthWithUUID":
+		mock.On(string(method), test.TeacherUUID).Return(returns...)
+	case "ChangeTeacherPW":
+		mock.On(string(method), test.TeacherUUID, "").Return(returns...)
 	case "Commit":
 		mock.On(string(method)).Return(returns...)
 	case "Rollback":
@@ -109,14 +107,14 @@ func (test *ChangeStudentPWCase) onMethod(mock *mock.Mock, method Method, return
 	}
 }
 
-func (test *ChangeStudentPWCase) SetRequestContextOf(req *proto.ChangeStudentPWRequest) {
+func (test *ChangeTeacherPWCase) SetRequestContextOf(req *proto.ChangeTeacherPWRequest) {
 	req.UUID = test.UUID
-	req.StudentUUID = test.StudentUUID
+	req.TeacherUUID = test.TeacherUUID
 	req.CurrentPW = test.CurrentPW
 	req.RevisionPW = test.RevisionPW
 }
 
-func (test *ChangeStudentPWCase) GetMetadataContext() (ctx context.Context) {
+func (test *ChangeTeacherPWCase) GetMetadataContext() (ctx context.Context) {
 	ctx = context.Background()
 
 	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
@@ -125,39 +123,39 @@ func (test *ChangeStudentPWCase) GetMetadataContext() (ctx context.Context) {
 	return
 }
 
-type GetStudentInformWithUUIDCase struct {
-	UUID, StudentUUID string
+type GetTeacherInformWithUUIDCase struct {
+	UUID, TeacherUUID string
 	XRequestID        string
 	SpanContextString string
 	ExpectedMethods   map[Method]Returns
 	ExpectedStatus    uint32
 	ExpectedCode      int32
 	ExpectedMessage   string
-	ExpectedInform    *model.StudentInform
+	ExpectedInform    *model.TeacherInform
 }
 
-func (test *GetStudentInformWithUUIDCase) ChangeEmptyValueToValidValue() {
+func (test *GetTeacherInformWithUUIDCase) ChangeEmptyValueToValidValue() {
 	if test.XRequestID == ""        { test.XRequestID = validXRequestID }
 	if test.SpanContextString == "" { test.SpanContextString = validSpanContextString }
 }
 
-func (test *GetStudentInformWithUUIDCase) ChangeEmptyReplaceValueToEmptyValue() {
+func (test *GetTeacherInformWithUUIDCase) ChangeEmptyReplaceValueToEmptyValue() {
 	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
 	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
 }
 
-func (test *GetStudentInformWithUUIDCase) OnExpectMethods(mock *mock.Mock) {
+func (test *GetTeacherInformWithUUIDCase) OnExpectMethods(mock *mock.Mock) {
 	for method, returns := range test.ExpectedMethods {
 		test.onMethod(mock, method, returns)
 	}
 }
 
-func (test *GetStudentInformWithUUIDCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+func (test *GetTeacherInformWithUUIDCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
 	switch method {
 	case "BeginTx":
 		mock.On(string(method)).Return(returns...)
-	case "GetStudentInformWithUUID":
-		mock.On(string(method), test.StudentUUID).Return(returns...)
+	case "GetTeacherInformWithUUID":
+		mock.On(string(method), test.TeacherUUID).Return(returns...)
 	case "Commit":
 		mock.On(string(method)).Return(returns...)
 	case "Rollback":
@@ -165,12 +163,12 @@ func (test *GetStudentInformWithUUIDCase) onMethod(mock *mock.Mock, method Metho
 	}
 }
 
-func (test *GetStudentInformWithUUIDCase) SetRequestContextOf(req *proto.GetStudentInformWithUUIDRequest) {
+func (test *GetTeacherInformWithUUIDCase) SetRequestContextOf(req *proto.GetTeacherInformWithUUIDRequest) {
 	req.UUID = test.UUID
-	req.StudentUUID = test.StudentUUID
+	req.TeacherUUID = test.TeacherUUID
 }
 
-func (test *GetStudentInformWithUUIDCase) GetMetadataContext() (ctx context.Context) {
+func (test *GetTeacherInformWithUUIDCase) GetMetadataContext() (ctx context.Context) {
 	ctx = context.Background()
 
 	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)

@@ -32,6 +32,7 @@ import (
 
 func Test_default_CreateNewStudent(t *testing.T) {
 	const studentUUIDRegexString = "^student-\\d{12}"
+	newMock, defaultHandler := generateVarForTest()
 
 	tests := []test.CreateNewStudentCase{
 		{ // success case
@@ -231,7 +232,7 @@ func Test_default_CreateNewStudent(t *testing.T) {
 	for _, createNewStudentTest := range tests {
 		createNewStudentTest.ChangeEmptyValueToValidValue()
 		createNewStudentTest.ChangeEmptyReplaceValueToEmptyValue()
-		createNewStudentTest.OnExpectMethodsTo(mockForDB)
+		createNewStudentTest.OnExpectMethodsTo(newMock)
 
 		req := new(proto.CreateNewStudentRequest)
 		createNewStudentTest.SetRequestContextOf(req)
@@ -246,11 +247,12 @@ func Test_default_CreateNewStudent(t *testing.T) {
 		assert.Regexpf(t, createNewStudentTest.ExpectedStudentUUID, resp.CreatedStudentUUID, "student uuid assertion error (test case: %v, message: %s)", createNewStudentTest, resp.Message)
 	}
 
-	mockForDB.AssertExpectations(t)
+	newMock.AssertExpectations(t)
 }
 
 func Test_default_CreateNewTeacher(t *testing.T) {
 	const teacherUUIDRegexString = "^teacher-\\d{12}"
+	newMock, defaultHandler := generateVarForTest()
 
 	tests := []test.CreateNewTeacherCase{
 		{ // success case
@@ -399,7 +401,7 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 	for _, createNewTeacherTest := range tests {
 		createNewTeacherTest.ChangeEmptyValueToValidValue()
 		createNewTeacherTest.ChangeEmptyReplaceValueToEmptyValue()
-		createNewTeacherTest.OnExpectMethodsTo(mockForDB)
+		createNewTeacherTest.OnExpectMethodsTo(newMock)
 
 		req := new(proto.CreateNewTeacherRequest)
 		createNewTeacherTest.SetRequestContextOf(req)
@@ -413,11 +415,12 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 		assert.Regexpf(t, createNewTeacherTest.ExpectedStudentUUID, resp.CreatedTeacherUUID, "teacher uuid assertion error (test case: %v, message: %s)", createNewTeacherTest, resp.Message)
 	}
 
-	mockForDB.AssertExpectations(t)
+	newMock.AssertExpectations(t)
 }
 
 func Test_default_CreateNewParent(t *testing.T) {
 	const parentUUIDRegexString = "^parent-\\d{12}"
+	newMock, defaultHandler := generateVarForTest()
 
 	tests := []test.CreateNewParentCase{
 		{ // success case
@@ -554,7 +557,7 @@ func Test_default_CreateNewParent(t *testing.T) {
 	for _, createNewParentTest := range tests {
 		createNewParentTest.ChangeEmptyValueToValidValue()
 		createNewParentTest.ChangeEmptyReplaceValueToEmptyValue()
-		createNewParentTest.OnExpectMethodsTo(mockForDB)
+		createNewParentTest.OnExpectMethodsTo(newMock)
 
 		req := new(proto.CreateNewParentRequest)
 		createNewParentTest.SetRequestContextOf(req)
@@ -568,5 +571,5 @@ func Test_default_CreateNewParent(t *testing.T) {
 		assert.Regexpf(t, createNewParentTest.ExpectedStudentUUID, resp.CreatedParentUUID, "parent uuid assertion error (test case: %v, message: %s)", createNewParentTest, resp.Message)
 	}
 
-	mockForDB.AssertExpectations(t)
+	newMock.AssertExpectations(t)
 }

@@ -133,3 +133,46 @@ type GetTeacherInformWithUUIDCase struct {
 	ExpectedMessage   string
 	ExpectedInform    *model.TeacherInform
 }
+
+func (test *GetTeacherInformWithUUIDCase) ChangeEmptyValueToValidValue() {
+	if test.XRequestID == ""        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == "" { test.SpanContextString = validSpanContextString }
+}
+
+func (test *GetTeacherInformWithUUIDCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+}
+
+func (test *GetTeacherInformWithUUIDCase) OnExpectMethods(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *GetTeacherInformWithUUIDCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+	switch method {
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "GetTeacherInformWithUUID":
+		mock.On(string(method), test.TeacherUUID).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	}
+}
+
+func (test *GetTeacherInformWithUUIDCase) SetRequestContextOf(req *proto.GetTeacherInformWithUUIDRequest) {
+	req.UUID = test.UUID
+	req.TeacherUUID = test.TeacherUUID
+}
+
+func (test *GetTeacherInformWithUUIDCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+
+	return
+}

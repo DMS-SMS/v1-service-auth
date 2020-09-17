@@ -14,6 +14,7 @@ import (
 )
 
 func Test_default_LoginTeacherAuth(t *testing.T) {
+	newMock, defaultHandler := generateVarForTest()
 	hashedByte, _ := bcrypt.GenerateFromPassword([]byte("testPW"), 1)
 
 	tests := []test.LoginTeacherAuthCase{
@@ -84,7 +85,7 @@ func Test_default_LoginTeacherAuth(t *testing.T) {
 	for _, testCase := range tests {
 		testCase.ChangeEmptyValueToValidValue()
 		testCase.ChangeEmptyReplaceValueToEmptyValue()
-		testCase.OnExpectMethods(mockForDB)
+		testCase.OnExpectMethods(newMock)
 
 		var req = new(proto.LoginTeacherAuthRequest)
 		testCase.SetRequestContextOf(req)
@@ -98,12 +99,12 @@ func Test_default_LoginTeacherAuth(t *testing.T) {
 		assert.Equalf(t, testCase.ExpectedLoggedInTeacherUUID, resp.LoggedInTeacherUUID, "logged in uuid assertion error (test case: %v, message: %s)", testCase, resp.Message)
 	}
 
-	mockForDB.AssertExpectations(t)
+	newMock.AssertExpectations(t)
 }
 
 func Test_default_ChangeTeacherPW(t *testing.T) {
+	newMock, defaultHandler := generateVarForTest()
 	hashedTestPW, _ := bcrypt.GenerateFromPassword([]byte("testPW"), 1)
-
 
 	tests := []test.ChangeTeacherPWCase{
 		{ // success case
@@ -221,7 +222,7 @@ func Test_default_ChangeTeacherPW(t *testing.T) {
 	for _, testCase := range tests {
 		testCase.ChangeEmptyValueToValidValue()
 		testCase.ChangeEmptyReplaceValueToEmptyValue()
-		testCase.OnExpectMethods(mockForDB)
+		testCase.OnExpectMethods(newMock)
 
 		req := new(proto.ChangeTeacherPWRequest)
 		testCase.SetRequestContextOf(req)
@@ -234,10 +235,11 @@ func Test_default_ChangeTeacherPW(t *testing.T) {
 		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
 	}
 
-	mockForDB.AssertExpectations(t)
+	newMock.AssertExpectations(t)
 }
 
 func Test_default_GetTeacherInformWithUUID(t *testing.T) {
+	newMock, defaultHandler := generateVarForTest()
 	now := time.Now()
 
 	tests := []test.GetTeacherInformWithUUIDCase{
@@ -319,7 +321,7 @@ func Test_default_GetTeacherInformWithUUID(t *testing.T) {
 	for _, testCase := range tests {
 		testCase.ChangeEmptyValueToValidValue()
 		testCase.ChangeEmptyReplaceValueToEmptyValue()
-		testCase.OnExpectMethods(mockForDB)
+		testCase.OnExpectMethods(newMock)
 
 		req := new(proto.GetTeacherInformWithUUIDRequest)
 		testCase.SetRequestContextOf(req)
@@ -340,5 +342,5 @@ func Test_default_GetTeacherInformWithUUID(t *testing.T) {
 		assert.Equalf(t, testCase.ExpectedInform, resultInform, "result inform assertion error (test case: %v, message: %s)", testCase, resp.Message)
 	}
 
-	mockForDB.AssertExpectations(t)
+	newMock.AssertExpectations(t)
 }

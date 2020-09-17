@@ -1,6 +1,7 @@
 package test
 
 import (
+	"auth/model"
 	proto "auth/proto/golang/auth"
 	"context"
 	"github.com/micro/go-micro/v2/metadata"
@@ -120,4 +121,15 @@ func (test *ChangeTeacherPWCase) GetMetadataContext() (ctx context.Context) {
 	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
 
 	return
+}
+
+type GetTeacherInformWithUUIDCase struct {
+	UUID, TeacherUUID string
+	XRequestID        string
+	SpanContextString string
+	ExpectedMethods   map[Method]Returns
+	ExpectedStatus    uint32
+	ExpectedCode      int32
+	ExpectedMessage   string
+	ExpectedInform    *model.TeacherInform
 }

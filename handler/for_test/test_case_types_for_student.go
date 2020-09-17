@@ -135,3 +135,27 @@ type GetStudentInformWithUUIDCase struct {
 	ExpectedMessage   string
 	ExpectedInform    *model.StudentInform
 }
+
+func (test *GetStudentInformWithUUIDCase) ChangeEmptyValueToValidValue() {
+	if test.XRequestID == ""        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == "" { test.SpanContextString = validSpanContextString }
+}
+
+func (test *GetStudentInformWithUUIDCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+}
+
+func (test *GetStudentInformWithUUIDCase) SetRequestContextOf(req *proto.GetStudentInformWithUUIDRequest) {
+	req.UUID = test.UUID
+	req.StudentUUID = test.StudentUUID
+}
+
+func (test *GetStudentInformWithUUIDCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+
+	return
+}

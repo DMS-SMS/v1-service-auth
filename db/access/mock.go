@@ -10,22 +10,25 @@ type _mock struct {
 	mock *mock.Mock
 }
 
-func NewMock(mock *mock.Mock) _mock {
+func Mock(mock *mock.Mock) _mock {
 	return _mock{mock: mock}
 }
 
 // 계정 생성 메서드
 func (m _mock) CreateStudentAuth(auth *model.StudentAuth) (resultAuth *model.StudentAuth, err error) {
+	auth.StudentPW = ""
 	args := m.mock.Called(auth)
 	return args.Get(0).(*model.StudentAuth), args.Error(1)
 }
 
 func (m _mock) CreateTeacherAuth(auth *model.TeacherAuth) (resultAuth *model.TeacherAuth, err error) {
+	auth.TeacherPW = ""
 	args := m.mock.Called(auth)
 	return args.Get(0).(*model.TeacherAuth), args.Error(1)
 }
 
 func (m _mock) CreateParentAuth(auth *model.ParentAuth) (resultAuth *model.ParentAuth, err error) {
+	auth.ParentPW = ""
 	args := m.mock.Called(auth)
 	return args.Get(0).(*model.ParentAuth), args.Error(1)
 }
@@ -47,31 +50,34 @@ func (m _mock) GetParentAuthWithID(parentID string) (*model.ParentAuth, error) {
 }
 
 // UUID로 계정 존재 여부 확인 메서드
-func (m _mock) CheckIfStudentAuthExists(uuid string) (bool, error) {
+func (m _mock) GetStudentAuthWithUUID(uuid string) (*model.StudentAuth, error) {
 	args := m.mock.Called(uuid)
-	return args.Bool(0), args.Error(1)
+	return args.Get(0).(*model.StudentAuth), args.Error(1)
 }
 
-func (m _mock) CheckIfTeacherAuthExists(uuid string) (bool, error) {
+func (m _mock) GetTeacherAuthWithUUID(uuid string) (*model.TeacherAuth, error) {
 	args := m.mock.Called(uuid)
-	return args.Bool(0), args.Error(1)
+	return args.Get(0).(*model.TeacherAuth), args.Error(1)
 }
 
-func (m _mock) CheckIfParentAuthExists(uuid string) (bool, error) {
+func (m _mock) GetParentAuthWithUUID(uuid string) (*model.ParentAuth, error) {
 	args := m.mock.Called(uuid)
-	return args.Bool(0), args.Error(1)
+	return args.Get(0).(*model.ParentAuth), args.Error(1)
 }
 
 // 비밀번호 변경 메서드
 func (m _mock) ChangeStudentPW(uuid string, studentPW string) error {
+	studentPW = ""
 	return m.mock.Called(uuid, studentPW).Error(0)
 }
 
 func (m _mock) ChangeTeacherPW(uuid string, teacherPW string) error {
+	teacherPW = ""
 	return m.mock.Called(uuid, teacherPW).Error(0)
 }
 
 func (m _mock) ChangeParentPW(uuid string, parentPW string) error {
+	parentPW = ""
 	return m.mock.Called(uuid, parentPW).Error(0)
 }
 

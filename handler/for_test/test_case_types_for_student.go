@@ -146,6 +146,25 @@ func (test *GetStudentInformWithUUIDCase) ChangeEmptyReplaceValueToEmptyValue() 
 	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
 }
 
+func (test *GetStudentInformWithUUIDCase) OnExpectMethods(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *GetStudentInformWithUUIDCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+	switch method {
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "GetStudentAuthInformUUID":
+		mock.On(string(method), test.StudentUUID).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	}
+}
+
 func (test *GetStudentInformWithUUIDCase) SetRequestContextOf(req *proto.GetStudentInformWithUUIDRequest) {
 	req.UUID = test.UUID
 	req.StudentUUID = test.StudentUUID

@@ -9,15 +9,15 @@ import (
 )
 
 type LoginParentAuthCase struct {
-	ParentID, ParentPW          string
-	XRequestID                  string
-	SpanContextString           string
-	ExpectedMethods             map[Method]Returns
-	ExpectedStatus              uint32
-	ExpectedCode                int32
-	ExpectedMessage             string
-	ExpectedAccessToken         string
-	ExpectedLoggedInTeacherUUID string
+	ParentID, ParentPW         string
+	XRequestID                 string
+	SpanContextString          string
+	ExpectedMethods            map[Method]Returns
+	ExpectedStatus             uint32
+	ExpectedCode               int32
+	ExpectedMessage            string
+	ExpectedAccessToken        string
+	ExpectedLoggedInParentUUID string
 }
 
 func (test *LoginParentAuthCase) ChangeEmptyValueToValidValue() {

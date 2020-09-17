@@ -236,6 +236,8 @@ func Test_default_ChangeStudentPW(t *testing.T) {
 		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
 	}
+
+	mockForDB.AssertExpectations(t)
 }
 
 func Test_default_GetStudentInformWithUUID(t *testing.T) {

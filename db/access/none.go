@@ -15,6 +15,7 @@ func (t None) CreateParentAuth(auth *model.ParentAuth) (resultAuth *model.Parent
 func (t None) GetStudentAuthWithID(studentID string) (auth *model.StudentAuth, err error) { return }
 func (t None) GetTeacherAuthWithID(teacherID string) (auth *model.TeacherAuth, err error) { return }
 func (t None) GetParentAuthWithID(parentID string) (auth *model.ParentAuth, err error) { return }
+func (t None) GetAdminAuthWithID(adminID string) (auth *model.AdminAuth, err error) { return }
 
 // UUID로 계정 존재 여부 확인 메서드
 func (t None) GetStudentAuthWithUUID(uuid string) (auth *model.StudentAuth, err error) { return }

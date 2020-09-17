@@ -49,6 +49,11 @@ func (m _mock) GetParentAuthWithID(parentID string) (*model.ParentAuth, error) {
 	return args.Get(0).(*model.ParentAuth), args.Error(1)
 }
 
+func (m _mock) GetAdminAuthWithID(adminID string) (*model.AdminAuth, error) {
+	args := m.mock.Called(adminID)
+	return args.Get(0).(*model.AdminAuth), args.Error(1)
+}
+
 // UUID로 계정 존재 여부 확인 메서드
 func (m _mock) GetStudentAuthWithUUID(uuid string) (*model.StudentAuth, error) {
 	args := m.mock.Called(uuid)

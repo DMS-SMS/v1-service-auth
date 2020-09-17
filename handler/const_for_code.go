@@ -19,4 +19,6 @@ const (
 	CodeIncorrectTeacherPWForLogin = -502
 
 	CodeIncorrectStudentPWForChange = -701
+
+	CodeIncorrectTeacherPWForChange = -801
 )

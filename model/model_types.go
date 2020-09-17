@@ -97,6 +97,20 @@ func (pp parentPW) Value() (driver.Value, error) { return string(pp), nil }
 func (pp *parentPW) Scan(src interface{}) (err error) { *pp = parentPW(src.([]uint8)); return }
 func (pp parentPW) KeyName() string { return "parent_pw" }
 
+// AdminID 필드에서 사용할 사용자 정의 타입
+type adminID string
+func AdminID(s string) adminID { return adminID(s) }
+func (ai adminID) Value() (driver.Value, error) { return string(ai), nil }
+func (ai *adminID) Scan(src interface{}) (err error) { *ai = adminID(src.([]uint8)); return }
+func (ai adminID) KeyName() string { return "admin_id" }
+
+// AdminPW 필드에서 사용할 사용자 정의 타입
+type adminPW string
+func AdminPW(s string) parentPW { return parentPW(s) }
+func (ap adminPW) Value() (driver.Value, error) { return string(ap), nil }
+func (ap *adminPW) Scan(src interface{}) (err error) { *ap = adminPW(src.([]uint8)); return }
+func (ap adminPW) KeyName() string { return "admin_pw" }
+
 // StudentUUID 필드에서 사용할 사용자 정의 타입
 type studentUUID string
 func StudentUUID(s string) studentUUID { return studentUUID(s) }

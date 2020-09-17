@@ -156,7 +156,7 @@ func (test *GetStudentInformWithUUIDCase) onMethod(mock *mock.Mock, method Metho
 	switch method {
 	case "BeginTx":
 		mock.On(string(method)).Return(returns...)
-	case "GetStudentAuthInformUUID":
+	case "GetStudentInformWithUUID":
 		mock.On(string(method), test.StudentUUID).Return(returns...)
 	case "Commit":
 		mock.On(string(method)).Return(returns...)

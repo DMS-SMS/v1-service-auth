@@ -4,7 +4,6 @@ import (
 	"auth/db"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/opentracing/opentracing-go"
-	"log"
 )
 
 type _default struct {
@@ -24,10 +23,6 @@ func newDefault(setters ...FieldSetter) (h *_default) {
 	h = new(_default)
 	for _, setter := range setters {
 		setter(h)
-	}
-
-	if h.tracer == nil || h.awsSession == nil {
-		log.Fatal("please set all field using FieldSetter")
 	}
 	return
 }

@@ -15,6 +15,7 @@ type Accessor interface {
 	GetStudentAuthWithID(studentID string) (*model.StudentAuth, error)
 	GetTeacherAuthWithID(teacherID string) (*model.TeacherAuth, error)
 	GetParentAuthWithID(parentID string) (*model.ParentAuth, error)
+	GetAdminAuthWithID(adminID string) (*model.AdminAuth, error)
 
 	// 계정 UUID로 계정 정보 조회 메서드
 	GetStudentAuthWithUUID(uuid string) (*model.StudentAuth, error)

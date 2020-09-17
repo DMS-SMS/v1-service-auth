@@ -3,13 +3,15 @@ package validate
 import "regexp"
 
 const (
-	studentUUIDRegexString = "^student-\\d\\d\\d\\d\\d\\d\\d\\d\\d\\d\\d\\d"
-	teacherUUIDRegexString = "^teacher-\\d\\d\\d\\d\\d\\d\\d\\d\\d\\d\\d\\d"
-	parentUUIDRegexString = "^parent-\\d\\d\\d\\d\\d\\d\\d\\d\\d\\d\\d\\d"
-	phoneNumberRegexString = "\\d\\d\\d\\d\\d\\d\\d\\d\\d\\d\\d"
+	adminUUIDRegexString = "^admin-\\d{12}"
+	studentUUIDRegexString = "^student-\\d{12}"
+	teacherUUIDRegexString = "^teacher-\\d{12}"
+	parentUUIDRegexString = "^parent-\\d{12}"
+	phoneNumberRegexString = "\\d{11}"
 )
 
 var (
+	adminUUIDRegex = regexp.MustCompile(adminUUIDRegexString)
 	studentUUIDRegex = regexp.MustCompile(studentUUIDRegexString)
 	teacherUUIDRegex = regexp.MustCompile(teacherUUIDRegexString)
 	parentUUIDRegex = regexp.MustCompile(parentUUIDRegexString)

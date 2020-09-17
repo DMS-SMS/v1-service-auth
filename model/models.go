@@ -59,3 +59,11 @@ type ParentInform struct {
 	Name        name        `gorm:"Type:varchar(4);NOT NULL" validate:"min=2,max=4,korean"`       // 2~4자 사이 한글
 	PhoneNumber phoneNumber `gorm:"Type:char(11);UNIQUE;NOT NULL" validate:"len=11,phone_number"` // 11자
 }
+
+// 관리자 계정 테이블
+type AdminAuth struct {
+	gorm.Model
+	UUID    uuid    `gorm:"Type:char(18);UNIQUE;NOT NULL" validate:"uuid=admin,len=18"`
+	AdminID adminID `gorm:"varchar(20);NOT NULL;UNIQUE" validate:"min=4,max=20,ascii"`
+	AdminPW adminPW `gorm:"varchar(100):NOT NULL;"`
+}

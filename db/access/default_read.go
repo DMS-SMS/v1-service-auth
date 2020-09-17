@@ -28,6 +28,12 @@ func (d *_default) GetParentAuthWithID(parentID string) (auth *model.ParentAuth,
 	return
 }
 
+func (d *_default) GetAdminAuthWithID(adminID string) (auth *model.AdminAuth, err error) {
+	auth = new(model.AdminAuth)
+	err = d.tx.Where("admin_id = ?", adminID).Find(&auth).Error
+	return
+}
+
 func (d *_default) GetStudentAuthWithUUID(uuid string) (auth *model.StudentAuth, err error) {
 	auth = new(model.StudentAuth)
 	err = d.tx.Where("uuid = ?", uuid).Find(auth).Error

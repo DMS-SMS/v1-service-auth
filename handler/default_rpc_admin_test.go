@@ -32,15 +32,16 @@ import (
 
 func Test_default_CreateNewStudent(t *testing.T) {
 	const studentUUIDRegexString = "^student-\\d{12}"
+	newMock, defaultHandler := generateVarForTest()
 
 	tests := []test.CreateNewStudentCase{
 		{ // success case
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfStudentAuthExists": {false, nil},
-				"CreateStudentAuth":        {&model.StudentAuth{}, nil},
-				"CreateStudentInform":      {&model.StudentInform{}, nil},
-				"Commit":                   {&gorm.DB{}},
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, nil},
+				"CreateStudentInform":    {&model.StudentInform{}, nil},
+				"Commit":                 {&gorm.DB{}},
 			},
 			ExpectedStatus:      http.StatusCreated,
 			ExpectedStudentUUID: studentUUIDRegexString,
@@ -51,30 +52,30 @@ func Test_default_CreateNewStudent(t *testing.T) {
 		}, { // invalid request value -> Proxy Authorization Required
 			StudentID: "유효하지 않은 아이디", // ASCII, 4~16 사이 문자열이여야 함
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfStudentAuthExists": {false, nil},
-				"CreateStudentAuth":        {&model.StudentAuth{}, (validator.ValidationErrors)(nil)},
-				"Rollback":                 {&gorm.DB{}},
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, (validator.ValidationErrors)(nil)},
+				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusProxyAuthRequired,
 		}, { // invalid request value -> Proxy Authorization Required
 			Grade: 100, // 1~3 사이의 숫자여야 함
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfStudentAuthExists": {false, nil},
-				"CreateStudentAuth":        {&model.StudentAuth{}, nil},
-				"CreateStudentInform":      {&model.StudentInform{}, (validator.ValidationErrors)(nil)},
-				"Rollback":                 {&gorm.DB{}},
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, nil},
+				"CreateStudentInform":    {&model.StudentInform{}, (validator.ValidationErrors)(nil)},
+				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusProxyAuthRequired,
 		}, { // invalid request value -> Proxy Authorization Required
 			Name: "Invalid Name", // 2~4 글자의 한글이어야 함
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfStudentAuthExists": {false, nil},
-				"CreateStudentAuth":        {&model.StudentAuth{}, nil},
-				"CreateStudentInform":      {&model.StudentInform{}, (validator.ValidationErrors)(nil)},
-				"Rollback":                 {&gorm.DB{}},
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, nil},
+				"CreateStudentInform":    {&model.StudentInform{}, (validator.ValidationErrors)(nil)},
+				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusProxyAuthRequired,
 		}, { // no exist X-Request-ID -> Proxy Authorization Required
@@ -96,20 +97,20 @@ func Test_default_CreateNewStudent(t *testing.T) {
 		}, { // student id duplicate -> Conflict -101
 			StudentID: "jinhong0719",
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfStudentAuthExists": {false, nil},
-				"CreateStudentAuth":        {&model.StudentAuth{}, mysqlerr.DuplicateEntry(model.StudentAuthInstance.StudentID.KeyName(), "jinhong0719")},
-				"Rollback":                 {&gorm.DB{}},
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, mysqlerr.DuplicateEntry(model.StudentAuthInstance.StudentID.KeyName(), "jinhong0719")},
+				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   CodeStudentIDDuplicate,
 		}, { // parent uuid fk constraint fail -> Conflict -102
 			ParentUUID: "parent-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfStudentAuthExists": {false, nil},
-				"CreateStudentAuth":        {&model.StudentAuth{}, test.StudentAuthParentUUIDFKConstraintFailError},
-				"Rollback":                 {&gorm.DB{}},
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, test.StudentAuthParentUUIDFKConstraintFailError},
+				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   CodeParentUUIDNoExist,
@@ -118,111 +119,111 @@ func Test_default_CreateNewStudent(t *testing.T) {
 			Class:         2,
 			StudentNumber: 7,
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfStudentAuthExists": {false, nil},
-				"CreateStudentAuth":        {&model.StudentAuth{}, nil},
-				"CreateStudentInform":      {&model.StudentInform{}, mysqlerr.DuplicateEntry(model.StudentInformInstance.StudentNumber.KeyName(), "2207")},
-				"Rollback":                 {&gorm.DB{}},
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, nil},
+				"CreateStudentInform":    {&model.StudentInform{}, mysqlerr.DuplicateEntry(model.StudentInformInstance.StudentNumber.KeyName(), "2207")},
+				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   CodeStudentNumberDuplicate,
 		}, { // phone number duplicate -> Conflict -104
 			PhoneNumber: "01088378347",
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfStudentAuthExists": {false, nil},
-				"CreateStudentAuth":        {&model.StudentAuth{}, nil},
-				"CreateStudentInform":      {&model.StudentInform{}, mysqlerr.DuplicateEntry(model.StudentInformInstance.PhoneNumber.KeyName(), "01088378347")},
-				"Rollback":                 {&gorm.DB{}},
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, nil},
+				"CreateStudentInform":    {&model.StudentInform{}, mysqlerr.DuplicateEntry(model.StudentInformInstance.PhoneNumber.KeyName(), "01088378347")},
+				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   CodeStudentPhoneNumberDuplicate,
 		}, { // CheckIfStudentAuthExists error occur
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfStudentAuthExists": {false, errors.New("unexpected error from DB Connection")},
-				"Rollback":                 {&gorm.DB{}},
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, errors.New("unexpected error from DB Connection")},
+				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateStudentAuth return invalid duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfStudentAuthExists": {false, nil},
-				"CreateStudentAuth":        {&model.StudentAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "InvalidMessage"}},
-				"Rollback":                 {&gorm.DB{}},
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "InvalidMessage"}},
+				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateStudentAuth return unexpected key duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfStudentAuthExists": {false, nil},
-				"CreateStudentAuth":        {&model.StudentAuth{}, mysqlerr.DuplicateEntry("UnexpectedKey", "error")},
-				"Rollback":                 {&gorm.DB{}},
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, mysqlerr.DuplicateEntry("UnexpectedKey", "error")},
+				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateStudentAuth return invalid Fk Constraint Fail error
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfStudentAuthExists": {false, nil},
-				"CreateStudentAuth":        {&model.StudentAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_NO_REFERENCED_ROW_2, Message: "InvalidMessage"}},
-				"Rollback":                 {&gorm.DB{}},
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_NO_REFERENCED_ROW_2, Message: "InvalidMessage"}},
+				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateStudentAuth return unexpected constraint name error
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfStudentAuthExists": {false, nil},
-				"CreateStudentAuth":        {&model.StudentAuth{}, mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth": {&model.StudentAuth{}, mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
 					ConstraintName: "unexpected constraint name",
 					AttrName:       "unexpected attr",
 				}, mysqlerr.RefInform{})},
-				"Rollback":                 {&gorm.DB{}},
+				"Rollback": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateStudentAuth return unexpected constraint name error
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfStudentAuthExists": {false, nil},
-				"CreateStudentAuth":        {&model.StudentAuth{}, mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth": {&model.StudentAuth{}, mysqlerr.FKConstraintFailWithoutReferenceInform(mysqlerr.FKInform{
 					ConstraintName: "unexpected constraint name",
 					AttrName:       "unexpected attr",
 				}, mysqlerr.RefInform{})},
-				"Rollback":                 {&gorm.DB{}},
+				"Rollback": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateStudentAuth return unexpected error code
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfStudentAuthExists": {false, nil},
-				"CreateStudentAuth":        {&model.StudentAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
-				"Rollback":                 {&gorm.DB{}},
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
+				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateStudentInform return invalid duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfStudentAuthExists": {false, nil},
-				"CreateStudentAuth":        {&model.StudentAuth{}, nil},
-				"CreateStudentInform":      {&model.StudentInform{}, &mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "InvalidMessage"}},
-				"Rollback":                 {&gorm.DB{}},
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, nil},
+				"CreateStudentInform":    {&model.StudentInform{}, &mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "InvalidMessage"}},
+				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateStudentInform return unexpected duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfStudentAuthExists": {false, nil},
-				"CreateStudentAuth":        {&model.StudentAuth{}, nil},
-				"CreateStudentInform":      {&model.StudentInform{}, mysqlerr.DuplicateEntry("UnexpectedKey", "duplicated")},
-				"Rollback":                 {&gorm.DB{}},
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, nil},
+				"CreateStudentInform":    {&model.StudentInform{}, mysqlerr.DuplicateEntry("UnexpectedKey", "duplicated")},
+				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateStudentInform return unexpected error code
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfStudentAuthExists": {false, nil},
-				"CreateStudentAuth":        {&model.StudentAuth{}, nil},
-				"CreateStudentInform":      {&model.StudentInform{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
-				"Rollback":                 {&gorm.DB{}},
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, nil},
+				"CreateStudentInform":    {&model.StudentInform{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
+				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		},
@@ -231,7 +232,7 @@ func Test_default_CreateNewStudent(t *testing.T) {
 	for _, createNewStudentTest := range tests {
 		createNewStudentTest.ChangeEmptyValueToValidValue()
 		createNewStudentTest.ChangeEmptyReplaceValueToEmptyValue()
-		createNewStudentTest.OnExpectMethodsTo(mockForDB)
+		createNewStudentTest.OnExpectMethodsTo(newMock)
 
 		req := new(proto.CreateNewStudentRequest)
 		createNewStudentTest.SetRequestContextOf(req)
@@ -246,11 +247,12 @@ func Test_default_CreateNewStudent(t *testing.T) {
 		assert.Regexpf(t, createNewStudentTest.ExpectedStudentUUID, resp.CreatedStudentUUID, "student uuid assertion error (test case: %v, message: %s)", createNewStudentTest, resp.Message)
 	}
 
-	mockForDB.AssertExpectations(t)
+	newMock.AssertExpectations(t)
 }
 
 func Test_default_CreateNewTeacher(t *testing.T) {
 	const teacherUUIDRegexString = "^teacher-\\d{12}"
+	newMock, defaultHandler := generateVarForTest()
 
 	tests := []test.CreateNewTeacherCase{
 		{ // success case
@@ -258,7 +260,7 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 			Class: test.EmptyReplaceValueForUint32,
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
-				"CheckIfTeacherAuthExists": {false, nil},
+				"GetTeacherAuthWithUUID":   {&model.TeacherAuth{}, gorm.ErrRecordNotFound},
 				"CreateTeacherAuth":        {&model.TeacherAuth{}, nil},
 				"CreateTeacherInform":      {&model.TeacherInform{}, nil},
 				"Commit":                   {&gorm.DB{}},
@@ -273,7 +275,7 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 			TeacherID: "유효하지 않은 아이디", // ASCII, 4~16 사이 문자열이여야 함
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
-				"CheckIfTeacherAuthExists": {false, nil},
+				"GetTeacherAuthWithUUID":   {&model.TeacherAuth{}, gorm.ErrRecordNotFound},
 				"CreateTeacherAuth":        {&model.TeacherAuth{}, (validator.ValidationErrors)(nil)},
 				"Rollback":                 {&gorm.DB{}},
 			},
@@ -282,7 +284,7 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 			Grade: 100, // 1~3 사이의 숫자여야 함
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
-				"CheckIfTeacherAuthExists": {false, nil},
+				"GetTeacherAuthWithUUID":   {&model.TeacherAuth{}, gorm.ErrRecordNotFound},
 				"CreateTeacherAuth":        {&model.TeacherAuth{}, nil},
 				"CreateTeacherInform":      {&model.TeacherInform{}, (validator.ValidationErrors)(nil)},
 				"Rollback":                 {&gorm.DB{}},
@@ -292,7 +294,7 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 			Name: "Invalid Name", // 2~4 글자의 한글이어야 함
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
-				"CheckIfTeacherAuthExists": {false, nil},
+				"GetTeacherAuthWithUUID":   {&model.TeacherAuth{}, gorm.ErrRecordNotFound},
 				"CreateTeacherAuth":        {&model.TeacherAuth{}, nil},
 				"CreateTeacherInform":      {&model.TeacherInform{}, (validator.ValidationErrors)(nil)},
 				"Rollback":                 {&gorm.DB{}},
@@ -318,7 +320,7 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 			TeacherID: "duplicateID",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
-				"CheckIfTeacherAuthExists": {false, nil},
+				"GetTeacherAuthWithUUID":   {&model.TeacherAuth{}, gorm.ErrRecordNotFound},
 				"CreateTeacherAuth":        {&model.TeacherAuth{}, mysqlerr.DuplicateEntry(model.TeacherAuthInstance.TeacherID.KeyName(), "duplicateID")},
 				"Rollback":                 {&gorm.DB{}},
 			},
@@ -328,24 +330,24 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 			PhoneNumber: "01088378347",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
-				"CheckIfTeacherAuthExists": {false, nil},
+				"GetTeacherAuthWithUUID":   {&model.TeacherAuth{}, gorm.ErrRecordNotFound},
 				"CreateTeacherAuth":        {&model.TeacherAuth{}, nil},
 				"CreateTeacherInform":      {&model.TeacherInform{}, mysqlerr.DuplicateEntry(model.TeacherInformInstance.PhoneNumber.KeyName(), "01088378347")},
 				"Rollback":                 {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   CodeTeacherPhoneNumberDuplicate,
-		}, { // CheckIfTeacherAuthExists error occur
+		}, { // CheckIfTeacherAuth1Exists error occur
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
-				"CheckIfTeacherAuthExists": {false, errors.New("unexpected error from DB Connection")},
+				"GetTeacherAuthWithUUID":   {&model.TeacherAuth{}, errors.New("unexpected error from DB Connection")},
 				"Rollback":                 {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateTeacherAuth return invalid duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
-				"CheckIfTeacherAuthExists": {false, nil},
+				"GetTeacherAuthWithUUID":   {&model.TeacherAuth{}, gorm.ErrRecordNotFound},
 				"CreateTeacherAuth":        {&model.TeacherAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "InvalidMessage"}},
 				"Rollback":                 {&gorm.DB{}},
 			},
@@ -353,7 +355,7 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 		}, { // CreateTeacherAuth return unexpected key duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
-				"CheckIfTeacherAuthExists": {false, nil},
+				"GetTeacherAuthWithUUID":   {&model.TeacherAuth{}, gorm.ErrRecordNotFound},
 				"CreateTeacherAuth":        {&model.TeacherAuth{}, mysqlerr.DuplicateEntry("UnexpectedKey", "error")},
 				"Rollback":                 {&gorm.DB{}},
 			},
@@ -361,7 +363,7 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 		}, { // CreateTeacherAuth return unexpected error code
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
-				"CheckIfTeacherAuthExists": {false, nil},
+				"GetTeacherAuthWithUUID":   {&model.TeacherAuth{}, gorm.ErrRecordNotFound},
 				"CreateTeacherAuth":        {&model.TeacherAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
 				"Rollback":                 {&gorm.DB{}},
 			},
@@ -369,7 +371,7 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 		}, { // CreateTeacherInform return invalid duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
-				"CheckIfTeacherAuthExists": {false, nil},
+				"GetTeacherAuthWithUUID":   {&model.TeacherAuth{}, gorm.ErrRecordNotFound},
 				"CreateTeacherAuth":        {&model.TeacherAuth{}, nil},
 				"CreateTeacherInform":      {&model.TeacherInform{}, &mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "InvalidMessage"}},
 				"Rollback":                 {&gorm.DB{}},
@@ -378,7 +380,7 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 		}, { // CreateTeacherInform return unexpected duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
-				"CheckIfTeacherAuthExists": {false, nil},
+				"GetTeacherAuthWithUUID":   {&model.TeacherAuth{}, gorm.ErrRecordNotFound},
 				"CreateTeacherAuth":        {&model.TeacherAuth{}, nil},
 				"CreateTeacherInform":      {&model.TeacherInform{}, mysqlerr.DuplicateEntry("UnexpectedKey", "duplicated")},
 				"Rollback":                 {&gorm.DB{}},
@@ -387,7 +389,7 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 		}, { // CreateTeacherInform return unexpected error code
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
-				"CheckIfTeacherAuthExists": {false, nil},
+				"GetTeacherAuthWithUUID":   {&model.TeacherAuth{}, gorm.ErrRecordNotFound},
 				"CreateTeacherAuth":        {&model.TeacherAuth{}, nil},
 				"CreateTeacherInform":      {&model.TeacherInform{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
 				"Rollback":                 {&gorm.DB{}},
@@ -399,7 +401,7 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 	for _, createNewTeacherTest := range tests {
 		createNewTeacherTest.ChangeEmptyValueToValidValue()
 		createNewTeacherTest.ChangeEmptyReplaceValueToEmptyValue()
-		createNewTeacherTest.OnExpectMethodsTo(mockForDB)
+		createNewTeacherTest.OnExpectMethodsTo(newMock)
 
 		req := new(proto.CreateNewTeacherRequest)
 		createNewTeacherTest.SetRequestContextOf(req)
@@ -413,20 +415,21 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 		assert.Regexpf(t, createNewTeacherTest.ExpectedStudentUUID, resp.CreatedTeacherUUID, "teacher uuid assertion error (test case: %v, message: %s)", createNewTeacherTest, resp.Message)
 	}
 
-	mockForDB.AssertExpectations(t)
+	newMock.AssertExpectations(t)
 }
 
 func Test_default_CreateNewParent(t *testing.T) {
 	const parentUUIDRegexString = "^parent-\\d{12}"
+	newMock, defaultHandler := generateVarForTest()
 
 	tests := []test.CreateNewParentCase{
 		{ // success case
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                 {},
-				"CheckIfParentAuthExists": {false, nil},
-				"CreateParentAuth":        {&model.ParentAuth{}, nil},
-				"CreateParentInform":      {&model.ParentInform{}, nil},
-				"Commit":                  {&gorm.DB{}},
+				"BeginTx":               {},
+				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
+				"CreateParentAuth":      {&model.ParentAuth{}, nil},
+				"CreateParentInform":    {&model.ParentInform{}, nil},
+				"Commit":                {&gorm.DB{}},
 			},
 			ExpectedStatus:      http.StatusCreated,
 			ExpectedStudentUUID: parentUUIDRegexString,
@@ -437,20 +440,20 @@ func Test_default_CreateNewParent(t *testing.T) {
 		}, { // invalid request value -> Proxy Authorization Required
 			ParentID: "유효하지 않은 아이디", // ASCII, 4~16 사이 문자열이여야 함
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                 {},
-				"CheckIfParentAuthExists": {false, nil},
-				"CreateParentAuth":        {&model.ParentAuth{}, (validator.ValidationErrors)(nil)},
-				"Rollback":                {&gorm.DB{}},
+				"BeginTx":               {},
+				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
+				"CreateParentAuth":      {&model.ParentAuth{}, (validator.ValidationErrors)(nil)},
+				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusProxyAuthRequired,
 		}, { // invalid request value -> Proxy Authorization Required
 			Name: "Invalid Name", // 2~4 글자의 한글이어야 함
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                 {},
-				"CheckIfParentAuthExists": {false, nil},
-				"CreateParentAuth":        {&model.ParentAuth{}, nil},
-				"CreateParentInform":      {&model.ParentInform{}, (validator.ValidationErrors)(nil)},
-				"Rollback":                {&gorm.DB{}},
+				"BeginTx":               {},
+				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
+				"CreateParentAuth":      {&model.ParentAuth{}, nil},
+				"CreateParentInform":    {&model.ParentInform{}, (validator.ValidationErrors)(nil)},
+				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusProxyAuthRequired,
 		}, { // no exist X-Request-ID -> Proxy Authorization Required
@@ -472,80 +475,80 @@ func Test_default_CreateNewParent(t *testing.T) {
 		}, { // student id duplicate -> Conflict -201
 			ParentID: "duplicateID",
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                 {},
-				"CheckIfParentAuthExists": {false, nil},
-				"CreateParentAuth":        {&model.ParentAuth{}, mysqlerr.DuplicateEntry(model.ParentAuthInstance.ParentID.KeyName(), "duplicateID")},
-				"Rollback":                {&gorm.DB{}},
+				"BeginTx":               {},
+				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
+				"CreateParentAuth":      {&model.ParentAuth{}, mysqlerr.DuplicateEntry(model.ParentAuthInstance.ParentID.KeyName(), "duplicateID")},
+				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   CodeParentIDDuplicate,
 		}, { // phone number duplicate -> Conflict -202
 			PhoneNumber: "01088378347",
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                 {},
-				"CheckIfParentAuthExists": {false, nil},
-				"CreateParentAuth":        {&model.ParentAuth{}, nil},
-				"CreateParentInform":      {&model.ParentInform{}, mysqlerr.DuplicateEntry(model.ParentInformInstance.PhoneNumber.KeyName(), "01088378347")},
-				"Rollback":                {&gorm.DB{}},
+				"BeginTx":               {},
+				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
+				"CreateParentAuth":      {&model.ParentAuth{}, nil},
+				"CreateParentInform":    {&model.ParentInform{}, mysqlerr.DuplicateEntry(model.ParentInformInstance.PhoneNumber.KeyName(), "01088378347")},
+				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   CodeParentPhoneNumberDuplicate,
-		}, { // CheckIfTeacherAuthExists error occur
+		}, { // GetParentAuth1WithUUID error occur
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                  {},
-				"CheckIfParentAuthExists": {false, errors.New("unexpected error from DB Connection")},
-				"Rollback":                 {&gorm.DB{}},
+				"BeginTx":               {},
+				"GetParentAuthWithUUID": {&model.ParentAuth{}, errors.New("unexpected error from DB Connection")},
+				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateTeacherAuth return invalid duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                 {},
-				"CheckIfParentAuthExists": {false, nil},
-				"CreateParentAuth":        {&model.ParentAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "InvalidMessage"}},
-				"Rollback":                {&gorm.DB{}},
+				"BeginTx":               {},
+				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
+				"CreateParentAuth":      {&model.ParentAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "InvalidMessage"}},
+				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateTeacherAuth return unexpected key duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                 {},
-				"CheckIfParentAuthExists": {false, nil},
-				"CreateParentAuth":        {&model.ParentAuth{}, mysqlerr.DuplicateEntry("UnexpectedKey", "error")},
-				"Rollback":                {&gorm.DB{}},
+				"BeginTx":               {},
+				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
+				"CreateParentAuth":      {&model.ParentAuth{}, mysqlerr.DuplicateEntry("UnexpectedKey", "error")},
+				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateTeacherAuth return unexpected error code
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                 {},
-				"CheckIfParentAuthExists": {false, nil},
-				"CreateParentAuth":        {&model.ParentAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
-				"Rollback":                {&gorm.DB{}},
+				"BeginTx":               {},
+				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
+				"CreateParentAuth":      {&model.ParentAuth{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
+				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateTeacherInform return invalid duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                 {},
-				"CheckIfParentAuthExists": {false, nil},
-				"CreateParentAuth":        {&model.ParentAuth{}, nil},
-				"CreateParentInform":      {&model.ParentInform{}, &mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "InvalidMessage"}},
-				"Rollback":                {&gorm.DB{}},
+				"BeginTx":               {},
+				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
+				"CreateParentAuth":      {&model.ParentAuth{}, nil},
+				"CreateParentInform":    {&model.ParentInform{}, &mysql.MySQLError{Number: mysqlcode.ER_DUP_ENTRY, Message: "InvalidMessage"}},
+				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateTeacherInform return unexpected duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                 {},
-				"CheckIfParentAuthExists": {false, nil},
-				"CreateParentAuth":        {&model.ParentAuth{}, nil},
-				"CreateParentInform":      {&model.ParentInform{}, mysqlerr.DuplicateEntry("UnexpectedKey", "duplicated")},
-				"Rollback":                {&gorm.DB{}},
+				"BeginTx":               {},
+				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
+				"CreateParentAuth":      {&model.ParentAuth{}, nil},
+				"CreateParentInform":    {&model.ParentInform{}, mysqlerr.DuplicateEntry("UnexpectedKey", "duplicated")},
+				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateTeacherInform return unexpected error code
 			ExpectedMethods: map[test.Method]test.Returns{
-				"BeginTx":                 {},
-				"CheckIfParentAuthExists": {false, nil},
-				"CreateParentAuth":        {&model.ParentAuth{}, nil},
-				"CreateParentInform":      {&model.ParentInform{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
-				"Rollback":                {&gorm.DB{}},
+				"BeginTx":               {},
+				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
+				"CreateParentAuth":      {&model.ParentAuth{}, nil},
+				"CreateParentInform":    {&model.ParentInform{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
+				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		},
@@ -554,7 +557,7 @@ func Test_default_CreateNewParent(t *testing.T) {
 	for _, createNewParentTest := range tests {
 		createNewParentTest.ChangeEmptyValueToValidValue()
 		createNewParentTest.ChangeEmptyReplaceValueToEmptyValue()
-		createNewParentTest.OnExpectMethodsTo(mockForDB)
+		createNewParentTest.OnExpectMethodsTo(newMock)
 
 		req := new(proto.CreateNewParentRequest)
 		createNewParentTest.SetRequestContextOf(req)
@@ -568,5 +571,5 @@ func Test_default_CreateNewParent(t *testing.T) {
 		assert.Regexpf(t, createNewParentTest.ExpectedStudentUUID, resp.CreatedParentUUID, "parent uuid assertion error (test case: %v, message: %s)", createNewParentTest, resp.Message)
 	}
 
-	mockForDB.AssertExpectations(t)
+	newMock.AssertExpectations(t)
 }

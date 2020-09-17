@@ -92,7 +92,7 @@ func (test *CreateNewStudentCase) onMethod(mock *mock.Mock, method Method, retur
 		}
 		mock.On(string(method), test.getStudentInformModel()).Return(returns...)
 
-	case "CheckIfStudentAuthExists":
+	case "GetStudentAuthWithUUID":
 		mock.On(string(method), test.StudentUUID).Return(returns...)
 
 	case "BeginTx":
@@ -221,7 +221,7 @@ func (test *CreateNewTeacherCase) onMethod(mock *mock.Mock, method Method, retur
 		}
 		mock.On(string(method), test.getTeacherInformModel()).Return(returns...)
 
-	case "CheckIfTeacherAuthExists":
+	case "GetTeacherAuthWithUUID":
 		mock.On(string(method), test.TeacherUUID).Return(returns...)
 
 	case "BeginTx":
@@ -339,7 +339,7 @@ func (test *CreateNewParentCase) onMethod(mock *mock.Mock, method Method, return
 		}
 		mock.On(string(method), test.getParentInformModel()).Return(returns...)
 
-	case "CheckIfParentAuthExists":
+	case "GetParentAuthWithUUID":
 		mock.On(string(method), test.ParentUUID).Return(returns...)
 
 	case "BeginTx":

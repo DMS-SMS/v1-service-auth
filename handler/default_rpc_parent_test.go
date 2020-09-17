@@ -237,3 +237,104 @@ func Test_default_ChangeParentPW(t *testing.T) {
 
 	newMock.AssertExpectations(t)
 }
+
+func Test_default_GetParentInformWithUUID(t *testing.T) {
+	newMock, defaultHandler := generateVarForTest()
+	now := time.Now()
+
+	tests := []test.GetParentInformWithUUIDCase{
+		{ // success case
+			UUID:       "parent-111111111111",
+			ParentUUID: "parent-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetParentInformWithUUID": {&model.ParentInform{
+					Model:       gorm.Model{CreatedAt: now, UpdatedAt: now},
+					ParentUUID:  "parent-111111111111",
+					Name:        "박진홍",
+					PhoneNumber: "01088378347",
+				}, nil},
+				"Commit": {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusOK,
+			ExpectedInform: &model.ParentInform{
+				Name:        "박진홍",
+				PhoneNumber: "01088378347",
+			},
+		}, { // no exist X-Request-ID -> Proxy Authorization Required
+			XRequestID:      test.EmptyReplaceValueForString,
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+			ExpectedInform:  &model.ParentInform{},
+		}, { // invalid X-Request-ID -> Proxy Authorization Required
+			XRequestID:      "InvalidXRequestID",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+			ExpectedInform:  &model.ParentInform{},
+		}, { // no exist Span-Context -> Proxy Authorization Required
+			SpanContextString: test.EmptyReplaceValueForString,
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+			ExpectedInform:    &model.ParentInform{},
+		}, { // invalid Span-Context -> Proxy Authorization Required
+			SpanContextString: "InvalidSpanContext",
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+			ExpectedInform:    &model.ParentInform{},
+		}, { // forbidden (not parent)
+			UUID:           "student-111111111112",
+			ParentUUID:     "student-111111111112",
+			ExpectedStatus: http.StatusForbidden,
+			ExpectedInform: &model.ParentInform{},
+		}, { // forbidden (not my auth)
+			UUID:           "parent-111111111113",
+			ParentUUID:     "parent-111111111114",
+			ExpectedStatus: http.StatusForbidden,
+			ExpectedInform: &model.ParentInform{},
+		}, { // no exist parent uuid
+			UUID:       "parent-111111111115",
+			ParentUUID: "parent-111111111115",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                 {},
+				"GetParentInformWithUUID": {&model.ParentInform{}, gorm.ErrRecordNotFound},
+				"Rollback":                {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusNotFound,
+			ExpectedInform: &model.ParentInform{},
+		}, { // GetParentInformWithUUID error return
+			UUID:       "parent-111111111116",
+			ParentUUID: "parent-111111111116",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                 {},
+				"GetParentInformWithUUID": {&model.ParentInform{}, errors.New("DB not connected")},
+				"Rollback":                {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+			ExpectedInform: &model.ParentInform{},
+		},
+	}
+
+	for _, testCase := range tests {
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethods(newMock)
+
+		req := new(proto.GetParentInformWithUUIDRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		resp := new(proto.GetParentInformWithUUIDResponse)
+		_ = defaultHandler.GetParentInformWithUUID(ctx, req, resp)
+
+		resultInform := &model.ParentInform{
+			Name:          model.Name(resp.Name),
+			PhoneNumber:   model.PhoneNumber(resp.PhoneNumber),
+		}
+
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedInform, resultInform, "result inform assertion error (test case: %v, message: %s)", testCase, resp.Message)
+	}
+
+	newMock.AssertExpectations(t)
+}

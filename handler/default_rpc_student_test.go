@@ -314,4 +314,22 @@ func Test_default_GetStudentInformWithUUID(t *testing.T) {
 			ExpectedStatus: http.StatusInternalServerError,
 		},
 	}
+
+	for _, testCase := range tests {
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethods(mockForDB)
+
+		req := new(proto.GetStudentInformWithUUIDRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		resp := new(proto.GetStudentInformWithUUIDResponse)
+		_ = defaultHandler.GetStudentInformWithUUID(ctx, req, resp)
+
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+	}
+
+	mockForDB.AssertExpectations(t)
 }

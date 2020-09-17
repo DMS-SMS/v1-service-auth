@@ -11,9 +11,6 @@ import (
 )
 
 var (
-	defaultHandler *_default
-	mockForDB *mock.Mock
-
 	adminUUIDRegex = regexp.MustCompile("^admin-\\d{12}")
 	studentUUIDRegex = regexp.MustCompile("^student-\\d{12}")
 	teacherUUIDRegex = regexp.MustCompile("^teacher-\\d{12}")
@@ -29,18 +26,20 @@ const (
 
 )
 
-func init() {
-	mockForDB = new(mock.Mock)
+func generateVarForTest() (newMock *mock.Mock, h _default) {
+	newMock = new(mock.Mock)
 
 	exampleTracerForRPCService, closer, err := jaegercfg.Configuration{ServiceName: "DMS.SMS.v1.service.auth"}.NewTracer()
 	if err != nil { log.Fatal(fmt.Sprintf("error while creating new tracer for service, err: %v", err)) }
 	defer func() { _ = closer.Close() }()
 
-	mockAccessManage, err := db.NewAccessorManage(access.Mock(mockForDB))
+	mockAccessManage, err := db.NewAccessorManage(access.Mock(newMock))
 	if err != nil { log.Fatal(fmt.Sprintf("error while creating new access manage with mock, err: %v", err)) }
 
-	defaultHandler = &_default{
+	h = _default{
 		accessManage: mockAccessManage,
 		tracer:       exampleTracerForRPCService,
 	}
+
+	return
 }

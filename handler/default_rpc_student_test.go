@@ -263,8 +263,6 @@ func Test_default_GetStudentInformWithUUID(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusOK,
 			ExpectedInform: &model.StudentInform{
-				Model:         gorm.Model{CreatedAt: now, UpdatedAt: now},
-				StudentUUID:   "student-111111111111",
 				Grade:         2,
 				Class:         2,
 				StudentNumber: 7,
@@ -276,26 +274,32 @@ func Test_default_GetStudentInformWithUUID(t *testing.T) {
 			XRequestID:      test.EmptyReplaceValueForString,
 			ExpectedMethods: map[test.Method]test.Returns{},
 			ExpectedStatus:  http.StatusProxyAuthRequired,
+			ExpectedInform:  &model.StudentInform{},
 		}, { // invalid X-Request-ID -> Proxy Authorization Required
 			XRequestID:      "InvalidXRequestID",
 			ExpectedMethods: map[test.Method]test.Returns{},
 			ExpectedStatus:  http.StatusProxyAuthRequired,
+			ExpectedInform:  &model.StudentInform{},
 		}, { // no exist Span-Context -> Proxy Authorization Required
 			SpanContextString: test.EmptyReplaceValueForString,
 			ExpectedMethods:   map[test.Method]test.Returns{},
 			ExpectedStatus:    http.StatusProxyAuthRequired,
+			ExpectedInform:    &model.StudentInform{},
 		}, { // invalid Span-Context -> Proxy Authorization Required
 			SpanContextString: "InvalidSpanContext",
 			ExpectedMethods:   map[test.Method]test.Returns{},
 			ExpectedStatus:    http.StatusProxyAuthRequired,
+			ExpectedInform:    &model.StudentInform{},
 		}, { // forbidden (not student)
 			UUID:           "parent-111111111112",
 			StudentUUID:    "student-111111111112",
 			ExpectedStatus: http.StatusForbidden,
+			ExpectedInform: &model.StudentInform{},
 		}, { // forbidden (not my auth)
 			UUID:           "student-111111111113",
 			StudentUUID:    "student-111111111114",
 			ExpectedStatus: http.StatusForbidden,
+			ExpectedInform: &model.StudentInform{},
 		}, { // no exist student uuid
 			UUID:        "student-111111111115",
 			StudentUUID: "student-111111111115",
@@ -305,6 +309,7 @@ func Test_default_GetStudentInformWithUUID(t *testing.T) {
 				"Rollback":                 {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusNotFound,
+			ExpectedInform: &model.StudentInform{},
 		}, { // GetStudentInformWithUUID error return
 			UUID:        "student-111111111116",
 			StudentUUID: "student-111111111116",
@@ -314,6 +319,7 @@ func Test_default_GetStudentInformWithUUID(t *testing.T) {
 				"Rollback":                 {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
+			ExpectedInform: &model.StudentInform{},
 		},
 	}
 
@@ -329,8 +335,18 @@ func Test_default_GetStudentInformWithUUID(t *testing.T) {
 		resp := new(proto.GetStudentInformWithUUIDResponse)
 		_ = defaultHandler.GetStudentInformWithUUID(ctx, req, resp)
 
+		resultInform := &model.StudentInform{
+			Grade:         model.Grade(int64(resp.Grade)),
+			Class:         model.Class(int64(resp.Class)),
+			StudentNumber: model.StudentNumber(int64(resp.StudentNumber)),
+			Name:          model.Name(resp.Name),
+			PhoneNumber:   model.PhoneNumber(resp.PhoneNumber),
+			ProfileURI:    model.ProfileURI(resp.ImageURI),
+		}
+
 		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedInform, resultInform, "result inform assertion error (test case: %v, message: %s)", testCase, resp.Message)
 	}
 
 	mockForDB.AssertExpectations(t)

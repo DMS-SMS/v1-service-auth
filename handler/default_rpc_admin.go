@@ -21,7 +21,7 @@ import (
 	"net/http"
 )
 
-func(h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStudentRequest, resp *proto.CreateNewStudentResponse) (_ error) {
+func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStudentRequest, resp *proto.CreateNewStudentResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -523,6 +523,66 @@ func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParen
 	resp.Status = http.StatusCreated
 	resp.Message = "new parent create success"
 	resp.CreatedParentUUID = pUUID
+
+	return
+}
+
+func (h _default) LoginAdminAuth(ctx context.Context, req *proto.LoginAdminAuthRequest, resp *proto.LoginAdminAuthResponse) (err error) {
+	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access, err := h.accessManage.BeginTx()
+	if err != nil {
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())
+		return
+	}
+
+	spanForDB := opentracing.StartSpan("GetAdminAuthWithID", opentracing.ChildOf(parentSpan))
+	resultAuth, err := access.GetAdminAuthWithID(req.AdminID)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", resultAuth), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			resp.Status = http.StatusConflict
+			resp.Code = CodeAdminIDNoExist
+			resp.Message = fmt.Sprintf(conflictErrorFormat, "admin id not exists")
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " +err.Error())
+		}
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(resultAuth.AdminPW), []byte(req.AdminPW))
+	if err != nil {
+		access.Rollback()
+		switch err {
+		case bcrypt.ErrMismatchedHashAndPassword:
+			resp.Status = http.StatusConflict
+			resp.Code = CodeIncorrectAdminPWForLogin
+			resp.Message = fmt.Sprintf(conflictErrorFormat, "mismatched hash and password")
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "hash compare error, err: " + err.Error())
+		}
+		return
+	}
+
+	access.Commit()
+	resp.Status = http.StatusOK
+	resp.Message = "succeed to login admin auth"
+	resp.LoggedInAdminUUID = string(resultAuth.UUID)
 
 	return
 }

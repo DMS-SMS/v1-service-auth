@@ -106,7 +106,7 @@ func (ai adminID) KeyName() string { return "admin_id" }
 
 // AdminPW 필드에서 사용할 사용자 정의 타입
 type adminPW string
-func AdminPW(s string) parentPW { return parentPW(s) }
+func AdminPW(s string) adminPW { return adminPW(s) }
 func (ap adminPW) Value() (driver.Value, error) { return string(ap), nil }
 func (ap *adminPW) Scan(src interface{}) (err error) { *ap = adminPW(src.([]uint8)); return }
 func (ap adminPW) KeyName() string { return "admin_pw" }

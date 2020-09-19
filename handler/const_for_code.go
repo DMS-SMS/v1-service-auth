@@ -15,11 +15,14 @@ const (
 	CodeStudentIDNoExist = -401
 	CodeIncorrectStudentPWForLogin = -402
 
-	CodeTeacherIDNoExist = -501
-	CodeIncorrectTeacherPWForLogin = -502
+	CodeTeacherIDNoExist = -411
+	CodeIncorrectTeacherPWForLogin = -411
 
-	CodeParentIDNoExist = -601
-	CodeIncorrectParentPWForLogin = -602
+	CodeParentIDNoExist = -421
+	CodeIncorrectParentPWForLogin = -422
+
+	CodeAdminIDNoExist = -431
+	CodeIncorrectAdminPWForLogin = -432
 
 	CodeIncorrectStudentPWForChange = -701
 

@@ -15,6 +15,8 @@ import (
 const (
 	validAdminUUID = "admin-111111111111"
 
+	validAdminID = "adminID"
+	validAdminPW = ""
 	validStudentID = "jinhong0719"
 	validStudentPW = ""
 	validTeacherID = "teacherID"

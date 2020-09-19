@@ -11,6 +11,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"testing"
 )
@@ -569,6 +570,95 @@ func Test_default_CreateNewParent(t *testing.T) {
 		assert.Equalf(t, int(createNewParentTest.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", createNewParentTest, resp.Message)
 		assert.Equalf(t, createNewParentTest.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", createNewParentTest, resp.Message)
 		assert.Regexpf(t, createNewParentTest.ExpectedStudentUUID, resp.CreatedParentUUID, "parent uuid assertion error (test case: %v, message: %s)", createNewParentTest, resp.Message)
+	}
+
+	newMock.AssertExpectations(t)
+}
+
+func Test_default_LoginAdminAuth(t *testing.T) {
+	newMock, defaultHandler := generateVarForTest()
+	hashedByte, _ := bcrypt.GenerateFromPassword([]byte("testPW"), 1)
+
+	tests := []test.LoginAdminAuthCase{
+		{ // success case
+			AdminID: "jinhong07191",
+			AdminPW: "testPW",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetAdminAuthWithID": {&model.AdminAuth{
+					UUID:    "admin-111111111111",
+					AdminID: "jinhong07191",
+					AdminPW: model.AdminPW(string(hashedByte)),
+				}, nil},
+				"Commit": {&gorm.DB{}},
+			},
+			ExpectedStatus:            http.StatusOK,
+			ExpectedLoggedInAdminUUID: "admin-111111111111",
+		}, { // no exist X-Request-ID -> Proxy Authorization Required
+			XRequestID:      test.EmptyReplaceValueForString,
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // invalid X-Request-ID -> Proxy Authorization Required
+			XRequestID:      "InvalidXRequestID",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // no exist Span-Context -> Proxy Authorization Required
+			SpanContextString: test.EmptyReplaceValueForString,
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // invalid Span-Context -> Proxy Authorization Required
+			SpanContextString: "InvalidSpanContext",
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // Parent ID no exists
+			AdminID: "jinhong07192",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":            {},
+				"GetAdminAuthWithID": {&model.AdminAuth{}, gorm.ErrRecordNotFound},
+				"Rollback":           {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusConflict,
+			ExpectedCode:   CodeAdminIDNoExist,
+		}, { // GetParentAuthWithID unexpected error
+			AdminID: "jinhong07193",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":            {},
+				"GetAdminAuthWithID": {&model.AdminAuth{}, errors.New("unexpected error")},
+				"Rollback":           {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // incorrect Parent PW
+			AdminID: "jinhong07194",
+			AdminPW: "incorrectPW",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetAdminAuthWithID": {&model.AdminAuth{
+					UUID:    "admin-111111111111",
+					AdminID: "jinhong07194",
+					AdminPW: model.AdminPW(string(hashedByte)),
+				}, nil},
+				"Rollback": {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusConflict,
+			ExpectedCode:   CodeIncorrectAdminPWForLogin,
+		},
+	}
+
+	for _, testCase := range tests {
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethods(newMock)
+
+		var req = new(proto.LoginAdminAuthRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		var resp = new(proto.LoginAdminAuthResponse)
+		_ = defaultHandler.LoginAdminAuth(ctx, req, resp)
+
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedLoggedInAdminUUID, resp.LoggedInAdminUUID, "logged in uuid assertion error (test case: %v, message: %s)", testCase, resp.Message)
 	}
 
 	newMock.AssertExpectations(t)

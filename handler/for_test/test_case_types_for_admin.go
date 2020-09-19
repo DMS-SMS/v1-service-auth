@@ -387,3 +387,63 @@ func (test *CreateNewParentCase) GetMetadataContext() (ctx context.Context) {
 	ctx = metadata.Set(ctx, "ParentUUID", test.ParentUUID)
 	return
 }
+
+
+type LoginAdminAuthCase struct {
+	AdminID, AdminPW          string
+	XRequestID                string
+	SpanContextString         string
+	ExpectedMethods           map[Method]Returns
+	ExpectedStatus            uint32
+	ExpectedCode              int32
+	ExpectedMessage           string
+	ExpectedAccessToken       string
+	ExpectedLoggedInAdminUUID string
+}
+
+func (test *LoginAdminAuthCase) ChangeEmptyValueToValidValue() {
+	if test.AdminID == ""           { test.AdminID = validAdminID }
+	if test.AdminPW == ""           { test.AdminPW = validAdminPW }
+	if test.SpanContextString == "" { test.SpanContextString = validSpanContextString }
+	if test.XRequestID == ""        { test.XRequestID = validXRequestID }
+}
+
+func (test *LoginAdminAuthCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.AdminID == EmptyReplaceValueForString           { test.AdminID = "" }
+	if test.AdminPW == EmptyReplaceValueForString           { test.AdminPW = "" }
+	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+}
+
+func (test *LoginAdminAuthCase) OnExpectMethods(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *LoginAdminAuthCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+	switch method {
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "GetAdminAuthWithID":
+		mock.On(string(method), test.AdminID).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	}
+}
+
+func (test *LoginAdminAuthCase) SetRequestContextOf(req *proto.LoginAdminAuthRequest) {
+	req.AdminID = test.AdminID
+	req.AdminPW = test.AdminPW
+}
+
+func (test *LoginAdminAuthCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+
+	return
+}

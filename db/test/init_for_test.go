@@ -21,7 +21,7 @@ func init() {
 	}
 	db.Migrate(dbc)
 
-	manager, err = db.NewAccessorManage(access.DefaultReflectType(), dbc)
+	manager, err = db.NewAccessorManage(access.Default(dbc))
 	if err != nil {
 		log.Fatal(err)
 	}

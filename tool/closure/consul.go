@@ -33,11 +33,11 @@ func ConsulServiceRegistrar(s server.Server, consul *api.Client) func() error {
 			log.Fatalf("unable to register service in consul, err: %v\n", err)
 		}
 
-		checkerID := fmt.Sprintf("service:%s", srvID)
-		checkerName := fmt.Sprintf("service '%s' check", s.Options().Name)
+		checkID := fmt.Sprintf("service:%s", srvID)
+		checkName := fmt.Sprintf("service '%s' check", s.Options().Name)
 		err = consul.Agent().CheckRegister(&api.AgentCheckRegistration{
-			ID:                checkerID,
-			Name:              checkerName,
+			ID:                checkID,
+			Name:              checkName,
 			ServiceID:         srvID,
 			AgentServiceCheck: api.AgentServiceCheck{
 				Name:   s.Options().Name,
@@ -49,7 +49,24 @@ func ConsulServiceRegistrar(s server.Server, consul *api.Client) func() error {
 			log.Fatalf("unable to register check in consul, err: %v\n", err)
 		}
 
-		log.Infof("succeed to registry service and check to consul!! (service id: %s | checker id: %s)\n", srvID, checkerID)
+		log.Infof("succeed to registry service and check to consul!! (service id: %s | checker id: %s)\n", srvID, checkID)
+		return
+	}
+}
+
+func ConsulServiceDeregistrar(s server.Server, consul *api.Client) func() error {
+	return func() (err error) {
+		srvID := fmt.Sprintf("%s-%s", s.Options().Name, s.Options().Id)
+		err = consul.Agent().ServiceDeregister(srvID)
+		if err != nil {
+			log.Fatalf("unable to deregister service in consul, err: %v\n", err)
+		}
+
+		checkID := fmt.Sprintf("service:%s", srvID)
+		err = consul.Agent().CheckDeregister(checkID)
+		if err != nil {
+			log.Fatalf("unable to deregister check in consul, err: %v\n", err)
+		}
 		return
 	}
 }

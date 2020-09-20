@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hashicorp/consul/api"
+	log "github.com/micro/go-micro/v2/logger"
 	"github.com/micro/go-micro/v2/server"
-	"github.com/micro/go-micro/v2/util/log"
 	"net"
 	"strconv"
 	"strings"
@@ -49,7 +49,7 @@ func ConsulServiceRegistrar(s server.Server, consul *api.Client) func() error {
 			log.Fatalf("unable to register check in consul, err: %v\n", err)
 		}
 
-		log.Infof("succeed to registry service and check to consul!! (service id: %s | checker id: %s)\n", srvID, checkID)
+		log.Infof("succeed to registry service and check to consul!! (service id: %s | checker id: %s)", srvID, checkID)
 		return
 	}
 }
@@ -67,6 +67,8 @@ func ConsulServiceDeregistrar(s server.Server, consul *api.Client) func() error 
 		if err != nil {
 			log.Fatalf("unable to deregister check in consul, err: %v\n", err)
 		}
+
+		log.Infof("succeed to deregistry service and check to consul!! (service id: %s | checker id: %s)", srvID, checkID)
 		return
 	}
 }
@@ -88,7 +90,7 @@ func getMyLocalAddr() (addr *net.UDPAddr, err error) {
 	}()
 
 	addr, ok := conn.LocalAddr().(*net.UDPAddr)
-	if ok {
+	if !ok {
 		err = errors.New("unable to assert type to *net.UDPAddr")
 		return
 	}

@@ -6,6 +6,7 @@ import (
 	"auth/db/access"
 	"auth/handler"
 	proto "auth/proto/golang/auth"
+	"auth/tool/closure"
 	"github.com/hashicorp/consul/api"
 	"github.com/micro/go-micro/v2"
 	log "github.com/micro/go-micro/v2/logger"
@@ -55,8 +56,10 @@ func main() {
 		micro.Transport(grpc.NewTransport()),
 	)
 
-	// 서비스 등록 클로저 등록 추가
-	service.Init()
+	service.Init(
+		micro.AfterStart(closure.ConsulServiceRegistrar(service.Server(), consul)),
+		micro.BeforeStop(closure.ConsulServiceDeregistrar(service.Server(), consul)),
+	)
 
 	_ = proto.RegisterAuthAdminHandler(service.Server(), rpcHandler)
 	_ = proto.RegisterAuthStudentHandler(service.Server(), rpcHandler)

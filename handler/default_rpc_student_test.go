@@ -354,3 +354,95 @@ func Test_default_GetStudentInformWithUUID(t *testing.T) {
 
 	newMock.AssertExpectations(t)
 }
+
+func Test_default_GetStudentUUIDsWithInform(t *testing.T) {
+	newMock, defaultHandler := generateVarForTest()
+
+	tests := []test.GetStudentUUIDsWithInformCase{
+		{ // success case (for admin auth)
+			UUID: "admin-111111111111",
+			Name: "이성진",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                   {},
+				"GetStudentUUIDsWithInform": {[]string{"student-123412341234", "student-123412341234"}, nil},
+				"Commit":                    {&gorm.DB{}},
+			},
+			ExpectedStatus:       http.StatusOK,
+			ExpectedStudentUUIDs: []string{"student-123412341234", "student-123412341234"},
+		}, { // success case (for student auth)
+			UUID:          "student-111111111111",
+			Class:         2,
+			Grade:         2,
+			StudentNumber: 7,
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                   {},
+				"GetStudentUUIDsWithInform": {[]string{"student-111111111111"}, nil},
+				"Commit":                    {&gorm.DB{}},
+			},
+			ExpectedStatus:       http.StatusOK,
+			ExpectedStudentUUIDs: []string{"student-111111111111"},
+		}, { // no exist X-Request-ID -> Proxy Authorization Required
+			UUID:            "student-111111111111",
+			XRequestID:      test.EmptyReplaceValueForString,
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // invalid X-Request-ID -> Proxy Authorization Required
+			UUID:            "student-111111111111",
+			XRequestID:      "InvalidXRequestID",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // no exist Span-Context -> Proxy Authorization Required
+			UUID:              "student-111111111111",
+			SpanContextString: test.EmptyReplaceValueForString,
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // invalid Span-Context -> Proxy Authorization Required
+			UUID:              "student-111111111111",
+			SpanContextString: "InvalidSpanContext",
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // forbidden (not student)
+			UUID:           "parent-111111111111",
+			ExpectedStatus: http.StatusForbidden,
+		}, { // no exist student uuid with that inform
+			UUID:          "student-111111111111",
+			Class:         2,
+			Grade:         2,
+			StudentNumber: 21,
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                   {},
+				"GetStudentUUIDsWithInform": {[]string{}, gorm.ErrRecordNotFound},
+				"Rollback":                  {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusConflict,
+			ExpectedCode:   CodeStudentWithThatInformNoExist,
+		}, { // GetStudentInformWithUUID error return
+			UUID:          "student-111111111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                   {},
+				"GetStudentUUIDsWithInform": {[]string{}, errors.New("I don't know about that error")},
+				"Rollback":                  {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		},
+	}
+
+	for _, testCase := range tests {
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethods(newMock)
+
+		req := new(proto.GetStudentUUIDsWithInformRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		resp := new(proto.GetStudentUUIDsWithInformResponse)
+		_ = defaultHandler.GetStudentUUIDsWithInform(ctx, req, resp)
+
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedStudentUUIDs, resp.StudentUUIDs, "result studentUUIDs assertion error (test case: %v, message: %s)", testCase, resp.Message)
+	}
+
+	newMock.AssertExpectations(t)
+}

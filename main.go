@@ -7,11 +7,14 @@ import (
 	"auth/handler"
 	proto "auth/proto/golang/auth"
 	"auth/tool/closure"
+	"fmt"
 	"github.com/hashicorp/consul/api"
 	"github.com/micro/go-micro/v2"
 	log "github.com/micro/go-micro/v2/logger"
 	"github.com/micro/go-micro/v2/transport/grpc"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
+	"math/rand"
+	"net"
 	"os"
 )
 
@@ -63,10 +66,12 @@ func main() {
 		handler.Tracer(authSrvTracer),
 	)
 
+	port := getRandomPortNotInUsedWithRange(10000, 10100)
 	service := micro.NewService(
 		micro.Name("DMS.SMS.v1.service.auth"),
 		micro.Version("1.0.0"),
 		micro.Transport(grpc.NewTransport()),
+		micro.Address(fmt.Sprintf(":%d", port)),
 	)
 
 	service.Init(
@@ -84,6 +89,19 @@ func main() {
 	if err := service.Run(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func getRandomPortNotInUsedWithRange(min, max int) (port int) {
+	for {
+		port = rand.Intn(max - min) + min
+		conn, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+		if err != nil {
+			continue
+		}
+		_ = conn.Close()
+		break
+	}
+	return
 }
 
 //http.HandleFunc("/profiles", func(writer http.ResponseWriter, request *http.Request) {

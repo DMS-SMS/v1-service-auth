@@ -22,6 +22,8 @@ func init() {
 
 func isValidateUUID(fl validator.FieldLevel) bool {
 	switch fl.Param() {
+	case "admin":
+		return adminUUIDRegex.MatchString(fl.Field().String())
 	case "student":
 		return studentUUIDRegex.MatchString(fl.Field().String())
 	case "teacher":

@@ -28,48 +28,27 @@ func (d *_default) GetParentAuthWithID(parentID string) (auth *model.ParentAuth,
 	return
 }
 
-func (d *_default) CheckIfStudentAuthExists(uuid string) (exist bool, err error) {
-	studentAuth := new(model.StudentAuth)
-	studentAuthTable := d.tx.Where("uuid = ?", uuid).Find(studentAuth)
-	if studentAuthTable.Error != gorm.ErrRecordNotFound {
-		err = studentAuthTable.Error
-	}
-
-	if studentAuthTable.RowsAffected == 0 {
-		exist = false
-	} else {
-		exist = true
-	}
+func (d *_default) GetAdminAuthWithID(adminID string) (auth *model.AdminAuth, err error) {
+	auth = new(model.AdminAuth)
+	err = d.tx.Where("admin_id = ?", adminID).Find(&auth).Error
 	return
 }
 
-func (d *_default) CheckIfTeacherAuthExists(uuid string) (exist bool, err error) {
-	teacherAuth := new(model.TeacherAuth)
-	teacherAuthTable := d.tx.Where("uuid = ?", uuid).Find(teacherAuth)
-	if teacherAuthTable.Error != gorm.ErrRecordNotFound {
-		err = teacherAuthTable.Error
-	}
-
-	if teacherAuthTable.RowsAffected == 0 {
-		exist = false
-	} else {
-		exist = true
-	}
+func (d *_default) GetStudentAuthWithUUID(uuid string) (auth *model.StudentAuth, err error) {
+	auth = new(model.StudentAuth)
+	err = d.tx.Where("uuid = ?", uuid).Find(auth).Error
 	return
 }
 
-func (d *_default) CheckIfParentAuthExists(uuid string) (exist bool, err error) {
-	parentAuth := new(model.ParentAuth)
-	parentAuthTable := d.tx.Where("uuid = ?", uuid).Find(parentAuth)
-	if parentAuthTable.Error != gorm.ErrRecordNotFound {
-		err = parentAuthTable.Error
-	}
+func (d *_default) GetTeacherAuthWithUUID(uuid string) (auth *model.TeacherAuth, err error) {
+	auth = new(model.TeacherAuth)
+	err = d.tx.Where("uuid = ?", uuid).Find(auth).Error
+	return
+}
 
-	if parentAuthTable.RowsAffected == 0 {
-		exist = false
-	} else {
-		exist = true
-	}
+func (d *_default) GetParentAuthWithUUID(uuid string) (auth *model.ParentAuth, err error) {
+	auth = new(model.ParentAuth)
+	err = d.tx.Where("uuid = ?", uuid).Find(auth).Error
 	return
 }
 

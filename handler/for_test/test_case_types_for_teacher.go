@@ -176,3 +176,16 @@ func (test *GetTeacherInformWithUUIDCase) GetMetadataContext() (ctx context.Cont
 
 	return
 }
+
+type GetTeacherUUIDsWithInformCase struct {
+	UUID                 string
+	Grade, Class         int64
+	Name, PhoneNumber    string
+	XRequestID           string
+	SpanContextString    string
+	ExpectedMethods      map[Method]Returns
+	ExpectedStatus       uint32
+	ExpectedCode         int32
+	ExpectedMessage      string
+	ExpectedTeacherUUIDs []string
+}

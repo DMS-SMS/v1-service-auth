@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"auth/model"
 	proto "auth/proto/golang/auth"
 	"context"
 	"fmt"
@@ -72,7 +73,7 @@ func (h _default) LoginStudentAuth(ctx context.Context, req *proto.LoginStudentA
 	return
 }
 
-func (h _default) ChangeStudentPW (ctx context.Context, req *proto.ChangeStudentPWRequest, resp *proto.ChangeStudentPWResponse) (err error) {
+func (h _default) ChangeStudentPW(ctx context.Context, req *proto.ChangeStudentPWRequest, resp *proto.ChangeStudentPWResponse) (err error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -211,5 +212,67 @@ func (h _default) GetStudentInformWithUUID(ctx context.Context, req *proto.GetSt
 
 	resp.Status = http.StatusOK
 	resp.Message = "get student auth success"
+	return
+}
+
+func (h _default) GetStudentUUIDsWithInform(ctx context.Context, req *proto.GetStudentUUIDsWithInformRequest, resp *proto.GetStudentUUIDsWithInformResponse) (err error) {
+	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	switch true {
+	case studentUUIDRegex.MatchString(req.UUID):
+		break
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	default:
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "this API is for students for admins only")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access, err := h.accessManage.BeginTx()
+	if err != nil {
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())
+		return
+	}
+
+	spanForDB := opentracing.StartSpan("GetStudentUUIDsWithInform", opentracing.ChildOf(parentSpan))
+	selectedUUIDs, err := access.GetStudentUUIDsWithInform(&model.StudentInform{
+		Grade:         model.Grade(int64(req.Grade)),
+		Class:         model.Class(int64(req.Class)),
+		StudentNumber: model.StudentNumber(int64(req.StudentNumber)),
+		Name:          model.Name(req.Name),
+		PhoneNumber:   model.PhoneNumber(req.PhoneNumber),
+		ProfileURI:    model.ProfileURI(req.ImageURI),
+	})
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedUUIDs", selectedUUIDs), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			resp.Status = http.StatusConflict
+			resp.Code = CodeStudentWithThatInformNoExist
+			resp.Message = fmt.Sprintf(conflictErrorFormat, "no exist student with that inform")
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " + err.Error())
+		}
+		return
+	}
+
+	access.Commit()
+	resp.StudentUUIDs = selectedUUIDs
+	resp.Status = http.StatusOK
+	resp.Message = "get student uuids having that inform success"
 	return
 }

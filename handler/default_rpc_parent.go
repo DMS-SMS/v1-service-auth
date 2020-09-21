@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"auth/model"
 	proto "auth/proto/golang/auth"
 	"context"
 	"fmt"
@@ -207,5 +208,63 @@ func (h _default) GetParentInformWithUUID(ctx context.Context, req *proto.GetPar
 
 	resp.Status = http.StatusOK
 	resp.Message = "get parent auth success"
+	return
+}
+
+func (h _default) GetParentUUIDsWithInform(ctx context.Context, req *proto.GetParentUUIDsWithInformRequest, resp *proto.GetParentUUIDsWithInformResponse) (err error) {
+	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	switch true {
+	case parentUUIDRegex.MatchString(req.UUID):
+		break
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	default:
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "this API is for parents or admins only")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access, err := h.accessManage.BeginTx()
+	if err != nil {
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())
+		return
+	}
+
+	spanForDB := opentracing.StartSpan("GetParentUUIDsWithInform", opentracing.ChildOf(parentSpan))
+	selectedUUIDs, err := access.GetParentUUIDsWithInform(&model.ParentInform{
+		Name:          model.Name(req.Name),
+		PhoneNumber:   model.PhoneNumber(req.PhoneNumber),
+	})
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedUUIDs", selectedUUIDs), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			resp.Status = http.StatusConflict
+			resp.Code = CodeParentWithThatInformNoExist
+			resp.Message = fmt.Sprintf(conflictErrorFormat, "no exist parent with that inform")
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " + err.Error())
+		}
+		return
+	}
+
+	access.Commit()
+	resp.ParentUUIDs = selectedUUIDs
+	resp.Status = http.StatusOK
+	resp.Message = "get parent uuids having that inform success"
 	return
 }

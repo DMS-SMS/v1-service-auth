@@ -24,6 +24,10 @@ const (
 	CodeAdminIDNoExist = -431
 	CodeIncorrectAdminPWForLogin = -432
 
+	CodeStudentWithThatInformNoExist = -501
+	CodeTeacherWithThatInformNoExist = -511
+	CodeParentWithThatInformNoExist = -521
+
 	CodeIncorrectStudentPWForChange = -701
 
 	CodeIncorrectTeacherPWForChange = -801

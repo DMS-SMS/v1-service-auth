@@ -176,3 +176,62 @@ func (test *GetParentInformWithUUIDCase) GetMetadataContext() (ctx context.Conte
 
 	return
 }
+
+type GetParentUUIDsWithInformCase struct {
+	UUID                string
+	Name, PhoneNumber   string
+	XRequestID          string
+	SpanContextString   string
+	ExpectedMethods     map[Method]Returns
+	ExpectedStatus      uint32
+	ExpectedCode        int32
+	ExpectedMessage     string
+	ExpectedParentUUIDs []string
+}
+
+func (test *GetParentUUIDsWithInformCase) ChangeEmptyValueToValidValue() {
+	if test.XRequestID == ""        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == "" { test.SpanContextString = validSpanContextString }
+}
+
+func (test *GetParentUUIDsWithInformCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+}
+
+func (test *GetParentUUIDsWithInformCase) OnExpectMethods(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *GetParentUUIDsWithInformCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+	switch method {
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "GetParentUUIDsWithInform":
+		mock.On(string(method), &model.ParentInform{
+			Name:          model.Name(test.Name),
+			PhoneNumber:   model.PhoneNumber(test.PhoneNumber),
+		}).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	}
+}
+
+func (test *GetParentUUIDsWithInformCase) SetRequestContextOf(req *proto.GetParentUUIDsWithInformRequest) {
+	req.UUID = test.UUID
+	req.Name = test.Name
+	req.PhoneNumber = test.PhoneNumber
+}
+
+func (test *GetParentUUIDsWithInformCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+
+	return
+}

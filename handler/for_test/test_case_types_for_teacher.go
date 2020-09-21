@@ -176,3 +176,67 @@ func (test *GetTeacherInformWithUUIDCase) GetMetadataContext() (ctx context.Cont
 
 	return
 }
+
+type GetTeacherUUIDsWithInformCase struct {
+	UUID                 string
+	Grade, Class         int64
+	Name, PhoneNumber    string
+	XRequestID           string
+	SpanContextString    string
+	ExpectedMethods      map[Method]Returns
+	ExpectedStatus       uint32
+	ExpectedCode         int32
+	ExpectedMessage      string
+	ExpectedTeacherUUIDs []string
+}
+
+func (test *GetTeacherUUIDsWithInformCase) ChangeEmptyValueToValidValue() {
+	if test.XRequestID == ""        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == "" { test.SpanContextString = validSpanContextString }
+}
+
+func (test *GetTeacherUUIDsWithInformCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+}
+
+func (test *GetTeacherUUIDsWithInformCase) OnExpectMethods(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *GetTeacherUUIDsWithInformCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+	switch method {
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "GetTeacherUUIDsWithInform":
+		mock.On(string(method), &model.TeacherInform{
+			Grade:         model.Grade(test.Grade),
+			Class:         model.Class(test.Class),
+			Name:          model.Name(test.Name),
+			PhoneNumber:   model.PhoneNumber(test.PhoneNumber),
+		}).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	}
+}
+
+func (test *GetTeacherUUIDsWithInformCase) SetRequestContextOf(req *proto.GetTeacherUUIDsWithInformRequest) {
+	req.UUID = test.UUID
+	req.Grade = uint32(test.Grade)
+	req.Class = uint32(test.Class)
+	req.Name = test.Name
+	req.PhoneNumber = test.PhoneNumber
+}
+
+func (test *GetTeacherUUIDsWithInformCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+
+	return
+}

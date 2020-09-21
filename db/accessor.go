@@ -15,11 +15,12 @@ type Accessor interface {
 	GetStudentAuthWithID(studentID string) (*model.StudentAuth, error)
 	GetTeacherAuthWithID(teacherID string) (*model.TeacherAuth, error)
 	GetParentAuthWithID(parentID string) (*model.ParentAuth, error)
+	GetAdminAuthWithID(adminID string) (*model.AdminAuth, error)
 
-	// UUID로 계정 존재 여부 확인 메서드
-	CheckIfStudentAuthExists(uuid string) (exist bool, err error)
-	CheckIfTeacherAuthExists(uuid string) (exist bool, err error)
-	CheckIfParentAuthExists(uuid string) (exist bool, err error)
+	// 계정 UUID로 계정 정보 조회 메서드
+	GetStudentAuthWithUUID(uuid string) (*model.StudentAuth, error)
+	GetTeacherAuthWithUUID(uuid string) (*model.TeacherAuth, error)
+	GetParentAuthWithUUID(uuid string) (*model.ParentAuth, error)
 
 	// 비밀번호 변경 메서드
 	ChangeStudentPW(uuid string, studentPW string) error
@@ -56,7 +57,7 @@ type Accessor interface {
 	// ---
 
 	// 트랜잭션 관련 메서드
-	Begin(db *gorm.DB)
+	BeginTx()
 	Commit() *gorm.DB
 	Rollback() *gorm.DB
 }

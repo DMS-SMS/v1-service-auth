@@ -1,22 +1,21 @@
 
-GOPATH:=$(shell go env GOPATH)
-MODIFY=Mproto/imports/api.proto=github.com/micro/go-micro/v2/api/proto
-
-.PHONY: proto
-proto:
-    
-	protoc --proto_path=. --micro_out=${MODIFY}:. --go_out=${MODIFY}:. proto/auth/auth.proto
-    
-
 .PHONY: build
 build: proto
+	GOOS=linux GOARCH=amd64 go build -o auth-service *.go
 
-	go build -o auth-service *.go
+.PHONY: image
+image:
+	docker build . -t dms-sms-service-auth:${VERSION}
 
-.PHONY: test
-test:
-	go test -v ./... -cover
+.PHONY: upload
+upload:
+	docker tag dms-sms-service-auth:${VERSION} jinhong0719/dms-sms-service-auth:${VERSION}.RELEASE
+	docker push jinhong0719/dms-sms-service-auth:${VERSION}.RELEASE
 
-.PHONY: docker
-docker:
-	docker build . -t auth-service:latest
+.PHONY: pull
+pull:
+	docker pull jinhong0719/dms-sms-service-auth:${VERSION}.RELEASE
+
+.PHONY: run
+run:
+	docker-compose -f ./docker-compose.yml up -d

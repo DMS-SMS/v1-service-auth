@@ -15,11 +15,12 @@ func (t None) CreateParentAuth(auth *model.ParentAuth) (resultAuth *model.Parent
 func (t None) GetStudentAuthWithID(studentID string) (auth *model.StudentAuth, err error) { return }
 func (t None) GetTeacherAuthWithID(teacherID string) (auth *model.TeacherAuth, err error) { return }
 func (t None) GetParentAuthWithID(parentID string) (auth *model.ParentAuth, err error) { return }
+func (t None) GetAdminAuthWithID(adminID string) (auth *model.AdminAuth, err error) { return }
 
 // UUID로 계정 존재 여부 확인 메서드
-func (t None) CheckIfStudentAuthExists(uuid string) (exist bool, err error) { return }
-func (t None) CheckIfTeacherAuthExists(uuid string) (exist bool, err error) { return }
-func (t None) CheckIfParentAuthExists(uuid string) (exist bool, err error) { return }
+func (t None) GetStudentAuthWithUUID(uuid string) (auth *model.StudentAuth, err error) { return }
+func (t None) GetTeacherAuthWithUUID(uuid string) (auth *model.TeacherAuth, err error) { return }
+func (t None) GetParentAuthWithUUID(uuid string) (auth *model.ParentAuth, err error) { return }
 
 // 비밀번호 변경 메서드
 func (t None) ChangeStudentPW(uuid string, studentPW string) error { return nil }
@@ -52,6 +53,6 @@ func (t None) ModifyTeacherInform(uuid string, revisionInform *model.TeacherInfo
 func (t None) ModifyParentInform(uuid string, revisionInform *model.ParentInform) (err error) { return }
 
 // 트랜잭션 관련 메서드
-func (t None) Begin(db *gorm.DB) {}
+func (t None) BeginTx() {}
 func (t None) Commit() *gorm.DB { return nil }
 func (t None) Rollback() *gorm.DB { return nil }

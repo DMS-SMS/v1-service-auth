@@ -12,10 +12,16 @@ import (
 	log "github.com/micro/go-micro/v2/logger"
 	"github.com/micro/go-micro/v2/transport/grpc"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
+	"os"
 )
 
 func main() {
-	consul, err := api.NewClient(api.DefaultConfig())
+	consulCfg := api.DefaultConfig()
+	if addr := os.Getenv("CONSUL_ADDRESS"); addr != "" {
+		consulCfg.Address = addr
+	}
+
+	consul, err := api.NewClient(consulCfg)
 	if err != nil {
 		log.Fatalf("consul connect fail, err: %v", err)
 	}
@@ -24,17 +30,24 @@ func main() {
 	if err != nil {
 		log.Fatalf("db connect fail, err: %v", err)
 	}
+	db.Migrate(dbc)
 
 	defaultAccessManage, err := db.NewAccessorManage(access.Default(dbc))
 	if err != nil {
 		log.Fatalf("db accessor create fail, err: %v", err)
 	}
 
+	// 이 부분은 나중에 Consul 조회로 변경 예
+	agentHost := "localhost:6831"
+	if addr := os.Getenv("JAEGER_ADDRESS"); addr != "" {
+		agentHost = addr
+	}
+
 	authSrvTracer, closer, err := jaegercfg.Configuration{
 		ServiceName: "DMS.SMS.v1.service.auth",
 		Reporter: &jaegercfg.ReporterConfig{
 			LogSpans:           true,
-			LocalAgentHostPort: "localhost:6831",
+			LocalAgentHostPort: agentHost,
 		},
 	}.NewTracer()
 	if err != nil {

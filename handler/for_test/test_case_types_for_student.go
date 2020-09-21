@@ -180,17 +180,18 @@ func (test *GetStudentInformWithUUIDCase) GetMetadataContext() (ctx context.Cont
 }
 
 type GetStudentUUIDsWithInformCase struct {
-	UUID              string
-	Grade, Class      int64
-	StudentNumber     int64
-	Name, PhoneNumber string
-	ImageURI          string
-	XRequestID        string
-	SpanContextString string
-	ExpectedMethods   map[Method]Returns
-	ExpectedStatus    uint32
-	ExpectedCode      int32
-	ExpectedMessage   string
+	UUID                 string
+	Grade, Class         int64
+	StudentNumber        int64
+	Name, PhoneNumber    string
+	ImageURI             string
+	XRequestID           string
+	SpanContextString    string
+	ExpectedMethods      map[Method]Returns
+	ExpectedStatus       uint32
+	ExpectedCode         int32
+	ExpectedMessage      string
+	ExpectedStudentUUIDs []string
 }
 
 func (test *GetStudentUUIDsWithInformCase) ChangeEmptyValueToValidValue() {

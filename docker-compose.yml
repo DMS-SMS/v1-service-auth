@@ -1,0 +1,18 @@
+version: '3.5'
+services:
+  service-auth:
+    image: jinhong0719/dms-sms-service-auth:${VERSION}.RELEASE
+    container_name: service-auth
+    networks:
+      - dms_sms_local
+    ports:
+      - 10000-10100:10000-10100
+    environment:
+      - DB_PASSWORD=${DB_PASSWORD}
+      - CONSUL_ADDRESS=${CONSUL_ADDRESS}
+      - JAEGER_ADDRESS=${JAEGER_ADDRESS}
+
+networks:
+  dms_sms_local:
+    name: dms_sms_local
+    driver: bridge

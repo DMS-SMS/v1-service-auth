@@ -1,3 +1,5 @@
 FROM alpine
-ADD auth-service /auth-service
+MAINTAINER Park, Jinhong <jinhong0719@naver.com>
+
+COPY ./auth-service ./auth-service
 ENTRYPOINT [ "/auth-service" ]

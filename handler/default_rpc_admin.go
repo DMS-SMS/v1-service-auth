@@ -157,7 +157,7 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 	resultInform, err := access.CreateStudentInform(&model.StudentInform{
 		StudentUUID:   model.StudentUUID(string(resultAuth.UUID)),
 		Grade:         model.Grade(int64(req.Grade)),
-		Class:         model.Class(int64(req.Class)),
+		Class:         model.Class(int64(req.Group)),
 		StudentNumber: model.StudentNumber(int64(req.StudentNumber)),
 		Name:          model.Name(req.Name),
 		PhoneNumber:   model.PhoneNumber(req.PhoneNumber),
@@ -320,7 +320,7 @@ func (h _default) CreateNewTeacher(ctx context.Context, req *proto.CreateNewTeac
 	resultInform, err := access.CreateTeacherInform(&model.TeacherInform{
 		TeacherUUID:   model.TeacherUUID(string(resultAuth.UUID)),
 		Grade:         model.Grade(int64(req.Grade)),
-		Class:         model.Class(int64(req.Class)),
+		Class:         model.Class(int64(req.Group)),
 		Name:          model.Name(req.Name),
 		PhoneNumber:   model.PhoneNumber(req.PhoneNumber),
 	})

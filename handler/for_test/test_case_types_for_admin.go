@@ -136,7 +136,7 @@ func (test *CreateNewStudentCase) SetRequestContextOf(req *proto.CreateNewStuden
 	req.StudentPW = test.StudentPW
 	req.ParentUUID = test.ParentUUID
 	req.Grade = test.Grade
-	req.Class = test.Class
+	req.Group = test.Class
 	req.StudentNumber = test.StudentNumber
 	req.Name = test.Name
 	req.PhoneNumber = test.PhoneNumber
@@ -261,7 +261,7 @@ func (test *CreateNewTeacherCase) SetRequestContextOf(req *proto.CreateNewTeache
 	req.TeacherID = test.TeacherID
 	req.TeacherPW = test.TeacherPW
 	req.Grade = test.Grade
-	req.Class = test.Class
+	req.Group = test.Class
 	req.Name = test.Name
 	req.PhoneNumber = test.PhoneNumber
 }

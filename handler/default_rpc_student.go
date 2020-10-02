@@ -204,7 +204,7 @@ func (h _default) GetStudentInformWithUUID(ctx context.Context, req *proto.GetSt
 
 	access.Commit()
 	resp.Grade = uint32(selectedAuth.Grade)
-	resp.Class = uint32(selectedAuth.Class)
+	resp.Group = uint32(selectedAuth.Class)
 	resp.StudentNumber = uint32(selectedAuth.StudentNumber)
 	resp.Name = string(selectedAuth.Name)
 	resp.PhoneNumber = string(selectedAuth.PhoneNumber)
@@ -247,7 +247,7 @@ func (h _default) GetStudentUUIDsWithInform(ctx context.Context, req *proto.GetS
 	spanForDB := opentracing.StartSpan("GetStudentUUIDsWithInform", opentracing.ChildOf(parentSpan))
 	selectedUUIDs, err := access.GetStudentUUIDsWithInform(&model.StudentInform{
 		Grade:         model.Grade(int64(req.Grade)),
-		Class:         model.Class(int64(req.Class)),
+		Class:         model.Class(int64(req.Group)),
 		StudentNumber: model.StudentNumber(int64(req.StudentNumber)),
 		Name:          model.Name(req.Name),
 		PhoneNumber:   model.PhoneNumber(req.PhoneNumber),

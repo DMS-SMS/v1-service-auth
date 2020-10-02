@@ -332,7 +332,7 @@ func Test_default_GetTeacherInformWithUUID(t *testing.T) {
 
 		resultInform := &model.TeacherInform{
 			Grade:         model.Grade(int64(resp.Grade)),
-			Class:         model.Class(int64(resp.Class)),
+			Class:         model.Class(int64(resp.Group)),
 			Name:          model.Name(resp.Name),
 			PhoneNumber:   model.PhoneNumber(resp.PhoneNumber),
 		}

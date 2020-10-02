@@ -340,7 +340,7 @@ func Test_default_GetStudentInformWithUUID(t *testing.T) {
 
 		resultInform := &model.StudentInform{
 			Grade:         model.Grade(int64(resp.Grade)),
-			Class:         model.Class(int64(resp.Class)),
+			Class:         model.Class(int64(resp.Group)),
 			StudentNumber: model.StudentNumber(int64(resp.StudentNumber)),
 			Name:          model.Name(resp.Name),
 			PhoneNumber:   model.PhoneNumber(resp.PhoneNumber),

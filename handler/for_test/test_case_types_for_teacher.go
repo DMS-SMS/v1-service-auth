@@ -227,7 +227,7 @@ func (test *GetTeacherUUIDsWithInformCase) onMethod(mock *mock.Mock, method Meth
 func (test *GetTeacherUUIDsWithInformCase) SetRequestContextOf(req *proto.GetTeacherUUIDsWithInformRequest) {
 	req.UUID = test.UUID
 	req.Grade = uint32(test.Grade)
-	req.Class = uint32(test.Class)
+	req.Group = uint32(test.Class)
 	req.Name = test.Name
 	req.PhoneNumber = test.PhoneNumber
 }

@@ -1033,13 +1033,16 @@ func Test_Accessor_GetStudentInformsWithUUIDs(t *testing.T) {
 		}
 	}
 
+	_ = access.DeleteStudentAuth("student-333333333333")
+	_ = access.DeleteStudentInform("student-333333333333")
+
 	tests := []struct {
 		StudentUUIDs         []string
 		ExpectInforms []*model.StudentInform
 		ExpectError          error
 	} {
 		{
-			StudentUUIDs: []string{"student-111111111111", "student-222222222222", "student-333333333333"},
+			StudentUUIDs: []string{"student-111111111111", "student-222222222222"},
 			ExpectInforms: []*model.StudentInform{
 				{
 					StudentUUID:   "student-111111111111",
@@ -1057,32 +1060,42 @@ func Test_Accessor_GetStudentInformsWithUUIDs(t *testing.T) {
 					Name:          "진홍박",
 					PhoneNumber:   "01022222222",
 					ProfileURI:    "example.com/profiles/student-222222222222",
-				}, {
-					StudentUUID:   "student-333333333333",
-					Grade:         3,
-					Class:         2,
-					StudentNumber: 8,
-					Name:          "박진홍",
-					PhoneNumber:   "01033333333",
-					ProfileURI:    "example.com/profiles/student-333333333333",
 				},
 			},
 			ExpectError: nil,
 		}, {
-			StudentUUIDs: []string{"student-222222222222"},
-			ExpectInforms: []*model.StudentInform{{
-				StudentUUID:   "student-222222222222",
-				Grade:         1,
-				Class:         2,
-				StudentNumber: 8,
-				Name:          "진홍박",
-				PhoneNumber:   "01022222222",
-				ProfileURI:    "example.com/profiles/student-222222222222",
+			StudentUUIDs: []string{"student-222222222222", "student-333333333333", "student-111111111111", "student-222222222222"},
+			ExpectInforms: []*model.StudentInform{
+				{
+					StudentUUID:   "student-222222222222",
+					Grade:         1,
+					Class:         2,
+					StudentNumber: 8,
+					Name:          "진홍박",
+					PhoneNumber:   "01022222222",
+					ProfileURI:    "example.com/profiles/student-222222222222",
+				}, { }, {
+					StudentUUID:   "student-111111111111",
+					Grade:         2,
+					Class:         2,
+					StudentNumber: 7,
+					Name:          "박진홍",
+					PhoneNumber:   "01011111111",
+					ProfileURI:    "example.com/profiles/student-111111111111",
+				}, {
+					StudentUUID:   "student-222222222222",
+					Grade:         1,
+					Class:         2,
+					StudentNumber: 8,
+					Name:          "진홍박",
+					PhoneNumber:   "01022222222",
+					ProfileURI:    "example.com/profiles/student-222222222222",
+				},
 			},
-			},
-			ExpectError: nil,
+			ExpectError: gorm.ErrRecordNotFound,
 		}, {
 			StudentUUIDs:  []string{"student-444444444444"},
+			ExpectInforms: []*model.StudentInform{{}},
 			ExpectError:   gorm.ErrRecordNotFound,
 		},
 	}

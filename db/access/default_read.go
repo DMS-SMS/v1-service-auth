@@ -140,15 +140,13 @@ func (d *_default) GetStudentInformWithUUID(uuid string) (inform *model.StudentI
 }
 
 func (d *_default) GetStudentInformsWithUUIDs(uuidArr []string) (informs []*model.StudentInform, err error) {
-	selectedTx := d.tx.New()
-
 	for _, uuid := range uuidArr {
-		selectedTx = selectedTx.Or("student_uuid = ?", uuid)
-	}
-
-	err = selectedTx.Find(&informs).Error
-	if len(informs) == 0 && err == nil {
-		err = gorm.ErrRecordNotFound
+		inform := model.StudentInform{}
+		selectErr := d.tx.Where("student_uuid = ?", uuid).Find(&inform).Error
+		informs = append(informs, &inform)
+		if selectErr != nil {
+			err = selectErr
+		}
 	}
 	return
 }

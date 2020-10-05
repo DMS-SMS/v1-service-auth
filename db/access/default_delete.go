@@ -5,16 +5,16 @@ import (
 )
 
 func (d *_default) DeleteStudentAuth(uuid string) (err error) {
-	err = d.tx.Delete(&model.StudentAuth{UUID: model.UUID(uuid)}).Error
+	err = d.tx.Where("uuid = ?", uuid).Delete(&model.StudentAuth{}).Error
 	return
 }
 
 func (d *_default) DeleteTeacherAuth(uuid string) (err error) {
-	err = d.tx.Delete(&model.TeacherAuth{UUID: model.UUID(uuid)}).Error
+	err = d.tx.Where("uuid = ?", uuid).Delete(&model.TeacherAuth{}).Error
 	return
 }
 
 func (d *_default) DeleteParentAuth(uuid string) (err error) {
-	err = d.tx.Delete(&model.ParentAuth{UUID: model.UUID(uuid)}).Error
+	err = d.tx.Where("uuid = ?", uuid).Delete(&model.ParentAuth{}).Error
 	return
 }

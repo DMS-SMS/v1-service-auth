@@ -44,6 +44,7 @@ func (t None) GetParentUUIDsWithInform(*model.ParentInform) (uuidArr []string, e
 
 // 정보 조회 메서드 (계정 삭제 시 사용)
 func (t None) GetStudentInformWithUUID(uuid string) (inform *model.StudentInform, err error) { return }
+func (t None) GetStudentInformsWithUUIDs(uuidArr []string) (informs []*model.StudentInform, err error) { return }
 func (t None) GetTeacherInformWithUUID(uuid string) (inform *model.TeacherInform, err error) { return }
 func (t None) GetParentInformWithUUID(uuid string) (inform *model.ParentInform, err error) { return }
 
@@ -51,6 +52,11 @@ func (t None) GetParentInformWithUUID(uuid string) (inform *model.ParentInform, 
 func (t None) ModifyStudentInform(uuid string, revisionInform *model.StudentInform) (err error) { return }
 func (t None) ModifyTeacherInform(uuid string, revisionInform *model.TeacherInform) (err error) { return }
 func (t None) ModifyParentInform(uuid string, revisionInform *model.ParentInform) (err error) { return }
+
+// 사용자 정보 삭제 메서드 (Soft Delete)
+func (t None) DeleteStudentInform(studentUUID string) error { return nil }
+func (t None) DeleteTeacherInform(teacherUUID string) error { return nil }
+func (t None) DeleteParentInform(parentUUID string) error { return nil }
 
 // 트랜잭션 관련 메서드
 func (t None) BeginTx() {}

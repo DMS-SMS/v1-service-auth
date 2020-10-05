@@ -170,6 +170,19 @@ func (m _mock) ModifyParentInform(uuid string, revisionInform *model.ParentInfor
 	return args.Error(0)
 }
 
+// 사용자 정보 삭제 메서드 (Soft Delete)
+func (m _mock) DeleteStudentInform(studentUUID string) error {
+	return m.mock.Called(studentUUID).Error(0)
+}
+
+func (m _mock) DeleteTeacherInform(teacherUUID string) error {
+	return m.mock.Called(teacherUUID).Error(0)
+}
+
+func (m _mock) DeleteParentInform(parentUUID string) error {
+	return m.mock.Called(parentUUID).Error(0)
+}
+
 // ---
 
 // 트랜잭션 관련 메서드

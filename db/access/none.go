@@ -44,6 +44,7 @@ func (t None) GetParentUUIDsWithInform(*model.ParentInform) (uuidArr []string, e
 
 // 정보 조회 메서드 (계정 삭제 시 사용)
 func (t None) GetStudentInformWithUUID(uuid string) (inform *model.StudentInform, err error) { return }
+func (t None) GetStudentInformsWithUUIDs(uuidArr []string) (informs []*model.StudentInform, err error) { return }
 func (t None) GetTeacherInformWithUUID(uuid string) (inform *model.TeacherInform, err error) { return }
 func (t None) GetParentInformWithUUID(uuid string) (inform *model.ParentInform, err error) { return }
 

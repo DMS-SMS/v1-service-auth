@@ -139,6 +139,11 @@ func (m _mock) GetStudentInformWithUUID(uuid string) (*model.StudentInform, erro
 	return args.Get(0).(*model.StudentInform), args.Error(1)
 }
 
+func (m _mock) GetStudentInformsWithUUIDs(uuidArr []string) ([]*model.StudentInform, error) {
+	args := m.mock.Called(uuidArr)
+	return args.Get(0).([]*model.StudentInform), args.Error(1)
+}
+
 func (m _mock) GetTeacherInformWithUUID(uuid string) (*model.TeacherInform, error) {
 	args := m.mock.Called(uuid)
 	return args.Get(0).(*model.TeacherInform), args.Error(1)

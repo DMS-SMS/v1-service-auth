@@ -274,7 +274,7 @@ func Test_Accessor_GetStudentAuthWithUUID(t *testing.T) {
 			ExpectUUID:       "student-111111111111",
 			ExpectStudentID:  "jinhong0719",
 			ExpectStudentPW:  passwords["testPW1"],
-		 	ExpectParentUUID: "parent-111111111111",
+			ExpectParentUUID: "parent-111111111111",
 			ExpectError:      nil,
 		}, { // no exist student id
 			StudentUUID: "noExistStudentUUID",
@@ -914,6 +914,188 @@ func Test_Accessor_GetStudentInformWithUUID(t *testing.T) {
 
 		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
 		assert.Equalf(t, expectResult, result.ExceptGormModel(), "result inform model assertion error (test case: %v)", test)
+	}
+}
+
+func Test_Accessor_GetStudentInformsWithUUIDs(t *testing.T) {
+	access, err := manager.BeginTx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		access.Rollback()
+		waitForFinish.Done()
+	}()
+
+	// 학부모 계정 생성
+	for _, init := range []struct {
+		UUID, ParentID, ParentPW string
+	} {
+		{
+			UUID:     "parent-111111111111",
+			ParentID: "jinhong07191",
+			ParentPW: passwords["testPW1"],
+		}, {
+			UUID:     "parent-222222222222",
+			ParentID: "jinhong07192",
+			ParentPW: passwords["testPW1"],
+		}, {
+			UUID:     "parent-333333333333",
+			ParentID: "jinhong07193",
+			ParentPW: passwords["testPW1"],
+		},
+	} {
+		_, err := access.CreateParentAuth(&model.ParentAuth{
+			UUID:     model.UUID(init.UUID),
+			ParentID: model.ParentID(init.ParentID),
+			ParentPW: model.ParentPW(init.ParentPW),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating parent auth, err: %v", err))
+		}
+	}
+
+	// 학생 계정 생성
+	for _, init := range []struct {
+		UUID, StudentID, StudentPW, ParentUUID string
+	} {
+		{
+			UUID:       "student-111111111111",
+			StudentID:  "jinhong07191",
+			StudentPW:  passwords["testPW1"],
+			ParentUUID: "parent-111111111111",
+		}, {
+			UUID:       "student-222222222222",
+			StudentID:  "jinhong07192",
+			StudentPW:  passwords["testPW1"],
+			ParentUUID: "parent-222222222222",
+		}, {
+			UUID:       "student-333333333333",
+			StudentID:  "jinhong07193",
+			StudentPW:  passwords["testPW1"],
+			ParentUUID: "parent-333333333333",
+		},
+	} {
+		_, err := access.CreateStudentAuth(&model.StudentAuth{
+			UUID:       model.UUID(init.UUID),
+			StudentID:  model.StudentID(init.StudentID),
+			StudentPW:  model.StudentPW(init.StudentPW),
+			ParentUUID: model.ParentUUID(init.ParentUUID),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating student auth, err: %v", err))
+		}
+	}
+
+	// 학생 정보 생성
+	for _, init := range []struct {
+		StudentUUID, Name           string
+		PhoneNumber, ProfileURI     string
+		Grade, Class, StudentNumber int64
+	} {
+		{
+			StudentUUID:   "student-111111111111",
+			Grade:         2,
+			Class:         2,
+			StudentNumber: 7,
+			Name:          "박진홍",
+			PhoneNumber:   "01011111111",
+			ProfileURI:    "example.com/profiles/student-111111111111",
+		}, {
+			StudentUUID:   "student-222222222222",
+			Grade:         1,
+			Class:         2,
+			StudentNumber: 8,
+			Name:          "진홍박",
+			PhoneNumber:   "01022222222",
+			ProfileURI:    "example.com/profiles/student-222222222222",
+		}, {
+			StudentUUID:   "student-333333333333",
+			Grade:         3,
+			Class:         2,
+			StudentNumber: 8,
+			Name:          "박진홍",
+			PhoneNumber:   "01033333333",
+			ProfileURI:    "example.com/profiles/student-333333333333",
+		},
+	} {
+		_, err := access.CreateStudentInform(&model.StudentInform{
+			StudentUUID:   model.StudentUUID(init.StudentUUID),
+			Grade:         model.Grade(init.Grade),
+			Class:         model.Class(init.Class),
+			StudentNumber: model.StudentNumber(init.StudentNumber),
+			Name:          model.Name(init.Name),
+			PhoneNumber:   model.PhoneNumber(init.PhoneNumber),
+			ProfileURI:    model.ProfileURI(init.ProfileURI),
+		})
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error occurs while creating student inform, err: %v", err))
+		}
+	}
+
+	tests := []struct {
+		StudentUUIDs         []string
+		ExpectInforms []*model.StudentInform
+		ExpectError          error
+	} {
+		{
+			StudentUUIDs: []string{"student-111111111111", "student-222222222222", "student-333333333333"},
+			ExpectInforms: []*model.StudentInform{
+				{
+					StudentUUID:   "student-111111111111",
+					Grade:         2,
+					Class:         2,
+					StudentNumber: 7,
+					Name:          "박진홍",
+					PhoneNumber:   "01011111111",
+					ProfileURI:    "example.com/profiles/student-111111111111",
+				}, {
+					StudentUUID:   "student-222222222222",
+					Grade:         1,
+					Class:         2,
+					StudentNumber: 8,
+					Name:          "진홍박",
+					PhoneNumber:   "01022222222",
+					ProfileURI:    "example.com/profiles/student-222222222222",
+				}, {
+					StudentUUID:   "student-333333333333",
+					Grade:         3,
+					Class:         2,
+					StudentNumber: 8,
+					Name:          "박진홍",
+					PhoneNumber:   "01033333333",
+					ProfileURI:    "example.com/profiles/student-333333333333",
+				},
+			},
+			ExpectError: nil,
+		}, {
+			StudentUUIDs: []string{"student-222222222222"},
+			ExpectInforms: []*model.StudentInform{{
+				StudentUUID:   "student-222222222222",
+				Grade:         1,
+				Class:         2,
+				StudentNumber: 8,
+				Name:          "진홍박",
+				PhoneNumber:   "01022222222",
+				ProfileURI:    "example.com/profiles/student-222222222222",
+			},
+			},
+			ExpectError: nil,
+		}, {
+			StudentUUIDs:  []string{"student-444444444444"},
+			ExpectError:   gorm.ErrRecordNotFound,
+		},
+	}
+
+	for _, test := range tests {
+		resultInforms, err := access.GetStudentInformsWithUUIDs(test.StudentUUIDs)
+		var exceptedInforms []*model.StudentInform
+		for _, inform := range resultInforms {
+			exceptedInforms = append(exceptedInforms, inform.ExceptGormModel())
+		}
+
+		assert.Equalf(t, test.ExpectError, err, "error assertion error (test case: %v)", test)
+		assert.Equalf(t, test.ExpectInforms, exceptedInforms, "result informs assertion error (test case: %v)", test)
 	}
 }
 

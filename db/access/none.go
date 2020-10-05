@@ -53,6 +53,11 @@ func (t None) ModifyStudentInform(uuid string, revisionInform *model.StudentInfo
 func (t None) ModifyTeacherInform(uuid string, revisionInform *model.TeacherInform) (err error) { return }
 func (t None) ModifyParentInform(uuid string, revisionInform *model.ParentInform) (err error) { return }
 
+// 사용자 정보 삭제 메서드 (Soft Delete)
+func (t None) DeleteStudentInform(studentUUID string) error { return nil }
+func (t None) DeleteTeacherInform(teacherUUID string) error { return nil }
+func (t None) DeleteParentInform(parentUUID string) error { return nil }
+
 // 트랜잭션 관련 메서드
 func (t None) BeginTx() {}
 func (t None) Commit() *gorm.DB { return nil }

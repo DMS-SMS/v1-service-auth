@@ -55,6 +55,11 @@ type Accessor interface {
 	ModifyTeacherInform(uuid string, revisionInform *model.TeacherInform) (err error)
 	ModifyParentInform(uuid string, revisionInform *model.ParentInform) (err error)
 
+	// 계성 삭제 메서드 (Soft Delete)
+	DeleteStudentInform(studentUUID string) error
+	DeleteTeacherInform(teacherUUID string) error
+	DeleteParentInform(parentUUID string) error
+
 	// ---
 
 	// 트랜잭션 관련 메서드

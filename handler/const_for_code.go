@@ -8,19 +8,15 @@ const (
 
 	CodeTeacherIDDuplicate = -201
 	CodeTeacherPhoneNumberDuplicate = -202
-
 	CodeParentIDDuplicate = -301
 	CodeParentPhoneNumberDuplicate = -302
 
 	CodeStudentIDNoExist = -401
 	CodeIncorrectStudentPWForLogin = -402
-
 	CodeTeacherIDNoExist = -411
 	CodeIncorrectTeacherPWForLogin = -411
-
 	CodeParentIDNoExist = -421
 	CodeIncorrectParentPWForLogin = -422
-
 	CodeAdminIDNoExist = -431
 	CodeIncorrectAdminPWForLogin = -432
 
@@ -28,9 +24,9 @@ const (
 	CodeTeacherWithThatInformNoExist = -511
 	CodeParentWithThatInformNoExist = -521
 
+	CodeStudentUUIDsContainNoExistUUID = -601
+
 	CodeIncorrectStudentPWForChange = -701
-
 	CodeIncorrectTeacherPWForChange = -801
-
 	CodeIncorrectParentPWForChange = -901
 )

@@ -17,6 +17,7 @@ func(n None) LoginAdminAuth(context.Context, *proto.LoginAdminAuthRequest, *prot
 func(n None) LoginStudentAuth(context.Context, *proto.LoginStudentAuthRequest, *proto.LoginStudentAuthResponse) (err error) { return }
 func(n None) ChangeStudentPW(context.Context, *proto.ChangeStudentPWRequest, *proto.ChangeStudentPWResponse) (err error) { return }
 func(n None) GetStudentInformWithUUID(context.Context, *proto.GetStudentInformWithUUIDRequest, *proto.GetStudentInformWithUUIDResponse) (err error) { return }
+func(n None) GetStudentInformsWithUUIDs(context.Context, *proto.GetStudentInformsWithUUIDsRequest, *proto.GetStudentInformsWithUUIDsResponse) (err error) { return }
 func(n None) GetStudentUUIDsWithInform(context.Context, *proto.GetStudentUUIDsWithInformRequest, *proto.GetStudentUUIDsWithInformResponse) (err error) { return }
 
 // About Teacher RPC Service

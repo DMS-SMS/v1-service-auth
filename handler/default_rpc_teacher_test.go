@@ -4,6 +4,7 @@ import (
 	test "auth/handler/for_test"
 	"auth/model"
 	proto "auth/proto/golang/auth"
+	code "auth/utils/code/golang"
 	"errors"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
@@ -56,7 +57,7 @@ func Test_default_LoginTeacherAuth(t *testing.T) {
 				"Rollback":             {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeTeacherIDNoExist,
+			ExpectedCode:   code.TeacherIDNoExist,
 		}, { // GetStudentAuthWithID unexpected error
 			TeacherID: "jinhong07193",
 			ExpectedMethods: map[test.Method]test.Returns{
@@ -78,7 +79,7 @@ func Test_default_LoginTeacherAuth(t *testing.T) {
 				"Rollback": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeIncorrectTeacherPWForLogin,
+			ExpectedCode:   code.IncorrectTeacherPWForLogin,
 		},
 	}
 
@@ -175,7 +176,7 @@ func Test_default_ChangeTeacherPW(t *testing.T) {
 				"Rollback": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeIncorrectTeacherPWForChange,
+			ExpectedCode:   code.IncorrectTeacherPWForChange,
 		}, { // GetStudentAuthWithUUID 에러 반환
 			UUID:        "teacher-111111111117",
 			TeacherUUID: "teacher-111111111117",
@@ -403,7 +404,7 @@ func Test_default_GetTeacherUUIDsWithInform(t *testing.T) {
 				"Rollback":                  {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeTeacherWithThatInformNoExist,
+			ExpectedCode:   code.TeacherWithThatInformNoExist,
 		}, { // GetTeacherUUIDsWithInform error return
 			UUID: "teacher-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{

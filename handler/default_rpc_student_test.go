@@ -4,6 +4,7 @@ import (
 	test "auth/handler/for_test"
 	"auth/model"
 	proto "auth/proto/golang/auth"
+	code "auth/utils/code/golang"
 	"errors"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
@@ -57,7 +58,7 @@ func Test_default_LoginStudentAuth(t *testing.T) {
 				"Rollback":             {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeStudentIDNoExist,
+			ExpectedCode:   code.StudentIDNoExist,
 		}, { // GetStudentAuthWithID unexpected error
 			StudentID: "jinhong07193",
 			ExpectedMethods: map[test.Method]test.Returns{
@@ -80,7 +81,7 @@ func Test_default_LoginStudentAuth(t *testing.T) {
 				"Rollback": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeIncorrectStudentPWForLogin,
+			ExpectedCode:   code.IncorrectStudentPWForLogin,
 		},
 	}
 
@@ -179,7 +180,7 @@ func Test_default_ChangeStudentPW(t *testing.T) {
 				"Rollback": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeIncorrectStudentPWForChange,
+			ExpectedCode:   code.IncorrectStudentPWForChange,
 		}, { // GetStudentAuthWithUUID 에러 반환
 			UUID:        "student-111111111117",
 			StudentUUID: "student-111111111117",
@@ -415,7 +416,7 @@ func Test_default_GetStudentUUIDsWithInform(t *testing.T) {
 				"Rollback":                  {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeStudentWithThatInformNoExist,
+			ExpectedCode:   code.StudentWithThatInformNoExist,
 		}, { // GetStudentInformWithUUID error return
 			UUID:          "student-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
@@ -537,7 +538,7 @@ func Test_default_GetStudentInformsWithUUIDs(t *testing.T) {
 				"Rollback": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeStudentUUIDsContainNoExistUUID,
+			ExpectedCode:   code.StudentUUIDsContainNoExistUUID,
 		}, { // GetStudentInformWithUUID error return
 			UUID:         "student-111111111116",
 			StudentUUIDs: []string{},

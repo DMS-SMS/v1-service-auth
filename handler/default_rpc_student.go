@@ -3,6 +3,7 @@ package handler
 import (
 	"auth/model"
 	proto "auth/proto/golang/auth"
+	code "auth/utils/code/golang"
 	"context"
 	"fmt"
 	"github.com/jinzhu/gorm"
@@ -41,7 +42,7 @@ func (h _default) LoginStudentAuth(ctx context.Context, req *proto.LoginStudentA
 		switch err {
 		case gorm.ErrRecordNotFound:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeStudentIDNoExist
+			resp.Code = code.StudentIDNoExist
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "student id not exists")
 		default:
 			resp.Status = http.StatusInternalServerError
@@ -56,7 +57,7 @@ func (h _default) LoginStudentAuth(ctx context.Context, req *proto.LoginStudentA
 		switch err {
 		case bcrypt.ErrMismatchedHashAndPassword:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeIncorrectStudentPWForLogin
+			resp.Code = code.IncorrectStudentPWForLogin
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "mismatched hash and password")
 		default:
 			resp.Status = http.StatusInternalServerError
@@ -127,7 +128,7 @@ func (h _default) ChangeStudentPW(ctx context.Context, req *proto.ChangeStudentP
 		switch err {
 		case bcrypt.ErrMismatchedHashAndPassword:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeIncorrectStudentPWForChange
+			resp.Code = code.IncorrectStudentPWForChange
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "mismatched hash and password")
 		default:
 			resp.Status = http.StatusInternalServerError
@@ -254,7 +255,7 @@ func (h _default) GetStudentInformsWithUUIDs(ctx context.Context, req *proto.Get
 		switch err {
 		case gorm.ErrRecordNotFound:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeStudentUUIDsContainNoExistUUID
+			resp.Code = code.StudentUUIDsContainNoExistUUID
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "student uuid array contain no exist uuid")
 		default:
 			resp.Status = http.StatusInternalServerError
@@ -327,7 +328,7 @@ func (h _default) GetStudentUUIDsWithInform(ctx context.Context, req *proto.GetS
 		switch err {
 		case gorm.ErrRecordNotFound:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeStudentWithThatInformNoExist
+			resp.Code = code.StudentWithThatInformNoExist
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "no exist student with that inform")
 		default:
 			resp.Status = http.StatusInternalServerError

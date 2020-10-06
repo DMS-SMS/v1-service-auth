@@ -3,6 +3,7 @@ package handler
 import (
 	"auth/model"
 	proto "auth/proto/golang/auth"
+	code "auth/utils/code/golang"
 	"context"
 	"fmt"
 	"github.com/jinzhu/gorm"
@@ -41,7 +42,7 @@ func (h _default) LoginParentAuth(ctx context.Context, req *proto.LoginParentAut
 		switch err {
 		case gorm.ErrRecordNotFound:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeParentIDNoExist
+			resp.Code = code.ParentIDNoExist
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "parent id not exists")
 		default:
 			resp.Status = http.StatusInternalServerError
@@ -56,7 +57,7 @@ func (h _default) LoginParentAuth(ctx context.Context, req *proto.LoginParentAut
 		switch err {
 		case bcrypt.ErrMismatchedHashAndPassword:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeIncorrectParentPWForLogin
+			resp.Code = code.IncorrectParentPWForLogin
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "mismatched hash and password")
 		default:
 			resp.Status = http.StatusInternalServerError
@@ -127,7 +128,7 @@ func (h _default) ChangeParentPW(ctx context.Context, req *proto.ChangeParentPWR
 		switch err {
 		case bcrypt.ErrMismatchedHashAndPassword:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeIncorrectParentPWForChange
+			resp.Code = code.IncorrectParentPWForChange
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "mismatched hash and password")
 		default:
 			resp.Status = http.StatusInternalServerError
@@ -253,7 +254,7 @@ func (h _default) GetParentUUIDsWithInform(ctx context.Context, req *proto.GetPa
 		switch err {
 		case gorm.ErrRecordNotFound:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeParentWithThatInformNoExist
+			resp.Code = code.ParentWithThatInformNoExist
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "no exist parent with that inform")
 		default:
 			resp.Status = http.StatusInternalServerError

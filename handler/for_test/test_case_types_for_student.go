@@ -258,7 +258,7 @@ type GetStudentInformsWithUUIDsCase struct {
 	ExpectedStatus    uint32
 	ExpectedCode      int32
 	ExpectedMessage   string
-	ExpectedInforms   []*model.StudentInform
+	ExpectedInforms   []*proto.StudentInform
 }
 
 func (test *GetStudentInformsWithUUIDsCase) ChangeEmptyValueToValidValue() {

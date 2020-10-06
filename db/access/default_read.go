@@ -139,13 +139,23 @@ func (d *_default) GetStudentInformWithUUID(uuid string) (inform *model.StudentI
 	return
 }
 
+func (d *_default) GetStudentInformsWithUUIDs(uuidArr []string) (informs []*model.StudentInform, err error) {
+	for _, uuid := range uuidArr {
+		inform := model.StudentInform{}
+		selectErr := d.tx.Where("student_uuid = ?", uuid).Find(&inform).Error
+		informs = append(informs, &inform)
+		if selectErr != nil {
+			err = selectErr
+		}
+	}
+	return
+}
 
 func (d *_default) GetTeacherInformWithUUID(uuid string) (inform *model.TeacherInform, err error) {
 	inform = new(model.TeacherInform)
 	err = d.tx.Where("teacher_uuid = ?", uuid).Find(inform).Error
 	return
 }
-
 
 func (d *_default) GetParentInformWithUUID(uuid string) (inform *model.ParentInform, err error) {
 	inform = new(model.ParentInform)

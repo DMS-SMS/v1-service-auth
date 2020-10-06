@@ -139,6 +139,11 @@ func (m _mock) GetStudentInformWithUUID(uuid string) (*model.StudentInform, erro
 	return args.Get(0).(*model.StudentInform), args.Error(1)
 }
 
+func (m _mock) GetStudentInformsWithUUIDs(uuidArr []string) ([]*model.StudentInform, error) {
+	args := m.mock.Called(uuidArr)
+	return args.Get(0).([]*model.StudentInform), args.Error(1)
+}
+
 func (m _mock) GetTeacherInformWithUUID(uuid string) (*model.TeacherInform, error) {
 	args := m.mock.Called(uuid)
 	return args.Get(0).(*model.TeacherInform), args.Error(1)
@@ -163,6 +168,19 @@ func (m _mock) ModifyTeacherInform(uuid string, revisionInform *model.TeacherInf
 func (m _mock) ModifyParentInform(uuid string, revisionInform *model.ParentInform) (err error) {
 	args := m.mock.Called(uuid, revisionInform)
 	return args.Error(0)
+}
+
+// 사용자 정보 삭제 메서드 (Soft Delete)
+func (m _mock) DeleteStudentInform(studentUUID string) error {
+	return m.mock.Called(studentUUID).Error(0)
+}
+
+func (m _mock) DeleteTeacherInform(teacherUUID string) error {
+	return m.mock.Called(teacherUUID).Error(0)
+}
+
+func (m _mock) DeleteParentInform(parentUUID string) error {
+	return m.mock.Called(parentUUID).Error(0)
 }
 
 // ---

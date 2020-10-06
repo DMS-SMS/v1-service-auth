@@ -248,3 +248,58 @@ func (test *GetStudentUUIDsWithInformCase) GetMetadataContext() (ctx context.Con
 
 	return
 }
+
+type GetStudentInformsWithUUIDsCase struct {
+	UUID              string
+	StudentUUIDs      []string
+	XRequestID        string
+	SpanContextString string
+	ExpectedMethods   map[Method]Returns
+	ExpectedStatus    uint32
+	ExpectedCode      int32
+	ExpectedMessage   string
+	ExpectedInforms   []*proto.StudentInform
+}
+
+func (test *GetStudentInformsWithUUIDsCase) ChangeEmptyValueToValidValue() {
+	if test.XRequestID == ""        { test.XRequestID = validXRequestID }
+	if test.SpanContextString == "" { test.SpanContextString = validSpanContextString }
+}
+
+func (test *GetStudentInformsWithUUIDsCase) ChangeEmptyReplaceValueToEmptyValue() {
+	if test.XRequestID == EmptyReplaceValueForString        { test.XRequestID = "" }
+	if test.SpanContextString == EmptyReplaceValueForString { test.SpanContextString = "" }
+}
+
+func (test *GetStudentInformsWithUUIDsCase) OnExpectMethods(mock *mock.Mock) {
+	for method, returns := range test.ExpectedMethods {
+		test.onMethod(mock, method, returns)
+	}
+}
+
+func (test *GetStudentInformsWithUUIDsCase) onMethod(mock *mock.Mock, method Method, returns Returns) {
+	switch method {
+	case "BeginTx":
+		mock.On(string(method)).Return(returns...)
+	case "GetStudentInformsWithUUIDs":
+		mock.On(string(method), test.StudentUUIDs).Return(returns...)
+	case "Commit":
+		mock.On(string(method)).Return(returns...)
+	case "Rollback":
+		mock.On(string(method)).Return(returns...)
+	}
+}
+
+func (test *GetStudentInformsWithUUIDsCase) SetRequestContextOf(req *proto.GetStudentInformsWithUUIDsRequest) {
+	req.UUID = test.UUID
+	req.StudentUUIDs = test.StudentUUIDs
+}
+
+func (test *GetStudentInformsWithUUIDsCase) GetMetadataContext() (ctx context.Context) {
+	ctx = context.Background()
+
+	ctx = metadata.Set(ctx, "X-Request-Id", test.XRequestID)
+	ctx = metadata.Set(ctx, "Span-Context", test.SpanContextString)
+
+	return
+}

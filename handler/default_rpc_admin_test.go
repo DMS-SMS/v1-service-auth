@@ -5,6 +5,7 @@ import (
 	"auth/model"
 	proto "auth/proto/golang/auth"
 	"auth/tool/mysqlerr"
+	code "auth/utils/code/golang"
 	"errors"
 	mysqlcode "github.com/VividCortex/mysqlerr"
 	"github.com/go-playground/validator/v10"
@@ -104,7 +105,7 @@ func Test_default_CreateNewStudent(t *testing.T) {
 				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeStudentIDDuplicate,
+			ExpectedCode:   code.StudentIDDuplicate,
 		}, { // parent uuid fk constraint fail -> Conflict -102
 			ParentUUID: "parent-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
@@ -114,7 +115,7 @@ func Test_default_CreateNewStudent(t *testing.T) {
 				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeParentUUIDNoExist,
+			ExpectedCode:   code.ParentUUIDNoExist,
 		}, { // student number duplicate -> Conflict -103
 			Grade:         2,
 			Class:         2,
@@ -127,7 +128,7 @@ func Test_default_CreateNewStudent(t *testing.T) {
 				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeStudentNumberDuplicate,
+			ExpectedCode:   code.StudentNumberDuplicate,
 		}, { // phone number duplicate -> Conflict -104
 			PhoneNumber: "01088378347",
 			ExpectedMethods: map[test.Method]test.Returns{
@@ -138,7 +139,7 @@ func Test_default_CreateNewStudent(t *testing.T) {
 				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeStudentPhoneNumberDuplicate,
+			ExpectedCode:   code.StudentPhoneNumberDuplicate,
 		}, { // CheckIfStudentAuthExists error occur
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                {},
@@ -326,7 +327,7 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 				"Rollback":                 {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeTeacherIDDuplicate,
+			ExpectedCode:   code.TeacherIDDuplicate,
 		}, { // phone number duplicate -> Conflict -202
 			PhoneNumber: "01088378347",
 			ExpectedMethods: map[test.Method]test.Returns{
@@ -337,7 +338,7 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 				"Rollback":                 {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeTeacherPhoneNumberDuplicate,
+			ExpectedCode:   code.TeacherPhoneNumberDuplicate,
 		}, { // CheckIfTeacherAuth1Exists error occur
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
@@ -482,7 +483,7 @@ func Test_default_CreateNewParent(t *testing.T) {
 				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeParentIDDuplicate,
+			ExpectedCode:   code.ParentIDDuplicate,
 		}, { // phone number duplicate -> Conflict -202
 			PhoneNumber: "01088378347",
 			ExpectedMethods: map[test.Method]test.Returns{
@@ -493,7 +494,7 @@ func Test_default_CreateNewParent(t *testing.T) {
 				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeParentPhoneNumberDuplicate,
+			ExpectedCode:   code.ParentPhoneNumberDuplicate,
 		}, { // GetParentAuth1WithUUID error occur
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":               {},
@@ -618,7 +619,7 @@ func Test_default_LoginAdminAuth(t *testing.T) {
 				"Rollback":           {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeAdminIDNoExist,
+			ExpectedCode:   code.AdminIDNoExist,
 		}, { // GetParentAuthWithID unexpected error
 			AdminID: "jinhong07193",
 			ExpectedMethods: map[test.Method]test.Returns{
@@ -640,7 +641,7 @@ func Test_default_LoginAdminAuth(t *testing.T) {
 				"Rollback": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeIncorrectAdminPWForLogin,
+			ExpectedCode:   code.IncorrectAdminPWForLogin,
 		},
 	}
 

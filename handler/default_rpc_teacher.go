@@ -3,6 +3,7 @@ package handler
 import (
 	"auth/model"
 	proto "auth/proto/golang/auth"
+	code "auth/utils/code/golang"
 	"context"
 	"fmt"
 	"github.com/jinzhu/gorm"
@@ -41,7 +42,7 @@ func (h _default) LoginTeacherAuth(ctx context.Context, req *proto.LoginTeacherA
 		switch err {
 		case gorm.ErrRecordNotFound:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeTeacherIDNoExist
+			resp.Code = code.TeacherIDNoExist
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "teacher id not exists")
 		default:
 			resp.Status = http.StatusInternalServerError
@@ -56,7 +57,7 @@ func (h _default) LoginTeacherAuth(ctx context.Context, req *proto.LoginTeacherA
 		switch err {
 		case bcrypt.ErrMismatchedHashAndPassword:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeIncorrectTeacherPWForLogin
+			resp.Code = code.IncorrectTeacherPWForLogin
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "mismatched hash and password")
 		default:
 			resp.Status = http.StatusInternalServerError
@@ -127,7 +128,7 @@ func (h _default) ChangeTeacherPW(ctx context.Context, req *proto.ChangeTeacherP
 		switch err {
 		case bcrypt.ErrMismatchedHashAndPassword:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeIncorrectTeacherPWForChange
+			resp.Code = code.IncorrectTeacherPWForChange
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "mismatched hash and password")
 		default:
 			resp.Status = http.StatusInternalServerError
@@ -257,7 +258,7 @@ func (h _default) GetTeacherUUIDsWithInform(ctx context.Context, req *proto.GetT
 		switch err {
 		case gorm.ErrRecordNotFound:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeTeacherWithThatInformNoExist
+			resp.Code = code.TeacherWithThatInformNoExist
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "no exist teacher with that inform")
 		default:
 			resp.Status = http.StatusInternalServerError

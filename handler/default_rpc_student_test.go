@@ -446,3 +446,128 @@ func Test_default_GetStudentUUIDsWithInform(t *testing.T) {
 
 	newMock.AssertExpectations(t)
 }
+
+func Test_default_GetStudentInformsWithUUIDs(t *testing.T) {
+	now := time.Now()
+
+	tests := []test.GetStudentInformsWithUUIDsCase{
+		{ // success case
+			UUID:         "student-111111111111",
+			StudentUUIDs: []string{"student-111111111111", "student-222222222222"},
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetStudentInformsWithUUIDs": {[]*model.StudentInform{
+					{
+						Model:         gorm.Model{CreatedAt: now, UpdatedAt: now},
+						StudentUUID:   "student-111111111111",
+						Grade:         2,
+						Class:         2,
+						StudentNumber: 7,
+						Name:          "박진홍",
+						PhoneNumber:   "01011111111",
+						ProfileURI:    "/profiles/student-111111111111",
+					}, {
+						Model:         gorm.Model{CreatedAt: now, UpdatedAt: now},
+						StudentUUID:   "student-222222222222",
+						Grade:         1,
+						Class:         2,
+						StudentNumber: 8,
+						Name:          "박진홍",
+						PhoneNumber:   "01022222222",
+						ProfileURI:    "/profiles/student-222222222222",
+					},
+				}, nil},
+				"Commit": {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusOK,
+			ExpectedInforms: []*proto.StudentInform{
+				{
+					StudentUUID:   "student-111111111111",
+					Grade:         2,
+					Group:         2,
+					StudentNumber: 7,
+					Name:          "박진홍",
+					PhoneNumber:   "01011111111",
+					ImageURI:      "/profiles/student-111111111111",
+				}, {
+					StudentUUID:   "student-222222222222",
+					Grade:         1,
+					Group:         2,
+					StudentNumber: 8,
+					Name:          "박진홍",
+					PhoneNumber:   "01022222222",
+					ImageURI:      "/profiles/student-222222222222",
+				},
+			},
+		}, { // no exist X-Request-ID -> Proxy Authorization Required
+			XRequestID:      test.EmptyReplaceValueForString,
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // invalid X-Request-ID -> Proxy Authorization Required
+			XRequestID:      "InvalidXRequestID",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // no exist Span-Context -> Proxy Authorization Required
+			SpanContextString: test.EmptyReplaceValueForString,
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // invalid Span-Context -> Proxy Authorization Required
+			SpanContextString: "InvalidSpanContext",
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // forbidden (not student)
+			UUID:           "parent-111111111112",
+			StudentUUIDs:   []string{"student-111111111112"},
+			ExpectedStatus: http.StatusForbidden,
+		}, { // no exist student uuid
+			UUID:         "student-111111111115",
+			StudentUUIDs: []string{"student-111111111115", "student-111111111111"},
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx": {},
+				"GetStudentInformsWithUUIDs": {[]*model.StudentInform{{}, {
+					Model:         gorm.Model{CreatedAt: now, UpdatedAt: now},
+					StudentUUID:   "student-111111111111",
+					Grade:         2,
+					Class:         2,
+					StudentNumber: 7,
+					Name:          "박진홍",
+					PhoneNumber:   "01011111111",
+					ProfileURI:    "/profiles/student-111111111111",
+				}}, gorm.ErrRecordNotFound},
+				"Rollback": {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusConflict,
+			ExpectedCode:   CodeStudentUUIDsContainNoExistUUID,
+		}, { // GetStudentInformWithUUID error return
+			UUID:         "student-111111111116",
+			StudentUUIDs: []string{},
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                    {},
+				"GetStudentInformsWithUUIDs": {[]*model.StudentInform{}, errors.New("DB not connected")},
+				"Rollback":                   {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		},
+	}
+
+	for _, testCase := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethods(newMock)
+
+		req := new(proto.GetStudentInformsWithUUIDsRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		resp := new(proto.GetStudentInformsWithUUIDsResponse)
+		_ = defaultHandler.GetStudentInformsWithUUIDs(ctx, req, resp)
+
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedInforms, resp.StudentInforms, "result informs assertion error (test case: %v, message: %s)", testCase, resp.Message)
+
+		newMock.AssertExpectations(t)
+	}
+}

@@ -215,6 +215,72 @@ func (h _default) GetStudentInformWithUUID(ctx context.Context, req *proto.GetSt
 	return
 }
 
+func (h _default) GetStudentInformsWithUUIDs(ctx context.Context, req *proto.GetStudentInformsWithUUIDsRequest, resp *proto.GetStudentInformsWithUUIDsResponse) (err error) {
+	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	switch true {
+	case studentUUIDRegex.MatchString(req.UUID):
+		break
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	default:
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "this API is for students and admins only")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access, err := h.accessManage.BeginTx()
+	if err != nil {
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())
+		return
+	}
+
+	spanForDB := opentracing.StartSpan("GetStudentInformsWithUUIDs", opentracing.ChildOf(parentSpan))
+	selectedInforms, err := access.GetStudentInformsWithUUIDs(req.StudentUUIDs)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedInforms", selectedInforms), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			resp.Status = http.StatusConflict
+			resp.Code = CodeStudentUUIDsContainNoExistUUID
+			resp.Message = fmt.Sprintf(conflictErrorFormat, "student uuid array contain no exist uuid")
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "some error occurs while quering DB, err: " + err.Error())
+		}
+		return
+	}
+
+	access.Commit()
+	for _, inform := range selectedInforms {
+		resp.StudentInforms = append(resp.StudentInforms, &proto.StudentInform{
+			StudentUUID:   string(inform.StudentUUID),
+			Grade:         uint32(inform.Grade),
+			Group:         uint32(inform.Class),
+			StudentNumber: uint32(inform.StudentNumber),
+			Name:          string(inform.Name),
+			PhoneNumber:   string(inform.PhoneNumber),
+			ImageURI:      string(inform.ProfileURI),
+		})
+	}
+
+	resp.Status = http.StatusOK
+	resp.Message = "get student informs success"
+	return
+}
+
 func (h _default) GetStudentUUIDsWithInform(ctx context.Context, req *proto.GetStudentUUIDsWithInformRequest, resp *proto.GetStudentUUIDsWithInformResponse) (err error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {

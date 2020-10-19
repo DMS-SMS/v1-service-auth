@@ -9,7 +9,7 @@ import (
 type StudentAuth struct {
 	gorm.Model
 	UUID       uuid       `gorm:"PRIMARY_KEY;Type:char(20);UNIQUE;INDEX" validate:"uuid=student,len=20"` // 형식 => 'student-' + 12자리 랜덤 수 (20자)
-	StudentID  studentID  `gorm:"Type:varchar(20);NOT NULL;UNIQUE" validate:"min=4,max=20,ascii"`        // 4~20자 사이
+	StudentID  studentID  `gorm:"Type:varchar(20);NOT NULL" validate:"min=4,max=20,ascii"`        // 4~20자 사이
 	StudentPW  studentPW  `gorm:"Type:varchar(100);NOT NULL"`
 	ParentUUID parentUUID `gorm:"Type:char(19);" validate:"uuid=parent,len=19"` 						 // 형식 => 'parent-' + 12자리 랜덤 수 (19자) 만일의 경우를 대비해서 NOT NULL 삭제
 }
@@ -30,8 +30,8 @@ type StudentInform struct {
 type TeacherAuth struct {
 	gorm.Model
 	UUID      uuid      `gorm:"PRIMARY_KEY;Type:char(20);UNIQUE;INDEX" validate:"uuid=teacher,len=20"` // 형식 => 'teacher-' + 12자리 랜덤 수 (20자)
-	TeacherID teacherID `gorm:"varchar(20);NOT NULL;UNIQUE" validate:"min=4,max=20,ascii"`             // 4~20자 사이
-	TeacherPW teacherPW `gorm:"varchar(100):NOT NULL;"`
+	TeacherID teacherID `gorm:"varchar(20);NOT NULL" validate:"min=4,max=20,ascii"`             // 4~20자 사이
+	TeacherPW teacherPW `gorm:"varchar(100):NOT NULL"`
 }
 
 // 선생님 사용자 정보 테이블
@@ -48,7 +48,7 @@ type TeacherInform struct {
 type ParentAuth struct {
 	gorm.Model
 	UUID     uuid     `gorm:"PRIMARY_KEY;Type:char(19);UNIQUE;INDEX" validate:"uuid=parent,len=19"` // 형식 => 'parent-' + 12자리 랜덤 수 (19자)
-	ParentID parentID `gorm:"Type:varchar(20);NOT NULL;UNIQUE" validate:"min=4,max=20,ascii"`       // 4~20자 사이
+	ParentID parentID `gorm:"Type:varchar(20);NOT NULL" validate:"min=4,max=20,ascii"`       // 4~20자 사이
 	ParentPW parentPW `gorm:"Type:varchar(100);NOT NULL"`
 }
 

@@ -22,28 +22,64 @@ const (
 	validProfileURI = "example.com/profiles/student-111111111111"
 )
 
-func (sa *StudentAuth) BeforeCreate() (err error) {
-	return validate.DBValidator.Struct(sa)
+func (sa *StudentAuth) BeforeCreate(tx *gorm.DB) (err error) {
+	if err = validate.DBValidator.Struct(sa); err != nil {
+		return
+	}
+
+	query := tx.Where("student_id = ?", sa.StudentID).Find(&StudentAuth{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(StudentAuthInstance.StudentID.KeyName(), string(sa.StudentID))
+	}
+	return
 }
 
-func (ta *TeacherAuth) BeforeCreate() (err error) {
-	return validate.DBValidator.Struct(ta)
+func (ta *TeacherAuth) BeforeCreate(tx *gorm.DB) (err error) {
+	if err = validate.DBValidator.Struct(ta); err != nil {
+		return
+	}
+
+	query := tx.Where("teacher_id = ?", ta.TeacherID).Find(&TeacherAuth{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(TeacherAuthInstance.TeacherID.KeyName(), string(ta.TeacherID))
+	}
+	return
 }
 
-func (pa *ParentAuth) BeforeCreate() (err error) {
-	return validate.DBValidator.Struct(pa)
+func (pa *ParentAuth) BeforeCreate(tx *gorm.DB) (err error) {
+	if err = validate.DBValidator.Struct(pa); err != nil {
+		return
+	}
+
+	query := tx.Where("parent_id = ?", pa.ParentID).Find(&ParentAuth{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(ParentAuthInstance.ParentID.KeyName(), string(pa.ParentID))
+	}
+	return
 }
 
-// 사전에 거를 수 없었던 상황에 대한 오류는 mysql 에러로 반환, 그렇지 않으면 X -> 500으로 처리
 func (si *StudentInform) BeforeCreate(tx *gorm.DB) (err error) {
 	if err = validate.DBValidator.Struct(si); err != nil {
 		return
 	}
 
-	query := tx.Where("grade = ? AND class = ? AND student_number = ?", si.Grade, si.Class, si.StudentNumber).Find(&StudentInform{})
+	query := tx.Where("phone_number = ?", si.PhoneNumber).Find(&StudentInform{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(StudentInformInstance.PhoneNumber.KeyName(), string(si.PhoneNumber))
+		return
+	}
+
+	query = tx.Where("profile_uri = ?", si.ProfileURI).Find(&StudentInform{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(StudentInformInstance.ProfileURI.KeyName(), string(si.ProfileURI))
+		return
+	}
+
+	query = tx.Where("grade = ? AND class = ? AND student_number = ?", si.Grade, si.Class, si.StudentNumber).Find(&StudentInform{})
 	if query.RowsAffected != 0 {
 		// number와 같은 key들 상수로 선언 및 관리 필요
 		err = mysqlerr.DuplicateEntry(si.StudentNumber.KeyName(), fmt.Sprintf("%d%d%02d", si.Grade, si.Class, si.StudentNumber))
+		return
 	}
 
 	return
@@ -73,8 +109,16 @@ func (si *StudentInform) BeforeUpdate(tx *gorm.DB) (err error) {
 	return
 }
 
-func (ti *TeacherInform) BeforeCreate() (err error) {
-	return validate.DBValidator.Struct(ti)
+func (ti *TeacherInform) BeforeCreate(tx *gorm.DB) (err error) {
+	if err = validate.DBValidator.Struct(ti); err != nil {
+		return
+	}
+
+	query := tx.Where("phone_number = ?", ti.PhoneNumber).Find(&TeacherInform{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(TeacherInformInstance.PhoneNumber.KeyName(), string(ti.PhoneNumber))
+	}
+	return
 }
 
 func (ti *TeacherInform) BeforeUpdate() (err error) {
@@ -89,8 +133,16 @@ func (ti *TeacherInform) BeforeUpdate() (err error) {
 	return validate.DBValidator.Struct(informForValidate)
 }
 
-func (pi *ParentInform) BeforeCreate() (err error) {
-	return validate.DBValidator.Struct(pi)
+func (pi *ParentInform) BeforeCreate(tx *gorm.DB) (err error) {
+	if err = validate.DBValidator.Struct(pi); err != nil {
+		return
+	}
+
+	query := tx.Where("phone_number = ?", pi.PhoneNumber).Find(&ParentInform{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(ParentInformInstance.PhoneNumber.KeyName(), string(pi.PhoneNumber))
+	}
+	return
 }
 
 func (pi *ParentInform) BeforeUpdate() (err error) {

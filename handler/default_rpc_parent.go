@@ -32,7 +32,7 @@ func (h _default) LoginParentAuth(ctx context.Context, req *proto.LoginParentAut
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetParentAuthWithID", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetParentAuthWithID", opentracing.ChildOf(parentSpan))
 	resultAuth, err := access.GetParentAuthWithID(req.ParentID)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", resultAuth), log.Error(err))
 	spanForDB.Finish()
@@ -104,7 +104,7 @@ func (h _default) ChangeParentPW(ctx context.Context, req *proto.ChangeParentPWR
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetParentAuthWithUUID", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetParentAuthWithUUID", opentracing.ChildOf(parentSpan))
 	selectedAuth, err := access.GetParentAuthWithUUID(req.ParentUUID)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", selectedAuth), log.Error(err))
 	spanForDB.Finish()
@@ -137,7 +137,7 @@ func (h _default) ChangeParentPW(ctx context.Context, req *proto.ChangeParentPWR
 		return
 	}
 
-	spanForDB = opentracing.StartSpan("ChangeParentPW", opentracing.ChildOf(parentSpan))
+	spanForDB = h.tracer.StartSpan("ChangeParentPW", opentracing.ChildOf(parentSpan))
 	err = access.ChangeParentPW(string(selectedAuth.UUID), req.RevisionPW)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
 	spanForDB.Finish()
@@ -185,7 +185,7 @@ func (h _default) GetParentInformWithUUID(ctx context.Context, req *proto.GetPar
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetParentInformWithUUID", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetParentInformWithUUID", opentracing.ChildOf(parentSpan))
 	selectedAuth, err := access.GetParentInformWithUUID(req.ParentUUID)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", selectedAuth), log.Error(err))
 	spanForDB.Finish()
@@ -241,7 +241,7 @@ func (h _default) GetParentUUIDsWithInform(ctx context.Context, req *proto.GetPa
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetParentUUIDsWithInform", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetParentUUIDsWithInform", opentracing.ChildOf(parentSpan))
 	selectedUUIDs, err := access.GetParentUUIDsWithInform(&model.ParentInform{
 		Name:          model.Name(req.Name),
 		PhoneNumber:   model.PhoneNumber(req.PhoneNumber),

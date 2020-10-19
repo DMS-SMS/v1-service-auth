@@ -546,7 +546,7 @@ func (h _default) LoginAdminAuth(ctx context.Context, req *proto.LoginAdminAuthR
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetAdminAuthWithID", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetAdminAuthWithID", opentracing.ChildOf(parentSpan))
 	resultAuth, err := access.GetAdminAuthWithID(req.AdminID)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", resultAuth), log.Error(err))
 	spanForDB.Finish()

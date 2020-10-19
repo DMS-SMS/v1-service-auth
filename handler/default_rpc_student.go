@@ -32,7 +32,7 @@ func (h _default) LoginStudentAuth(ctx context.Context, req *proto.LoginStudentA
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetStudentAuthWithID", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetStudentAuthWithID", opentracing.ChildOf(parentSpan))
 	resultAuth, err := access.GetStudentAuthWithID(req.StudentID)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", resultAuth), log.Error(err))
 	spanForDB.Finish()
@@ -104,7 +104,7 @@ func (h _default) ChangeStudentPW(ctx context.Context, req *proto.ChangeStudentP
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetStudentAuthWithUUID", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetStudentAuthWithUUID", opentracing.ChildOf(parentSpan))
 	selectedAuth, err := access.GetStudentAuthWithUUID(req.StudentUUID)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", selectedAuth), log.Error(err))
 	spanForDB.Finish()
@@ -137,7 +137,7 @@ func (h _default) ChangeStudentPW(ctx context.Context, req *proto.ChangeStudentP
 		return
 	}
 
-	spanForDB = opentracing.StartSpan("ChangeStudentPW", opentracing.ChildOf(parentSpan))
+	spanForDB = h.tracer.StartSpan("ChangeStudentPW", opentracing.ChildOf(parentSpan))
 	err = access.ChangeStudentPW(string(selectedAuth.UUID), req.RevisionPW)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
 	spanForDB.Finish()
@@ -185,7 +185,7 @@ func (h _default) GetStudentInformWithUUID(ctx context.Context, req *proto.GetSt
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetStudentInformWithUUID", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetStudentInformWithUUID", opentracing.ChildOf(parentSpan))
 	selectedAuth, err := access.GetStudentInformWithUUID(req.StudentUUID)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", selectedAuth), log.Error(err))
 	spanForDB.Finish()
@@ -245,7 +245,7 @@ func (h _default) GetStudentInformsWithUUIDs(ctx context.Context, req *proto.Get
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetStudentInformsWithUUIDs", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetStudentInformsWithUUIDs", opentracing.ChildOf(parentSpan))
 	selectedInforms, err := access.GetStudentInformsWithUUIDs(req.StudentUUIDs)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedInforms", selectedInforms), log.Error(err))
 	spanForDB.Finish()
@@ -311,7 +311,7 @@ func (h _default) GetStudentUUIDsWithInform(ctx context.Context, req *proto.GetS
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetStudentUUIDsWithInform", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetStudentUUIDsWithInform", opentracing.ChildOf(parentSpan))
 	selectedUUIDs, err := access.GetStudentUUIDsWithInform(&model.StudentInform{
 		Grade:         model.Grade(int64(req.Grade)),
 		Class:         model.Class(int64(req.Group)),

@@ -11,6 +11,7 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - CONSUL_ADDRESS=${CONSUL_ADDRESS}
       - JAEGER_ADDRESS=${JAEGER_ADDRESS}
+      - VERSION=${VERSION}
 
 networks:
   dms_sms_local:

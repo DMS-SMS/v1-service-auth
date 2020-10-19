@@ -9,6 +9,8 @@ import (
 	"auth/tool/closure"
 	topic "auth/utils/topic/golang"
 	"fmt"
+	"github.com/InVisionApp/go-health/v2"
+	"github.com/InVisionApp/go-health/v2/checkers"
 	"github.com/hashicorp/consul/api"
 	"github.com/micro/go-micro/v2"
 	log "github.com/micro/go-micro/v2/logger"
@@ -18,6 +20,7 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	"time"
 )
 
 func main() {
@@ -77,18 +80,40 @@ func main() {
 		micro.Address(fmt.Sprintf(":%d", port)),
 	)
 
+	// register initializer for service
 	service.Init(
 		micro.AfterStart(closure.ConsulServiceRegistrar(service.Server(), consul)),
 		micro.BeforeStop(closure.ConsulServiceDeregistrar(service.Server(), consul)),
 	)
 
+	// register gRPC handler in service
 	_ = proto.RegisterAuthAdminHandler(service.Server(), rpcHandler)
 	_ = proto.RegisterAuthStudentHandler(service.Server(), rpcHandler)
 	_ = proto.RegisterAuthTeacherHandler(service.Server(), rpcHandler)
 	_ = proto.RegisterAuthParentHandler(service.Server(), rpcHandler)
 
-	// health checker 실행 추가
+	// run DB Health checker
+	h := health.New()
+	dbChecker, err := checkers.NewSQL(&checkers.SQLConfig{
+		Pinger: dbc.DB(),
+	})
+	if err != nil {
+		log.Fatalf("unable to create sql health checker, err: %v", err)
+	}
+	dbHealthCfg := &health.Config{
+		Name:       "DB-Checker",
+		Checker:    dbChecker,
+		Interval:   time.Second * 5,
+		OnComplete: closure.TTLCheckHandlerAboutDB(service.Server(), consul),
+	}
+	if err = h.AddChecks([]*health.Config{dbHealthCfg}); err != nil {
+		log.Fatalf("unable to register health checks, err: %v", err)
+	}
+	if err = h.Start(); err != nil {
+		log.Fatalf("unable to start health checks, err: %v", err)
+	}
 
+	// run service
 	if err := service.Run(); err != nil {
 		log.Fatal(err)
 	}

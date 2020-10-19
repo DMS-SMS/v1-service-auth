@@ -14,7 +14,7 @@ import (
 	"net/http"
 )
 
-func (h _default) LoginStudentAuth(ctx context.Context, req *proto.LoginStudentAuthRequest, resp *proto.LoginStudentAuthResponse) (err error) {
+func (h _default) LoginStudentAuth(ctx context.Context, req *proto.LoginStudentAuthRequest, resp *proto.LoginStudentAuthResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -74,7 +74,7 @@ func (h _default) LoginStudentAuth(ctx context.Context, req *proto.LoginStudentA
 	return
 }
 
-func (h _default) ChangeStudentPW(ctx context.Context, req *proto.ChangeStudentPWRequest, resp *proto.ChangeStudentPWResponse) (err error) {
+func (h _default) ChangeStudentPW(ctx context.Context, req *proto.ChangeStudentPWRequest, resp *proto.ChangeStudentPWResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -155,7 +155,7 @@ func (h _default) ChangeStudentPW(ctx context.Context, req *proto.ChangeStudentP
 	return
 }
 
-func (h _default) GetStudentInformWithUUID(ctx context.Context, req *proto.GetStudentInformWithUUIDRequest, resp *proto.GetStudentInformWithUUIDResponse) (err error) {
+func (h _default) GetStudentInformWithUUID(ctx context.Context, req *proto.GetStudentInformWithUUIDRequest, resp *proto.GetStudentInformWithUUIDResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -216,7 +216,7 @@ func (h _default) GetStudentInformWithUUID(ctx context.Context, req *proto.GetSt
 	return
 }
 
-func (h _default) GetStudentInformsWithUUIDs(ctx context.Context, req *proto.GetStudentInformsWithUUIDsRequest, resp *proto.GetStudentInformsWithUUIDsResponse) (err error) {
+func (h _default) GetStudentInformsWithUUIDs(ctx context.Context, req *proto.GetStudentInformsWithUUIDsRequest, resp *proto.GetStudentInformsWithUUIDsResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -282,7 +282,7 @@ func (h _default) GetStudentInformsWithUUIDs(ctx context.Context, req *proto.Get
 	return
 }
 
-func (h _default) GetStudentUUIDsWithInform(ctx context.Context, req *proto.GetStudentUUIDsWithInformRequest, resp *proto.GetStudentUUIDsWithInformResponse) (err error) {
+func (h _default) GetStudentUUIDsWithInform(ctx context.Context, req *proto.GetStudentUUIDsWithInformRequest, resp *proto.GetStudentUUIDsWithInformResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired

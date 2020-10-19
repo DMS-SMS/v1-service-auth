@@ -14,7 +14,7 @@ import (
 	"net/http"
 )
 
-func (h _default) LoginTeacherAuth(ctx context.Context, req *proto.LoginTeacherAuthRequest, resp *proto.LoginTeacherAuthResponse) (err error) {
+func (h _default) LoginTeacherAuth(ctx context.Context, req *proto.LoginTeacherAuthRequest, resp *proto.LoginTeacherAuthResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -74,7 +74,7 @@ func (h _default) LoginTeacherAuth(ctx context.Context, req *proto.LoginTeacherA
 	return
 }
 
-func (h _default) ChangeTeacherPW(ctx context.Context, req *proto.ChangeTeacherPWRequest, resp *proto.ChangeTeacherPWResponse) (err error) {
+func (h _default) ChangeTeacherPW(ctx context.Context, req *proto.ChangeTeacherPWRequest, resp *proto.ChangeTeacherPWResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -155,7 +155,7 @@ func (h _default) ChangeTeacherPW(ctx context.Context, req *proto.ChangeTeacherP
 	return
 }
 
-func (h _default) GetTeacherInformWithUUID(ctx context.Context, req *proto.GetTeacherInformWithUUIDRequest, resp *proto.GetTeacherInformWithUUIDResponse) (err error) {
+func (h _default) GetTeacherInformWithUUID(ctx context.Context, req *proto.GetTeacherInformWithUUIDRequest, resp *proto.GetTeacherInformWithUUIDResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -214,7 +214,7 @@ func (h _default) GetTeacherInformWithUUID(ctx context.Context, req *proto.GetTe
 	return
 }
 
-func (h _default) GetTeacherUUIDsWithInform(ctx context.Context, req *proto.GetTeacherUUIDsWithInformRequest, resp *proto.GetTeacherUUIDsWithInformResponse) (err error) {
+func (h _default) GetTeacherUUIDsWithInform(ctx context.Context, req *proto.GetTeacherUUIDsWithInformRequest, resp *proto.GetTeacherUUIDsWithInformResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired

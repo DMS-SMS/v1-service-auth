@@ -528,7 +528,7 @@ func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParen
 	return
 }
 
-func (h _default) LoginAdminAuth(ctx context.Context, req *proto.LoginAdminAuthRequest, resp *proto.LoginAdminAuthResponse) (err error) {
+func (h _default) LoginAdminAuth(ctx context.Context, req *proto.LoginAdminAuthRequest, resp *proto.LoginAdminAuthResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired

@@ -22,16 +22,40 @@ const (
 	validProfileURI = "example.com/profiles/student-111111111111"
 )
 
-func (sa *StudentAuth) BeforeCreate() (err error) {
-	return validate.DBValidator.Struct(sa)
+func (sa *StudentAuth) BeforeCreate(tx *gorm.DB) (err error) {
+	if err = validate.DBValidator.Struct(sa); err != nil {
+		return
+	}
+
+	query := tx.Where("student_id = ?", sa.StudentID).Find(&StudentAuth{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(StudentAuthInstance.StudentID.KeyName(), string(sa.StudentID))
+	}
+	return
 }
 
-func (ta *TeacherAuth) BeforeCreate() (err error) {
-	return validate.DBValidator.Struct(ta)
+func (ta *TeacherAuth) BeforeCreate(tx *gorm.DB) (err error) {
+	if err = validate.DBValidator.Struct(ta); err != nil {
+		return
+	}
+
+	query := tx.Where("teacher_id = ?", ta.TeacherID).Find(&TeacherAuth{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(TeacherAuthInstance.TeacherID.KeyName(), string(ta.TeacherID))
+	}
+	return
 }
 
-func (pa *ParentAuth) BeforeCreate() (err error) {
-	return validate.DBValidator.Struct(pa)
+func (pa *ParentAuth) BeforeCreate(tx *gorm.DB) (err error) {
+	if err = validate.DBValidator.Struct(pa); err != nil {
+		return
+	}
+
+	query := tx.Where("parent_id = ?", pa.ParentID).Find(&ParentAuth{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(ParentAuthInstance.ParentID.KeyName(), string(pa.ParentID))
+	}
+	return
 }
 
 // 사전에 거를 수 없었던 상황에 대한 오류는 mysql 에러로 반환, 그렇지 않으면 X -> 500으로 처리

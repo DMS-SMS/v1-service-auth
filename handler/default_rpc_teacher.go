@@ -3,6 +3,7 @@ package handler
 import (
 	"auth/model"
 	proto "auth/proto/golang/auth"
+	code "auth/utils/code/golang"
 	"context"
 	"fmt"
 	"github.com/jinzhu/gorm"
@@ -13,7 +14,7 @@ import (
 	"net/http"
 )
 
-func (h _default) LoginTeacherAuth(ctx context.Context, req *proto.LoginTeacherAuthRequest, resp *proto.LoginTeacherAuthResponse) (err error) {
+func (h _default) LoginTeacherAuth(ctx context.Context, req *proto.LoginTeacherAuthRequest, resp *proto.LoginTeacherAuthResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -31,7 +32,7 @@ func (h _default) LoginTeacherAuth(ctx context.Context, req *proto.LoginTeacherA
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetTeacherAuthWithID", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetTeacherAuthWithID", opentracing.ChildOf(parentSpan))
 	resultAuth, err := access.GetTeacherAuthWithID(req.TeacherID)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", resultAuth), log.Error(err))
 	spanForDB.Finish()
@@ -41,7 +42,7 @@ func (h _default) LoginTeacherAuth(ctx context.Context, req *proto.LoginTeacherA
 		switch err {
 		case gorm.ErrRecordNotFound:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeTeacherIDNoExist
+			resp.Code = code.TeacherIDNoExist
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "teacher id not exists")
 		default:
 			resp.Status = http.StatusInternalServerError
@@ -56,7 +57,7 @@ func (h _default) LoginTeacherAuth(ctx context.Context, req *proto.LoginTeacherA
 		switch err {
 		case bcrypt.ErrMismatchedHashAndPassword:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeIncorrectTeacherPWForLogin
+			resp.Code = code.IncorrectTeacherPWForLogin
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "mismatched hash and password")
 		default:
 			resp.Status = http.StatusInternalServerError
@@ -73,7 +74,7 @@ func (h _default) LoginTeacherAuth(ctx context.Context, req *proto.LoginTeacherA
 	return
 }
 
-func (h _default) ChangeTeacherPW(ctx context.Context, req *proto.ChangeTeacherPWRequest, resp *proto.ChangeTeacherPWResponse) (err error) {
+func (h _default) ChangeTeacherPW(ctx context.Context, req *proto.ChangeTeacherPWRequest, resp *proto.ChangeTeacherPWResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -103,7 +104,7 @@ func (h _default) ChangeTeacherPW(ctx context.Context, req *proto.ChangeTeacherP
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetTeacherAuthWithUUID", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetTeacherAuthWithUUID", opentracing.ChildOf(parentSpan))
 	selectedAuth, err := access.GetTeacherAuthWithUUID(req.TeacherUUID)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", selectedAuth), log.Error(err))
 	spanForDB.Finish()
@@ -127,7 +128,7 @@ func (h _default) ChangeTeacherPW(ctx context.Context, req *proto.ChangeTeacherP
 		switch err {
 		case bcrypt.ErrMismatchedHashAndPassword:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeIncorrectTeacherPWForChange
+			resp.Code = code.IncorrectTeacherPWForChange
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "mismatched hash and password")
 		default:
 			resp.Status = http.StatusInternalServerError
@@ -136,7 +137,7 @@ func (h _default) ChangeTeacherPW(ctx context.Context, req *proto.ChangeTeacherP
 		return
 	}
 
-	spanForDB = opentracing.StartSpan("ChangeTeacherPW", opentracing.ChildOf(parentSpan))
+	spanForDB = h.tracer.StartSpan("ChangeTeacherPW", opentracing.ChildOf(parentSpan))
 	err = access.ChangeTeacherPW(string(selectedAuth.UUID), req.RevisionPW)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
 	spanForDB.Finish()
@@ -154,7 +155,7 @@ func (h _default) ChangeTeacherPW(ctx context.Context, req *proto.ChangeTeacherP
 	return
 }
 
-func (h _default) GetTeacherInformWithUUID(ctx context.Context, req *proto.GetTeacherInformWithUUIDRequest, resp *proto.GetTeacherInformWithUUIDResponse) (err error) {
+func (h _default) GetTeacherInformWithUUID(ctx context.Context, req *proto.GetTeacherInformWithUUIDRequest, resp *proto.GetTeacherInformWithUUIDResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -184,7 +185,7 @@ func (h _default) GetTeacherInformWithUUID(ctx context.Context, req *proto.GetTe
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetTeacherInformWithUUID", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetTeacherInformWithUUID", opentracing.ChildOf(parentSpan))
 	selectedAuth, err := access.GetTeacherInformWithUUID(req.TeacherUUID)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", selectedAuth), log.Error(err))
 	spanForDB.Finish()
@@ -213,7 +214,7 @@ func (h _default) GetTeacherInformWithUUID(ctx context.Context, req *proto.GetTe
 	return
 }
 
-func (h _default) GetTeacherUUIDsWithInform(ctx context.Context, req *proto.GetTeacherUUIDsWithInformRequest, resp *proto.GetTeacherUUIDsWithInformResponse) (err error) {
+func (h _default) GetTeacherUUIDsWithInform(ctx context.Context, req *proto.GetTeacherUUIDsWithInformRequest, resp *proto.GetTeacherUUIDsWithInformResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -242,7 +243,7 @@ func (h _default) GetTeacherUUIDsWithInform(ctx context.Context, req *proto.GetT
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetTeacherUUIDsWithInform", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetTeacherUUIDsWithInform", opentracing.ChildOf(parentSpan))
 	selectedUUIDs, err := access.GetTeacherUUIDsWithInform(&model.TeacherInform{
 		Grade:         model.Grade(int64(req.Grade)),
 		Class:         model.Class(int64(req.Group)),
@@ -257,7 +258,7 @@ func (h _default) GetTeacherUUIDsWithInform(ctx context.Context, req *proto.GetT
 		switch err {
 		case gorm.ErrRecordNotFound:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeTeacherWithThatInformNoExist
+			resp.Code = code.TeacherWithThatInformNoExist
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "no exist teacher with that inform")
 		default:
 			resp.Status = http.StatusInternalServerError

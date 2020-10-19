@@ -4,6 +4,7 @@ import (
 	test "auth/handler/for_test"
 	"auth/model"
 	proto "auth/proto/golang/auth"
+	code "auth/utils/code/golang"
 	"errors"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
@@ -56,7 +57,7 @@ func Test_default_LoginParentAuth(t *testing.T) {
 				"Rollback":            {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeParentIDNoExist,
+			ExpectedCode:   code.ParentIDNoExist,
 		}, { // GetParentAuthWithID unexpected error
 			ParentID: "jinhong07193",
 			ExpectedMethods: map[test.Method]test.Returns{
@@ -78,7 +79,7 @@ func Test_default_LoginParentAuth(t *testing.T) {
 				"Rollback": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeIncorrectParentPWForLogin,
+			ExpectedCode:   code.IncorrectParentPWForLogin,
 		},
 	}
 
@@ -175,7 +176,7 @@ func Test_default_ChangeParentPW(t *testing.T) {
 				"Rollback": {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeIncorrectParentPWForChange,
+			ExpectedCode:   code.IncorrectParentPWForChange,
 		}, { // GetParentAuthWithUUID 에러 반환
 			UUID:       "parent-111111111117",
 			ParentUUID: "parent-111111111117",
@@ -395,7 +396,7 @@ func Test_default_GetParentUUIDsWithInform(t *testing.T) {
 				"Rollback":                 {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusConflict,
-			ExpectedCode:   CodeParentWithThatInformNoExist,
+			ExpectedCode:   code.ParentWithThatInformNoExist,
 		}, { // GetParentUUIDsWithInform error return
 			UUID:        "parent-111111111111",
 			PhoneNumber: "01012341234",

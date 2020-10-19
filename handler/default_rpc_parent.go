@@ -3,6 +3,7 @@ package handler
 import (
 	"auth/model"
 	proto "auth/proto/golang/auth"
+	code "auth/utils/code/golang"
 	"context"
 	"fmt"
 	"github.com/jinzhu/gorm"
@@ -13,7 +14,7 @@ import (
 	"net/http"
 )
 
-func (h _default) LoginParentAuth(ctx context.Context, req *proto.LoginParentAuthRequest, resp *proto.LoginParentAuthResponse) (err error) {
+func (h _default) LoginParentAuth(ctx context.Context, req *proto.LoginParentAuthRequest, resp *proto.LoginParentAuthResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -31,7 +32,7 @@ func (h _default) LoginParentAuth(ctx context.Context, req *proto.LoginParentAut
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetParentAuthWithID", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetParentAuthWithID", opentracing.ChildOf(parentSpan))
 	resultAuth, err := access.GetParentAuthWithID(req.ParentID)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", resultAuth), log.Error(err))
 	spanForDB.Finish()
@@ -41,7 +42,7 @@ func (h _default) LoginParentAuth(ctx context.Context, req *proto.LoginParentAut
 		switch err {
 		case gorm.ErrRecordNotFound:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeParentIDNoExist
+			resp.Code = code.ParentIDNoExist
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "parent id not exists")
 		default:
 			resp.Status = http.StatusInternalServerError
@@ -56,7 +57,7 @@ func (h _default) LoginParentAuth(ctx context.Context, req *proto.LoginParentAut
 		switch err {
 		case bcrypt.ErrMismatchedHashAndPassword:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeIncorrectParentPWForLogin
+			resp.Code = code.IncorrectParentPWForLogin
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "mismatched hash and password")
 		default:
 			resp.Status = http.StatusInternalServerError
@@ -73,7 +74,7 @@ func (h _default) LoginParentAuth(ctx context.Context, req *proto.LoginParentAut
 	return
 }
 
-func (h _default) ChangeParentPW(ctx context.Context, req *proto.ChangeParentPWRequest, resp *proto.ChangeParentPWResponse) (err error) {
+func (h _default) ChangeParentPW(ctx context.Context, req *proto.ChangeParentPWRequest, resp *proto.ChangeParentPWResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -103,7 +104,7 @@ func (h _default) ChangeParentPW(ctx context.Context, req *proto.ChangeParentPWR
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetParentAuthWithUUID", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetParentAuthWithUUID", opentracing.ChildOf(parentSpan))
 	selectedAuth, err := access.GetParentAuthWithUUID(req.ParentUUID)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", selectedAuth), log.Error(err))
 	spanForDB.Finish()
@@ -127,7 +128,7 @@ func (h _default) ChangeParentPW(ctx context.Context, req *proto.ChangeParentPWR
 		switch err {
 		case bcrypt.ErrMismatchedHashAndPassword:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeIncorrectParentPWForChange
+			resp.Code = code.IncorrectParentPWForChange
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "mismatched hash and password")
 		default:
 			resp.Status = http.StatusInternalServerError
@@ -136,7 +137,7 @@ func (h _default) ChangeParentPW(ctx context.Context, req *proto.ChangeParentPWR
 		return
 	}
 
-	spanForDB = opentracing.StartSpan("ChangeParentPW", opentracing.ChildOf(parentSpan))
+	spanForDB = h.tracer.StartSpan("ChangeParentPW", opentracing.ChildOf(parentSpan))
 	err = access.ChangeParentPW(string(selectedAuth.UUID), req.RevisionPW)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
 	spanForDB.Finish()
@@ -154,7 +155,7 @@ func (h _default) ChangeParentPW(ctx context.Context, req *proto.ChangeParentPWR
 	return
 }
 
-func (h _default) GetParentInformWithUUID(ctx context.Context, req *proto.GetParentInformWithUUIDRequest, resp *proto.GetParentInformWithUUIDResponse) (err error) {
+func (h _default) GetParentInformWithUUID(ctx context.Context, req *proto.GetParentInformWithUUIDRequest, resp *proto.GetParentInformWithUUIDResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -184,7 +185,7 @@ func (h _default) GetParentInformWithUUID(ctx context.Context, req *proto.GetPar
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetParentInformWithUUID", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetParentInformWithUUID", opentracing.ChildOf(parentSpan))
 	selectedAuth, err := access.GetParentInformWithUUID(req.ParentUUID)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", selectedAuth), log.Error(err))
 	spanForDB.Finish()
@@ -211,7 +212,7 @@ func (h _default) GetParentInformWithUUID(ctx context.Context, req *proto.GetPar
 	return
 }
 
-func (h _default) GetParentUUIDsWithInform(ctx context.Context, req *proto.GetParentUUIDsWithInformRequest, resp *proto.GetParentUUIDsWithInformResponse) (err error) {
+func (h _default) GetParentUUIDsWithInform(ctx context.Context, req *proto.GetParentUUIDsWithInformRequest, resp *proto.GetParentUUIDsWithInformResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -240,7 +241,7 @@ func (h _default) GetParentUUIDsWithInform(ctx context.Context, req *proto.GetPa
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetParentUUIDsWithInform", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetParentUUIDsWithInform", opentracing.ChildOf(parentSpan))
 	selectedUUIDs, err := access.GetParentUUIDsWithInform(&model.ParentInform{
 		Name:          model.Name(req.Name),
 		PhoneNumber:   model.PhoneNumber(req.PhoneNumber),
@@ -253,7 +254,7 @@ func (h _default) GetParentUUIDsWithInform(ctx context.Context, req *proto.GetPa
 		switch err {
 		case gorm.ErrRecordNotFound:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeParentWithThatInformNoExist
+			resp.Code = code.ParentWithThatInformNoExist
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "no exist parent with that inform")
 		default:
 			resp.Status = http.StatusInternalServerError

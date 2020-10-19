@@ -5,6 +5,7 @@ import (
 	proto "auth/proto/golang/auth"
 	"auth/tool/mysqlerr"
 	"auth/tool/random"
+	code "auth/utils/code/golang"
 	"bytes"
 	"context"
 	"fmt"
@@ -109,7 +110,7 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 			switch key {
 			case model.StudentAuthInstance.StudentID.KeyName():
 				resp.Status = http.StatusConflict
-				resp.Code = CodeStudentIDDuplicate
+				resp.Code = code.StudentIDDuplicate
 				resp.Message = fmt.Sprintf(conflictErrorFormat, "student id duplicate, entry: " + entry)
 			default:
 				resp.Status = http.StatusInternalServerError
@@ -126,7 +127,7 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 			switch fkInform.ConstraintName {
 			case model.StudentAuthInstance.ParentUUIDConstraintName():
 				resp.Status = http.StatusConflict
-				resp.Code = CodeParentUUIDNoExist
+				resp.Code = code.ParentUUIDNoExist
 				resp.Message = fmt.Sprintf(conflictErrorFormat, "FK constraint fail, FK name: " + fkInform.AttrName)
 			default:
 				resp.Status = http.StatusInternalServerError
@@ -189,11 +190,11 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 			switch key {
 			case model.StudentInformInstance.StudentNumber.KeyName():
 				resp.Status = http.StatusConflict
-				resp.Code = CodeStudentNumberDuplicate
+				resp.Code = code.StudentNumberDuplicate
 				resp.Message = fmt.Sprintf(conflictErrorFormat, "student number duplicate, entry: " + entry)
 			case model.StudentInformInstance.PhoneNumber.KeyName():
 				resp.Status = http.StatusConflict
-				resp.Code = CodeStudentPhoneNumberDuplicate
+				resp.Code = code.StudentPhoneNumberDuplicate
 				resp.Message = fmt.Sprintf(conflictErrorFormat, "phone number duplicate entry: " + entry)
 			default:
 				resp.Status = http.StatusInternalServerError
@@ -302,7 +303,7 @@ func (h _default) CreateNewTeacher(ctx context.Context, req *proto.CreateNewTeac
 			switch key {
 			case model.TeacherAuthInstance.TeacherID.KeyName():
 				resp.Status = http.StatusConflict
-				resp.Code = CodeTeacherIDDuplicate
+				resp.Code = code.TeacherIDDuplicate
 				resp.Message = fmt.Sprintf(conflictErrorFormat, "teacher id duplicate, entry: " + entry)
 			default:
 				resp.Status = http.StatusInternalServerError
@@ -350,7 +351,7 @@ func (h _default) CreateNewTeacher(ctx context.Context, req *proto.CreateNewTeac
 			switch key {
 			case model.TeacherInformInstance.PhoneNumber.KeyName():
 				resp.Status = http.StatusConflict
-				resp.Code = CodeTeacherPhoneNumberDuplicate
+				resp.Code = code.TeacherPhoneNumberDuplicate
 				resp.Message = fmt.Sprintf(conflictErrorFormat, "phone number duplicate, entry: " + entry)
 			default:
 				resp.Status = http.StatusInternalServerError
@@ -459,7 +460,7 @@ func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParen
 			switch key {
 			case model.ParentAuthInstance.ParentID.KeyName():
 				resp.Status = http.StatusConflict
-				resp.Code = CodeParentIDDuplicate
+				resp.Code = code.ParentIDDuplicate
 				resp.Message = fmt.Sprintf(conflictErrorFormat, "parent id duplicate, entry: " + entry)
 			default:
 				resp.Status = http.StatusInternalServerError
@@ -505,7 +506,7 @@ func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParen
 			switch key {
 			case model.ParentInformInstance.PhoneNumber.KeyName():
 				resp.Status = http.StatusConflict
-				resp.Code = CodeParentPhoneNumberDuplicate
+				resp.Code = code.ParentPhoneNumberDuplicate
 				resp.Message = fmt.Sprintf(conflictErrorFormat, "phone number duplicate, entry: " + entry)
 			default:
 				resp.Status = http.StatusInternalServerError
@@ -527,7 +528,7 @@ func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParen
 	return
 }
 
-func (h _default) LoginAdminAuth(ctx context.Context, req *proto.LoginAdminAuthRequest, resp *proto.LoginAdminAuthResponse) (err error) {
+func (h _default) LoginAdminAuth(ctx context.Context, req *proto.LoginAdminAuthRequest, resp *proto.LoginAdminAuthResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -545,7 +546,7 @@ func (h _default) LoginAdminAuth(ctx context.Context, req *proto.LoginAdminAuthR
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetAdminAuthWithID", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetAdminAuthWithID", opentracing.ChildOf(parentSpan))
 	resultAuth, err := access.GetAdminAuthWithID(req.AdminID)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", resultAuth), log.Error(err))
 	spanForDB.Finish()
@@ -555,7 +556,7 @@ func (h _default) LoginAdminAuth(ctx context.Context, req *proto.LoginAdminAuthR
 		switch err {
 		case gorm.ErrRecordNotFound:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeAdminIDNoExist
+			resp.Code = code.AdminIDNoExist
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "admin id not exists")
 		default:
 			resp.Status = http.StatusInternalServerError
@@ -570,7 +571,7 @@ func (h _default) LoginAdminAuth(ctx context.Context, req *proto.LoginAdminAuthR
 		switch err {
 		case bcrypt.ErrMismatchedHashAndPassword:
 			resp.Status = http.StatusConflict
-			resp.Code = CodeIncorrectAdminPWForLogin
+			resp.Code = code.IncorrectAdminPWForLogin
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "mismatched hash and password")
 		default:
 			resp.Status = http.StatusInternalServerError

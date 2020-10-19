@@ -50,11 +50,9 @@ func main() {
 		log.Fatal("please set JAEGER_ADDRESS in environment variable")
 	}
 	authSrvTracer, closer, err := jaegercfg.Configuration{
-		ServiceName: "DMS.SMS.v1.service.auth",
-		Reporter: &jaegercfg.ReporterConfig{
-			LogSpans:           true,
-			LocalAgentHostPort: jaegerAddr,
-		},
+		ServiceName: topic.AuthServiceName,
+		Reporter:    &jaegercfg.ReporterConfig{LogSpans: true, LocalAgentHostPort: jaegerAddr},
+		Sampler:     &jaegercfg.SamplerConfig{Type: jaeger.SamplerTypeConst, Param: 1},
 	}.NewTracer()
 	if err != nil {
 		log.Fatalf("error while creating new tracer for service, err: %v", err)

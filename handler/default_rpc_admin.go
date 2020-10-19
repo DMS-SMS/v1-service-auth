@@ -528,7 +528,7 @@ func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParen
 	return
 }
 
-func (h _default) LoginAdminAuth(ctx context.Context, req *proto.LoginAdminAuthRequest, resp *proto.LoginAdminAuthResponse) (err error) {
+func (h _default) LoginAdminAuth(ctx context.Context, req *proto.LoginAdminAuthRequest, resp *proto.LoginAdminAuthResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {
 		resp.Status = http.StatusProxyAuthRequired
@@ -546,7 +546,7 @@ func (h _default) LoginAdminAuth(ctx context.Context, req *proto.LoginAdminAuthR
 		return
 	}
 
-	spanForDB := opentracing.StartSpan("GetAdminAuthWithID", opentracing.ChildOf(parentSpan))
+	spanForDB := h.tracer.StartSpan("GetAdminAuthWithID", opentracing.ChildOf(parentSpan))
 	resultAuth, err := access.GetAdminAuthWithID(req.AdminID)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", resultAuth), log.Error(err))
 	spanForDB.Finish()

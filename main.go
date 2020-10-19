@@ -7,11 +7,13 @@ import (
 	"auth/handler"
 	proto "auth/proto/golang/auth"
 	"auth/tool/closure"
+	topic "auth/utils/topic/golang"
 	"fmt"
 	"github.com/hashicorp/consul/api"
 	"github.com/micro/go-micro/v2"
 	log "github.com/micro/go-micro/v2/logger"
 	"github.com/micro/go-micro/v2/transport/grpc"
+	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	"math/rand"
 	"net"
@@ -19,39 +21,38 @@ import (
 )
 
 func main() {
-	consulCfg := api.DefaultConfig()
-	if addr := os.Getenv("CONSUL_ADDRESS"); addr != "" {
-		consulCfg.Address = addr
+	// create consul connection
+	consulAddr := os.Getenv("CONSUL_ADDRESS")
+	if consulAddr == "" {
+		log.Fatal("please set CONSUL_ADDRESS in environment variable")
 	}
-
+	consulCfg := api.DefaultConfig()
+	consulCfg.Address = consulAddr
 	consul, err := api.NewClient(consulCfg)
 	if err != nil {
 		log.Fatalf("consul connect fail, err: %v", err)
 	}
 
+	// create db access manager
 	dbc, _, err := adapter.ConnectDBWithConsul(consul, "db/auth/local")
 	if err != nil {
 		log.Fatalf("db connect fail, err: %v", err)
 	}
 	db.Migrate(dbc)
-
 	defaultAccessManage, err := db.NewAccessorManage(access.Default(dbc))
 	if err != nil {
 		log.Fatalf("db accessor create fail, err: %v", err)
 	}
 
-	// 이 부분은 나중에 Consul 조회로 변경 예
-	agentHost := "localhost:6831"
-	if addr := os.Getenv("JAEGER_ADDRESS"); addr != "" {
-		agentHost = addr
+	// create jaeger connection
+	jaegerAddr := os.Getenv("JAEGER_ADDRESS")
+	if jaegerAddr == "" {
+		log.Fatal("please set JAEGER_ADDRESS in environment variable")
 	}
-
 	authSrvTracer, closer, err := jaegercfg.Configuration{
-		ServiceName: "DMS.SMS.v1.service.auth",
-		Reporter: &jaegercfg.ReporterConfig{
-			LogSpans:           true,
-			LocalAgentHostPort: agentHost,
-		},
+		ServiceName: topic.AuthServiceName,
+		Reporter:    &jaegercfg.ReporterConfig{LogSpans: true, LocalAgentHostPort: jaegerAddr},
+		Sampler:     &jaegercfg.SamplerConfig{Type: jaeger.SamplerTypeConst, Param: 1},
 	}.NewTracer()
 	if err != nil {
 		log.Fatalf("error while creating new tracer for service, err: %v", err)
@@ -60,12 +61,14 @@ func main() {
 		_ = closer.Close()
 	}()
 
+	// create gRPC handler
 	rpcHandler := handler.Default(
 		handler.AWSSession(nil),
 		handler.Manager(defaultAccessManage),
 		handler.Tracer(authSrvTracer),
 	)
 
+	// create service
 	port := getRandomPortNotInUsedWithRange(10000, 10100)
 	service := micro.NewService(
 		micro.Name("DMS.SMS.v1.service.auth"),

@@ -149,12 +149,16 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 	}
 
 	if h.awsSession != nil {
+		spanForS3 := h.tracer.StartSpan("PutObject", opentracing.ChildOf(parentSpan))
 		_, err = s3.New(h.awsSession).PutObject(&s3.PutObjectInput{
 			Bucket: aws.String("dms-sms"),
 			Key:    aws.String(fmt.Sprintf("profiles/%s", string(resultAuth.UUID))),
 			Body:   bytes.NewReader(req.Image),
 		})
+		spanForS3.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+		spanForS3.Finish()
 		if err != nil {
+			access.Rollback()
 			resp.Status = http.StatusInternalServerError
 			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to upload profile to s3, err: " + err.Error())
 			return

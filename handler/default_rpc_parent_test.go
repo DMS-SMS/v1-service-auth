@@ -431,3 +431,92 @@ func Test_default_GetParentUUIDsWithInform(t *testing.T) {
 		newMock.AssertExpectations(t)
 	}
 }
+
+func Test_default_GetParentUUIDsWithInform(t *testing.T) {
+	newMock, defaultHandler := generateVarForTest()
+
+	tests := []test.GetParentUUIDsWithInformCase{
+		{ // success case (for admin auth)
+			UUID: "admin-111111111111",
+			Name: "이성진",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                  {},
+				"GetParentUUIDsWithInform": {[]string{"parent-123412341234", "parent-432143214321"}, nil},
+				"Commit":                   {&gorm.DB{}},
+			},
+			ExpectedStatus:      http.StatusOK,
+			ExpectedParentUUIDs: []string{"parent-123412341234", "parent-432143214321"},
+		}, { // success case (for parent auth)
+			UUID:        "parent-111111111111",
+			PhoneNumber: "01088378347",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                  {},
+				"GetParentUUIDsWithInform": {[]string{"parent-111111111111"}, nil},
+				"Commit":                   {&gorm.DB{}},
+			},
+			ExpectedStatus:      http.StatusOK,
+			ExpectedParentUUIDs: []string{"parent-111111111111"},
+		}, { // no exist X-Request-ID -> Proxy Authorization Required
+			UUID:            "parent-111111111111",
+			XRequestID:      test.EmptyReplaceValueForString,
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // invalid X-Request-ID -> Proxy Authorization Required
+			UUID:            "parent-111111111111",
+			XRequestID:      "InvalidXRequestID",
+			ExpectedMethods: map[test.Method]test.Returns{},
+			ExpectedStatus:  http.StatusProxyAuthRequired,
+		}, { // no exist Span-Context -> Proxy Authorization Required
+			UUID:              "parent-111111111111",
+			SpanContextString: test.EmptyReplaceValueForString,
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // invalid Span-Context -> Proxy Authorization Required
+			UUID:              "parent-111111111111",
+			SpanContextString: "InvalidSpanContext",
+			ExpectedMethods:   map[test.Method]test.Returns{},
+			ExpectedStatus:    http.StatusProxyAuthRequired,
+		}, { // forbidden (not parent)
+			UUID:           "student-111111111111",
+			ExpectedStatus: http.StatusForbidden,
+		}, { // no exist parent uuid with that inform
+			UUID:        "parent-111111111111",
+			PhoneNumber: "01011111111",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                  {},
+				"GetParentUUIDsWithInform": {[]string{}, gorm.ErrRecordNotFound},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusConflict,
+			ExpectedCode:   code.ParentWithThatInformNoExist,
+		}, { // GetParentUUIDsWithInform error return
+			UUID:        "parent-111111111111",
+			PhoneNumber: "01012341234",
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                  {},
+				"GetParentUUIDsWithInform": {[]string{}, errors.New("I don't know about that error")},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		},
+	}
+
+	for _, testCase := range tests {
+		testCase.ChangeEmptyValueToValidValue()
+		testCase.ChangeEmptyReplaceValueToEmptyValue()
+		testCase.OnExpectMethods(newMock)
+
+		req := new(proto.GetParentUUIDsWithInformRequest)
+		testCase.SetRequestContextOf(req)
+		ctx := testCase.GetMetadataContext()
+
+		resp := new(proto.GetParentUUIDsWithInformResponse)
+		_ = defaultHandler.GetParentUUIDsWithInform(ctx, req, resp)
+
+		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
+		assert.Equalf(t, testCase.ExpectedParentUUIDs, resp.ParentUUIDs, "result parentUUIDs assertion error (test case: %v, message: %s)", testCase, resp.Message)
+	}
+
+	newMock.AssertExpectations(t)
+}

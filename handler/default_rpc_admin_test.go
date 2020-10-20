@@ -34,7 +34,6 @@ import (
 
 func Test_default_CreateNewStudent(t *testing.T) {
 	const studentUUIDRegexString = "^student-\\d{12}"
-	newMock, defaultHandler := generateVarForTest()
 
 	tests := []test.CreateNewStudentCase{
 		{ // success case
@@ -116,6 +115,15 @@ func Test_default_CreateNewStudent(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   code.ParentUUIDNoExist,
+		}, { // image empty byte array
+			Image: []byte(test.EmptyReplaceValueForString),
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, nil},
+				"Rollback":               {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusProxyAuthRequired,
 		}, { // student number duplicate -> Conflict -103
 			Grade:         2,
 			Class:         2,
@@ -201,6 +209,14 @@ func Test_default_CreateNewStudent(t *testing.T) {
 				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateStudentAuth return unexpected type of error
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, errors.New("unexpected type of error")},
+				"Rollback":               {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateStudentInform return invalid duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                {},
@@ -228,10 +244,21 @@ func Test_default_CreateNewStudent(t *testing.T) {
 				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateStudentInform return unexpected type of error
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, nil},
+				"CreateStudentInform":    {&model.StudentInform{}, errors.New("unexpected error")},
+				"Rollback":               {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
 		},
 	}
 
 	for _, createNewStudentTest := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		createNewStudentTest.ChangeEmptyValueToValidValue()
 		createNewStudentTest.ChangeEmptyReplaceValueToEmptyValue()
 		createNewStudentTest.OnExpectMethodsTo(newMock)
@@ -247,14 +274,13 @@ func Test_default_CreateNewStudent(t *testing.T) {
 		assert.Equalf(t, int(createNewStudentTest.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", createNewStudentTest, resp.Message)
 		assert.Equalf(t, createNewStudentTest.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", createNewStudentTest, resp.Message)
 		assert.Regexpf(t, createNewStudentTest.ExpectedStudentUUID, resp.CreatedStudentUUID, "student uuid assertion error (test case: %v, message: %s)", createNewStudentTest, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }
 
 func Test_default_CreateNewTeacher(t *testing.T) {
 	const teacherUUIDRegexString = "^teacher-\\d{12}"
-	newMock, defaultHandler := generateVarForTest()
 
 	tests := []test.CreateNewTeacherCase{
 		{ // success case
@@ -370,6 +396,14 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 				"Rollback":                 {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateTeacherAuth return unexpected type of error
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                  {},
+				"GetTeacherAuthWithUUID":   {&model.TeacherAuth{}, gorm.ErrRecordNotFound},
+				"CreateTeacherAuth":        {&model.TeacherAuth{}, errors.New("unexpected type of error")},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateTeacherInform return invalid duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
@@ -397,10 +431,21 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 				"Rollback":                 {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateTeacherInform return unexpected type of error
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                  {},
+				"GetTeacherAuthWithUUID":   {&model.TeacherAuth{}, gorm.ErrRecordNotFound},
+				"CreateTeacherAuth":        {&model.TeacherAuth{}, nil},
+				"CreateTeacherInform":      {&model.TeacherInform{}, errors.New("unexpected type of error")},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
 		},
 	}
 
 	for _, createNewTeacherTest := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		createNewTeacherTest.ChangeEmptyValueToValidValue()
 		createNewTeacherTest.ChangeEmptyReplaceValueToEmptyValue()
 		createNewTeacherTest.OnExpectMethodsTo(newMock)
@@ -415,14 +460,13 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 		assert.Equalf(t, int(createNewTeacherTest.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", createNewTeacherTest, resp.Message)
 		assert.Equalf(t, createNewTeacherTest.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", createNewTeacherTest, resp.Message)
 		assert.Regexpf(t, createNewTeacherTest.ExpectedStudentUUID, resp.CreatedTeacherUUID, "teacher uuid assertion error (test case: %v, message: %s)", createNewTeacherTest, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }
 
 func Test_default_CreateNewParent(t *testing.T) {
 	const parentUUIDRegexString = "^parent-\\d{12}"
-	newMock, defaultHandler := generateVarForTest()
 
 	tests := []test.CreateNewParentCase{
 		{ // success case
@@ -502,7 +546,7 @@ func Test_default_CreateNewParent(t *testing.T) {
 				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
-		}, { // CreateTeacherAuth return invalid duplicate error
+		}, { // CreateParentAuth return invalid duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":               {},
 				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
@@ -510,7 +554,7 @@ func Test_default_CreateNewParent(t *testing.T) {
 				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
-		}, { // CreateTeacherAuth return unexpected key duplicate error
+		}, { // CreateParentAuth return unexpected key duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":               {},
 				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
@@ -518,7 +562,7 @@ func Test_default_CreateNewParent(t *testing.T) {
 				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
-		}, { // CreateTeacherAuth return unexpected error code
+		}, { // CreateParentAuth return unexpected error code
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":               {},
 				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
@@ -526,7 +570,15 @@ func Test_default_CreateNewParent(t *testing.T) {
 				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
-		}, { // CreateTeacherInform return invalid duplicate error
+		}, { // CreateParentAuth return unexpected type of error
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":               {},
+				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
+				"CreateParentAuth":      {&model.ParentAuth{}, errors.New("unexpected type of error")},
+				"Rollback":              {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateParentInform return invalid duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":               {},
 				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
@@ -535,7 +587,7 @@ func Test_default_CreateNewParent(t *testing.T) {
 				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
-		}, { // CreateTeacherInform return unexpected duplicate error
+		}, { // CreateParentInform return unexpected duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":               {},
 				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
@@ -544,7 +596,7 @@ func Test_default_CreateNewParent(t *testing.T) {
 				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
-		}, { // CreateTeacherInform return unexpected error code
+		}, { // CreateParentInform return unexpected error code
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":               {},
 				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
@@ -553,10 +605,21 @@ func Test_default_CreateNewParent(t *testing.T) {
 				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateParentInform return unexpected error code
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":               {},
+				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
+				"CreateParentAuth":      {&model.ParentAuth{}, nil},
+				"CreateParentInform":    {&model.ParentInform{}, errors.New("unexpected type of error")},
+				"Rollback":              {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
 		},
 	}
 
 	for _, createNewParentTest := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		createNewParentTest.ChangeEmptyValueToValidValue()
 		createNewParentTest.ChangeEmptyReplaceValueToEmptyValue()
 		createNewParentTest.OnExpectMethodsTo(newMock)
@@ -571,13 +634,12 @@ func Test_default_CreateNewParent(t *testing.T) {
 		assert.Equalf(t, int(createNewParentTest.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", createNewParentTest, resp.Message)
 		assert.Equalf(t, createNewParentTest.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", createNewParentTest, resp.Message)
 		assert.Regexpf(t, createNewParentTest.ExpectedStudentUUID, resp.CreatedParentUUID, "parent uuid assertion error (test case: %v, message: %s)", createNewParentTest, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }
 
 func Test_default_LoginAdminAuth(t *testing.T) {
-	newMock, defaultHandler := generateVarForTest()
 	hashedByte, _ := bcrypt.GenerateFromPassword([]byte("testPW"), 1)
 
 	tests := []test.LoginAdminAuthCase{
@@ -646,6 +708,8 @@ func Test_default_LoginAdminAuth(t *testing.T) {
 	}
 
 	for _, testCase := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		testCase.ChangeEmptyValueToValidValue()
 		testCase.ChangeEmptyReplaceValueToEmptyValue()
 		testCase.OnExpectMethods(newMock)
@@ -660,7 +724,7 @@ func Test_default_LoginAdminAuth(t *testing.T) {
 		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, testCase.ExpectedLoggedInAdminUUID, resp.LoggedInAdminUUID, "logged in uuid assertion error (test case: %v, message: %s)", testCase, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }

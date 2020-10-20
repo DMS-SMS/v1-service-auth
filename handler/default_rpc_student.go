@@ -82,15 +82,14 @@ func (h _default) ChangeStudentPW(ctx context.Context, req *proto.ChangeStudentP
 		return
 	}
 
-	if !studentUUIDRegex.MatchString(req.StudentUUID) {
+	switch true {
+	case studentUUIDRegex.MatchString(req.StudentUUID) && req.UUID == req.StudentUUID:
+		break
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	default:
 		resp.Status = http.StatusForbidden
-		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "this API is for students only")
-		return
-	}
-
-	if req.UUID != req.StudentUUID {
-		resp.Status = http.StatusForbidden
-		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not your auth, uuid: " + req.StudentUUID)
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not student or admin uuid OR not your student uuid")
 		return
 	}
 
@@ -163,15 +162,14 @@ func (h _default) GetStudentInformWithUUID(ctx context.Context, req *proto.GetSt
 		return
 	}
 
-	if !studentUUIDRegex.MatchString(req.UUID) {
+	switch true {
+	case studentUUIDRegex.MatchString(req.StudentUUID) && req.UUID == req.StudentUUID:
+		break
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	default:
 		resp.Status = http.StatusForbidden
-		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "this API is for students only")
-		return
-	}
-
-	if req.UUID != req.StudentUUID {
-		resp.Status = http.StatusForbidden
-		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not your auth, uuid: " + req.StudentUUID)
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not student or admin uuid OR not your student uuid")
 		return
 	}
 

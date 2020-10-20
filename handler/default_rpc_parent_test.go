@@ -15,7 +15,6 @@ import (
 )
 
 func Test_default_LoginParentAuth(t *testing.T) {
-	newMock, defaultHandler := generateVarForTest()
 	hashedByte, _ := bcrypt.GenerateFromPassword([]byte("testPW"), 1)
 
 	tests := []test.LoginParentAuthCase{
@@ -84,6 +83,8 @@ func Test_default_LoginParentAuth(t *testing.T) {
 	}
 
 	for _, testCase := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		testCase.ChangeEmptyValueToValidValue()
 		testCase.ChangeEmptyReplaceValueToEmptyValue()
 		testCase.OnExpectMethods(newMock)
@@ -98,13 +99,12 @@ func Test_default_LoginParentAuth(t *testing.T) {
 		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, testCase.ExpectedLoggedInParentUUID, resp.LoggedInParentUUID, "logged in uuid assertion error (test case: %v, message: %s)", testCase, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }
 
 func Test_default_ChangeParentPW(t *testing.T) {
-	newMock, defaultHandler := generateVarForTest()
 	hashedTestPW, _ := bcrypt.GenerateFromPassword([]byte("testPW"), 1)
 
 	tests := []test.ChangeParentPWCase{
@@ -163,7 +163,7 @@ func Test_default_ChangeParentPW(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusNotFound,
 		}, { // 현재 Password 불일치
-			UUID:       "parent-111111111116",
+			UUID:       "admin-111111111111",
 			ParentUUID: "parent-111111111116",
 			CurrentPW:  "IncorrectPassword",
 			RevisionPW: "NewPassword",
@@ -189,7 +189,7 @@ func Test_default_ChangeParentPW(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // ChangeParentPW 에러 반환
-			UUID:       "parent-111111111118",
+			UUID:       "admin-111111111112",
 			ParentUUID: "parent-111111111118",
 			CurrentPW:  "testPW",
 			RevisionPW: "NewPassword",
@@ -221,6 +221,8 @@ func Test_default_ChangeParentPW(t *testing.T) {
 	}
 
 	for _, testCase := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		testCase.ChangeEmptyValueToValidValue()
 		testCase.ChangeEmptyReplaceValueToEmptyValue()
 		testCase.OnExpectMethods(newMock)
@@ -234,13 +236,12 @@ func Test_default_ChangeParentPW(t *testing.T) {
 
 		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }
 
 func Test_default_GetParentInformWithUUID(t *testing.T) {
-	newMock, defaultHandler := generateVarForTest()
 	now := time.Now()
 
 	tests := []test.GetParentInformWithUUIDCase{
@@ -293,7 +294,7 @@ func Test_default_GetParentInformWithUUID(t *testing.T) {
 			ExpectedStatus: http.StatusForbidden,
 			ExpectedInform: &model.ParentInform{},
 		}, { // no exist parent uuid
-			UUID:       "parent-111111111115",
+			UUID:       "admin-111111111111",
 			ParentUUID: "parent-111111111115",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                 {},
@@ -303,7 +304,7 @@ func Test_default_GetParentInformWithUUID(t *testing.T) {
 			ExpectedStatus: http.StatusNotFound,
 			ExpectedInform: &model.ParentInform{},
 		}, { // GetParentInformWithUUID error return
-			UUID:       "parent-111111111116",
+			UUID:       "admin-111111111112",
 			ParentUUID: "parent-111111111116",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                 {},
@@ -316,6 +317,8 @@ func Test_default_GetParentInformWithUUID(t *testing.T) {
 	}
 
 	for _, testCase := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		testCase.ChangeEmptyValueToValidValue()
 		testCase.ChangeEmptyReplaceValueToEmptyValue()
 		testCase.OnExpectMethods(newMock)
@@ -335,14 +338,12 @@ func Test_default_GetParentInformWithUUID(t *testing.T) {
 		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, testCase.ExpectedInform, resultInform, "result inform assertion error (test case: %v, message: %s)", testCase, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }
 
 func Test_default_GetParentUUIDsWithInform(t *testing.T) {
-	newMock, defaultHandler := generateVarForTest()
-
 	tests := []test.GetParentUUIDsWithInformCase{
 		{ // success case (for admin auth)
 			UUID: "admin-111111111111",
@@ -388,7 +389,7 @@ func Test_default_GetParentUUIDsWithInform(t *testing.T) {
 			UUID:           "student-111111111111",
 			ExpectedStatus: http.StatusForbidden,
 		}, { // no exist parent uuid with that inform
-			UUID:        "parent-111111111111",
+			UUID:        "admin-111111111111",
 			PhoneNumber: "01011111111",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
@@ -398,7 +399,7 @@ func Test_default_GetParentUUIDsWithInform(t *testing.T) {
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   code.ParentWithThatInformNoExist,
 		}, { // GetParentUUIDsWithInform error return
-			UUID:        "parent-111111111111",
+			UUID:        "admin-111111111112",
 			PhoneNumber: "01012341234",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
@@ -410,6 +411,8 @@ func Test_default_GetParentUUIDsWithInform(t *testing.T) {
 	}
 
 	for _, testCase := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		testCase.ChangeEmptyValueToValidValue()
 		testCase.ChangeEmptyReplaceValueToEmptyValue()
 		testCase.OnExpectMethods(newMock)
@@ -424,7 +427,7 @@ func Test_default_GetParentUUIDsWithInform(t *testing.T) {
 		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, testCase.ExpectedParentUUIDs, resp.ParentUUIDs, "result parentUUIDs assertion error (test case: %v, message: %s)", testCase, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }

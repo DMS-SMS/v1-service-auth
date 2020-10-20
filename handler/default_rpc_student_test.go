@@ -15,7 +15,6 @@ import (
 )
 
 func Test_default_LoginStudentAuth(t *testing.T) {
-	newMock, defaultHandler := generateVarForTest()
 	hashedByte, _ := bcrypt.GenerateFromPassword([]byte("testPW"), 1)
 
 	tests := []test.LoginStudentAuthCase{
@@ -86,6 +85,8 @@ func Test_default_LoginStudentAuth(t *testing.T) {
 	}
 
 	for _, testCase := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		testCase.ChangeEmptyValueToValidValue()
 		testCase.ChangeEmptyReplaceValueToEmptyValue()
 		testCase.OnExpectMethods(newMock)
@@ -100,14 +101,12 @@ func Test_default_LoginStudentAuth(t *testing.T) {
 		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, testCase.ExpectedLoggedInStudentUUID, resp.LoggedInStudentUUID, "student uuid assertion error (test case: %v, message: %s)", testCase, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }
 
 func Test_default_ChangeStudentPW(t *testing.T) {
-	newMock, defaultHandler := generateVarForTest()
-
 	hashedTestPW1, _ := bcrypt.GenerateFromPassword([]byte("testPW1"), 1)
 	hashedTestPW2, _ := bcrypt.GenerateFromPassword([]byte("testPW2"), 1)
 
@@ -167,7 +166,7 @@ func Test_default_ChangeStudentPW(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusNotFound,
 		}, { // 현재 Password 불일치
-			UUID:        "student-111111111116",
+			UUID:        "admin-111111111111",
 			StudentUUID: "student-111111111116",
 			CurrentPW:   "testPW1",
 			RevisionPW:  "NewPassword",
@@ -193,7 +192,7 @@ func Test_default_ChangeStudentPW(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // ChangeStudentPW 에러 반환
-			UUID:        "student-111111111118",
+			UUID:        "admin-111111111112",
 			StudentUUID: "student-111111111118",
 			CurrentPW:   "testPW1",
 			RevisionPW:  "NewPassword",
@@ -225,6 +224,8 @@ func Test_default_ChangeStudentPW(t *testing.T) {
 	}
 
 	for _, testCase := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		testCase.ChangeEmptyValueToValidValue()
 		testCase.ChangeEmptyReplaceValueToEmptyValue()
 		testCase.OnExpectMethods(newMock)
@@ -238,13 +239,12 @@ func Test_default_ChangeStudentPW(t *testing.T) {
 
 		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }
 
 func Test_default_GetStudentInformWithUUID(t *testing.T) {
-	newMock, defaultHandler := generateVarForTest()
 	now := time.Now()
 
 	tests := []test.GetStudentInformWithUUIDCase{
@@ -305,7 +305,7 @@ func Test_default_GetStudentInformWithUUID(t *testing.T) {
 			ExpectedStatus: http.StatusForbidden,
 			ExpectedInform: &model.StudentInform{},
 		}, { // no exist student uuid
-			UUID:        "student-111111111115",
+			UUID:        "admin-111111111111",
 			StudentUUID: "student-111111111115",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
@@ -315,7 +315,7 @@ func Test_default_GetStudentInformWithUUID(t *testing.T) {
 			ExpectedStatus: http.StatusNotFound,
 			ExpectedInform: &model.StudentInform{},
 		}, { // GetStudentInformWithUUID error return
-			UUID:        "student-111111111116",
+			UUID:        "admin-111111111112",
 			StudentUUID: "student-111111111116",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
@@ -328,6 +328,8 @@ func Test_default_GetStudentInformWithUUID(t *testing.T) {
 	}
 
 	for _, testCase := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		testCase.ChangeEmptyValueToValidValue()
 		testCase.ChangeEmptyReplaceValueToEmptyValue()
 		testCase.OnExpectMethods(newMock)
@@ -351,14 +353,12 @@ func Test_default_GetStudentInformWithUUID(t *testing.T) {
 		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, testCase.ExpectedInform, resultInform, "result inform assertion error (test case: %v, message: %s)", testCase, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }
 
 func Test_default_GetStudentUUIDsWithInform(t *testing.T) {
-	newMock, defaultHandler := generateVarForTest()
-
 	tests := []test.GetStudentUUIDsWithInformCase{
 		{ // success case (for admin auth)
 			UUID: "admin-111111111111",
@@ -429,6 +429,8 @@ func Test_default_GetStudentUUIDsWithInform(t *testing.T) {
 	}
 
 	for _, testCase := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		testCase.ChangeEmptyValueToValidValue()
 		testCase.ChangeEmptyReplaceValueToEmptyValue()
 		testCase.OnExpectMethods(newMock)
@@ -443,9 +445,9 @@ func Test_default_GetStudentUUIDsWithInform(t *testing.T) {
 		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, testCase.ExpectedStudentUUIDs, resp.StudentUUIDs, "result studentUUIDs assertion error (test case: %v, message: %s)", testCase, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }
 
 func Test_default_GetStudentInformsWithUUIDs(t *testing.T) {
@@ -521,7 +523,7 @@ func Test_default_GetStudentInformsWithUUIDs(t *testing.T) {
 			StudentUUIDs:   []string{"student-111111111112"},
 			ExpectedStatus: http.StatusForbidden,
 		}, { // no exist student uuid
-			UUID:         "student-111111111115",
+			UUID:         "admin-111111111111",
 			StudentUUIDs: []string{"student-111111111115", "student-111111111111"},
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
@@ -540,7 +542,7 @@ func Test_default_GetStudentInformsWithUUIDs(t *testing.T) {
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   code.StudentUUIDsContainNoExistUUID,
 		}, { // GetStudentInformWithUUID error return
-			UUID:         "student-111111111116",
+			UUID:         "admin-111111111112",
 			StudentUUIDs: []string{},
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                    {},

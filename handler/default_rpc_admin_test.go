@@ -34,7 +34,6 @@ import (
 
 func Test_default_CreateNewStudent(t *testing.T) {
 	const studentUUIDRegexString = "^student-\\d{12}"
-	newMock, defaultHandler := generateVarForTest()
 
 	tests := []test.CreateNewStudentCase{
 		{ // success case
@@ -232,6 +231,8 @@ func Test_default_CreateNewStudent(t *testing.T) {
 	}
 
 	for _, createNewStudentTest := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		createNewStudentTest.ChangeEmptyValueToValidValue()
 		createNewStudentTest.ChangeEmptyReplaceValueToEmptyValue()
 		createNewStudentTest.OnExpectMethodsTo(newMock)
@@ -247,14 +248,13 @@ func Test_default_CreateNewStudent(t *testing.T) {
 		assert.Equalf(t, int(createNewStudentTest.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", createNewStudentTest, resp.Message)
 		assert.Equalf(t, createNewStudentTest.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", createNewStudentTest, resp.Message)
 		assert.Regexpf(t, createNewStudentTest.ExpectedStudentUUID, resp.CreatedStudentUUID, "student uuid assertion error (test case: %v, message: %s)", createNewStudentTest, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }
 
 func Test_default_CreateNewTeacher(t *testing.T) {
 	const teacherUUIDRegexString = "^teacher-\\d{12}"
-	newMock, defaultHandler := generateVarForTest()
 
 	tests := []test.CreateNewTeacherCase{
 		{ // success case
@@ -401,6 +401,8 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 	}
 
 	for _, createNewTeacherTest := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		createNewTeacherTest.ChangeEmptyValueToValidValue()
 		createNewTeacherTest.ChangeEmptyReplaceValueToEmptyValue()
 		createNewTeacherTest.OnExpectMethodsTo(newMock)
@@ -415,14 +417,13 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 		assert.Equalf(t, int(createNewTeacherTest.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", createNewTeacherTest, resp.Message)
 		assert.Equalf(t, createNewTeacherTest.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", createNewTeacherTest, resp.Message)
 		assert.Regexpf(t, createNewTeacherTest.ExpectedStudentUUID, resp.CreatedTeacherUUID, "teacher uuid assertion error (test case: %v, message: %s)", createNewTeacherTest, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }
 
 func Test_default_CreateNewParent(t *testing.T) {
 	const parentUUIDRegexString = "^parent-\\d{12}"
-	newMock, defaultHandler := generateVarForTest()
 
 	tests := []test.CreateNewParentCase{
 		{ // success case
@@ -557,6 +558,8 @@ func Test_default_CreateNewParent(t *testing.T) {
 	}
 
 	for _, createNewParentTest := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		createNewParentTest.ChangeEmptyValueToValidValue()
 		createNewParentTest.ChangeEmptyReplaceValueToEmptyValue()
 		createNewParentTest.OnExpectMethodsTo(newMock)
@@ -571,13 +574,12 @@ func Test_default_CreateNewParent(t *testing.T) {
 		assert.Equalf(t, int(createNewParentTest.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", createNewParentTest, resp.Message)
 		assert.Equalf(t, createNewParentTest.ExpectedCode, resp.Code, "code assertion error (test case: %v, message: %s)", createNewParentTest, resp.Message)
 		assert.Regexpf(t, createNewParentTest.ExpectedStudentUUID, resp.CreatedParentUUID, "parent uuid assertion error (test case: %v, message: %s)", createNewParentTest, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }
 
 func Test_default_LoginAdminAuth(t *testing.T) {
-	newMock, defaultHandler := generateVarForTest()
 	hashedByte, _ := bcrypt.GenerateFromPassword([]byte("testPW"), 1)
 
 	tests := []test.LoginAdminAuthCase{
@@ -646,6 +648,8 @@ func Test_default_LoginAdminAuth(t *testing.T) {
 	}
 
 	for _, testCase := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		testCase.ChangeEmptyValueToValidValue()
 		testCase.ChangeEmptyReplaceValueToEmptyValue()
 		testCase.OnExpectMethods(newMock)
@@ -660,7 +664,7 @@ func Test_default_LoginAdminAuth(t *testing.T) {
 		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, testCase.ExpectedLoggedInAdminUUID, resp.LoggedInAdminUUID, "logged in uuid assertion error (test case: %v, message: %s)", testCase, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }

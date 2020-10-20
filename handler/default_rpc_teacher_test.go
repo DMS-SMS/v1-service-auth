@@ -15,7 +15,6 @@ import (
 )
 
 func Test_default_LoginTeacherAuth(t *testing.T) {
-	newMock, defaultHandler := generateVarForTest()
 	hashedByte, _ := bcrypt.GenerateFromPassword([]byte("testPW"), 1)
 
 	tests := []test.LoginTeacherAuthCase{
@@ -84,6 +83,8 @@ func Test_default_LoginTeacherAuth(t *testing.T) {
 	}
 
 	for _, testCase := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		testCase.ChangeEmptyValueToValidValue()
 		testCase.ChangeEmptyReplaceValueToEmptyValue()
 		testCase.OnExpectMethods(newMock)
@@ -98,13 +99,12 @@ func Test_default_LoginTeacherAuth(t *testing.T) {
 		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, testCase.ExpectedLoggedInTeacherUUID, resp.LoggedInTeacherUUID, "logged in uuid assertion error (test case: %v, message: %s)", testCase, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }
 
 func Test_default_ChangeTeacherPW(t *testing.T) {
-	newMock, defaultHandler := generateVarForTest()
 	hashedTestPW, _ := bcrypt.GenerateFromPassword([]byte("testPW"), 1)
 
 	tests := []test.ChangeTeacherPWCase{
@@ -178,7 +178,7 @@ func Test_default_ChangeTeacherPW(t *testing.T) {
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   code.IncorrectTeacherPWForChange,
 		}, { // GetStudentAuthWithUUID 에러 반환
-			UUID:        "teacher-111111111117",
+			UUID:        "admin-111111111111",
 			TeacherUUID: "teacher-111111111117",
 			CurrentPW:   "testPW",
 			RevisionPW:  "NewPassword",
@@ -204,7 +204,7 @@ func Test_default_ChangeTeacherPW(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // GetStudentAuthWithUUID Short Hashed PW 반환
-			UUID:        "teacher-111111111119",
+			UUID:        "admin-111111111112",
 			TeacherUUID: "teacher-111111111119",
 			CurrentPW:   "testPW",
 			RevisionPW:  "NewPassword",
@@ -221,6 +221,8 @@ func Test_default_ChangeTeacherPW(t *testing.T) {
 	}
 
 	for _, testCase := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		testCase.ChangeEmptyValueToValidValue()
 		testCase.ChangeEmptyReplaceValueToEmptyValue()
 		testCase.OnExpectMethods(newMock)
@@ -234,13 +236,12 @@ func Test_default_ChangeTeacherPW(t *testing.T) {
 
 		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }
 
 func Test_default_GetTeacherInformWithUUID(t *testing.T) {
-	newMock, defaultHandler := generateVarForTest()
 	now := time.Now()
 
 	tests := []test.GetTeacherInformWithUUIDCase{
@@ -297,7 +298,7 @@ func Test_default_GetTeacherInformWithUUID(t *testing.T) {
 			ExpectedStatus: http.StatusForbidden,
 			ExpectedInform: &model.TeacherInform{},
 		}, { // no exist student uuid
-			UUID:        "teacher-111111111115",
+			UUID:        "admin-111111111111",
 			TeacherUUID: "teacher-111111111115",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
@@ -307,7 +308,7 @@ func Test_default_GetTeacherInformWithUUID(t *testing.T) {
 			ExpectedStatus: http.StatusNotFound,
 			ExpectedInform: &model.TeacherInform{},
 		}, { // GetStudentInformWithUUID error return
-			UUID:        "teacher-111111111116",
+			UUID:        "admin-111111111112",
 			TeacherUUID: "teacher-111111111116",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
@@ -320,6 +321,8 @@ func Test_default_GetTeacherInformWithUUID(t *testing.T) {
 	}
 
 	for _, testCase := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		testCase.ChangeEmptyValueToValidValue()
 		testCase.ChangeEmptyReplaceValueToEmptyValue()
 		testCase.OnExpectMethods(newMock)
@@ -341,14 +344,12 @@ func Test_default_GetTeacherInformWithUUID(t *testing.T) {
 		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, testCase.ExpectedInform, resultInform, "result inform assertion error (test case: %v, message: %s)", testCase, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }
 
 func Test_default_GetTeacherUUIDsWithInform(t *testing.T) {
-	newMock, defaultHandler := generateVarForTest()
-
 	tests := []test.GetTeacherUUIDsWithInformCase{
 		{ // success case (for admin auth)
 			UUID: "admin-111111111111",
@@ -395,7 +396,7 @@ func Test_default_GetTeacherUUIDsWithInform(t *testing.T) {
 			UUID:           "student-111111111111",
 			ExpectedStatus: http.StatusForbidden,
 		}, { // no exist parent uuid with that inform
-			UUID:  "teacher-111111111111",
+			UUID:  "admin-111111111111",
 			Class: 2,
 			Grade: 12,
 			ExpectedMethods: map[test.Method]test.Returns{
@@ -406,7 +407,7 @@ func Test_default_GetTeacherUUIDsWithInform(t *testing.T) {
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   code.TeacherWithThatInformNoExist,
 		}, { // GetTeacherUUIDsWithInform error return
-			UUID: "teacher-111111111111",
+			UUID: "admin-111111111111",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                   {},
 				"GetTeacherUUIDsWithInform": {[]string{}, errors.New("I don't know about that error")},
@@ -417,6 +418,8 @@ func Test_default_GetTeacherUUIDsWithInform(t *testing.T) {
 	}
 
 	for _, testCase := range tests {
+		newMock, defaultHandler := generateVarForTest()
+
 		testCase.ChangeEmptyValueToValidValue()
 		testCase.ChangeEmptyReplaceValueToEmptyValue()
 		testCase.OnExpectMethods(newMock)
@@ -431,7 +434,7 @@ func Test_default_GetTeacherUUIDsWithInform(t *testing.T) {
 		assert.Equalf(t, int(testCase.ExpectedStatus), int(resp.Status), "status assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, int(testCase.ExpectedCode), int(resp.Code), "code assertion error (test case: %v, message: %s)", testCase, resp.Message)
 		assert.Equalf(t, testCase.ExpectedTeacherUUIDs, resp.TeacherUUIDs, "result teacherUUIDs assertion error (test case: %v, message: %s)", testCase, resp.Message)
-	}
 
-	newMock.AssertExpectations(t)
+		newMock.AssertExpectations(t)
+	}
 }

@@ -7,55 +7,51 @@ import (
 	"auth/handler"
 	proto "auth/proto/golang/auth"
 	"auth/tool/closure"
-	topic "auth/utils/topic/golang"
 	"fmt"
-	"github.com/InVisionApp/go-health/v2"
-	"github.com/InVisionApp/go-health/v2/checkers"
 	"github.com/hashicorp/consul/api"
 	"github.com/micro/go-micro/v2"
 	log "github.com/micro/go-micro/v2/logger"
 	"github.com/micro/go-micro/v2/transport/grpc"
-	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	"math/rand"
 	"net"
 	"os"
-	"time"
 )
 
 func main() {
-	// create consul connection
-	consulAddr := os.Getenv("CONSUL_ADDRESS")
-	if consulAddr == "" {
-		log.Fatal("please set CONSUL_ADDRESS in environment variable")
-	}
 	consulCfg := api.DefaultConfig()
-	consulCfg.Address = consulAddr
+	if addr := os.Getenv("CONSUL_ADDRESS"); addr != "" {
+		consulCfg.Address = addr
+	}
+
 	consul, err := api.NewClient(consulCfg)
 	if err != nil {
 		log.Fatalf("consul connect fail, err: %v", err)
 	}
 
-	// create db access manager
 	dbc, _, err := adapter.ConnectDBWithConsul(consul, "db/auth/local")
 	if err != nil {
 		log.Fatalf("db connect fail, err: %v", err)
 	}
 	db.Migrate(dbc)
+
 	defaultAccessManage, err := db.NewAccessorManage(access.Default(dbc))
 	if err != nil {
 		log.Fatalf("db accessor create fail, err: %v", err)
 	}
 
-	// create jaeger connection
-	jaegerAddr := os.Getenv("JAEGER_ADDRESS")
-	if jaegerAddr == "" {
-		log.Fatal("please set JAEGER_ADDRESS in environment variable")
+	// 이 부분은 나중에 Consul 조회로 변경 예
+	agentHost := "localhost:6831"
+	if addr := os.Getenv("JAEGER_ADDRESS"); addr != "" {
+		agentHost = addr
 	}
+
 	authSrvTracer, closer, err := jaegercfg.Configuration{
-		ServiceName: topic.AuthServiceName,
-		Reporter:    &jaegercfg.ReporterConfig{LogSpans: true, LocalAgentHostPort: jaegerAddr},
-		Sampler:     &jaegercfg.SamplerConfig{Type: jaeger.SamplerTypeConst, Param: 1},
+		ServiceName: "DMS.SMS.v1.service.auth",
+		Reporter: &jaegercfg.ReporterConfig{
+			LogSpans:           true,
+			LocalAgentHostPort: agentHost,
+		},
 	}.NewTracer()
 	if err != nil {
 		log.Fatalf("error while creating new tracer for service, err: %v", err)
@@ -64,56 +60,32 @@ func main() {
 		_ = closer.Close()
 	}()
 
-	// create gRPC handler
 	rpcHandler := handler.Default(
 		handler.AWSSession(nil),
 		handler.Manager(defaultAccessManage),
 		handler.Tracer(authSrvTracer),
 	)
 
-	// create service
 	port := getRandomPortNotInUsedWithRange(10000, 10100)
 	service := micro.NewService(
-		micro.Name(topic.AuthServiceName),
-		micro.Version("1.0.6"),
+		micro.Name("DMS.SMS.v1.service.auth"),
+		micro.Version("1.0.0"),
 		micro.Transport(grpc.NewTransport()),
 		micro.Address(fmt.Sprintf(":%d", port)),
 	)
 
-	// register initializer for service
 	service.Init(
 		micro.AfterStart(closure.ConsulServiceRegistrar(service.Server(), consul)),
 		micro.BeforeStop(closure.ConsulServiceDeregistrar(service.Server(), consul)),
 	)
 
-	// register gRPC handler in service
 	_ = proto.RegisterAuthAdminHandler(service.Server(), rpcHandler)
 	_ = proto.RegisterAuthStudentHandler(service.Server(), rpcHandler)
 	_ = proto.RegisterAuthTeacherHandler(service.Server(), rpcHandler)
 	_ = proto.RegisterAuthParentHandler(service.Server(), rpcHandler)
 
-	// run DB Health checker
-	h := health.New()
-	dbChecker, err := checkers.NewSQL(&checkers.SQLConfig{
-		Pinger: dbc.DB(),
-	})
-	if err != nil {
-		log.Fatalf("unable to create sql health checker, err: %v", err)
-	}
-	dbHealthCfg := &health.Config{
-		Name:       "DB-Checker",
-		Checker:    dbChecker,
-		Interval:   time.Second * 5,
-		OnComplete: closure.TTLCheckHandlerAboutDB(service.Server(), consul),
-	}
-	if err = h.AddChecks([]*health.Config{dbHealthCfg}); err != nil {
-		log.Fatalf("unable to register health checks, err: %v", err)
-	}
-	if err = h.Start(); err != nil {
-		log.Fatalf("unable to start health checks, err: %v", err)
-	}
+	// health checker 실행 추가
 
-	// run service
 	if err := service.Run(); err != nil {
 		log.Fatal(err)
 	}

@@ -66,7 +66,7 @@ func (d *_default) GetStudentUUIDsWithInform(inform *model.StudentInform) (uuidA
 	informs := make([]*model.StudentInform, 1, 3)
 	err = cascadeTx.Find(&informs).Error
 
-	if len(informs) == 0 {
+	if len(informs) == 0 && err == nil {
 		err = gorm.ErrRecordNotFound
 	}
 
@@ -103,7 +103,7 @@ func (d *_default) GetTeacherUUIDsWithInform(inform *model.TeacherInform) (uuidA
 	informs := make([]*model.TeacherInform, 1, 3)
 	err = cascadeTx.Find(&informs).Error
 
-	if len(informs) == 0 {
+	if len(informs) == 0 && err == nil {
 		err = gorm.ErrRecordNotFound
 	}
 
@@ -123,7 +123,7 @@ func (d *_default) GetParentUUIDsWithInform(inform *model.ParentInform) (uuidArr
 	informs := make([]*model.ParentInform, 1, 3)
 	err = cascadeTx.Find(&informs).Error
 
-	if len(informs) == 0 {
+	if len(informs) == 0 && err == nil {
 		err = gorm.ErrRecordNotFound
 	}
 

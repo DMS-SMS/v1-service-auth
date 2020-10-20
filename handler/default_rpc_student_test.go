@@ -167,7 +167,7 @@ func Test_default_ChangeStudentPW(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusNotFound,
 		}, { // 현재 Password 불일치
-			UUID:        "student-111111111116",
+			UUID:        "admin-111111111111",
 			StudentUUID: "student-111111111116",
 			CurrentPW:   "testPW1",
 			RevisionPW:  "NewPassword",
@@ -193,7 +193,7 @@ func Test_default_ChangeStudentPW(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // ChangeStudentPW 에러 반환
-			UUID:        "student-111111111118",
+			UUID:        "admin-111111111112",
 			StudentUUID: "student-111111111118",
 			CurrentPW:   "testPW1",
 			RevisionPW:  "NewPassword",
@@ -305,7 +305,7 @@ func Test_default_GetStudentInformWithUUID(t *testing.T) {
 			ExpectedStatus: http.StatusForbidden,
 			ExpectedInform: &model.StudentInform{},
 		}, { // no exist student uuid
-			UUID:        "student-111111111115",
+			UUID:        "admin-111111111111",
 			StudentUUID: "student-111111111115",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
@@ -315,7 +315,7 @@ func Test_default_GetStudentInformWithUUID(t *testing.T) {
 			ExpectedStatus: http.StatusNotFound,
 			ExpectedInform: &model.StudentInform{},
 		}, { // GetStudentInformWithUUID error return
-			UUID:        "student-111111111116",
+			UUID:        "admin-111111111112",
 			StudentUUID: "student-111111111116",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
@@ -521,7 +521,7 @@ func Test_default_GetStudentInformsWithUUIDs(t *testing.T) {
 			StudentUUIDs:   []string{"student-111111111112"},
 			ExpectedStatus: http.StatusForbidden,
 		}, { // no exist student uuid
-			UUID:         "student-111111111115",
+			UUID:         "admin-111111111111",
 			StudentUUIDs: []string{"student-111111111115", "student-111111111111"},
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx": {},
@@ -540,7 +540,7 @@ func Test_default_GetStudentInformsWithUUIDs(t *testing.T) {
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   code.StudentUUIDsContainNoExistUUID,
 		}, { // GetStudentInformWithUUID error return
-			UUID:         "student-111111111116",
+			UUID:         "admin-111111111112",
 			StudentUUIDs: []string{},
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                    {},

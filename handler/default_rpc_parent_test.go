@@ -163,7 +163,7 @@ func Test_default_ChangeParentPW(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusNotFound,
 		}, { // 현재 Password 불일치
-			UUID:       "parent-111111111116",
+			UUID:       "admin-111111111111",
 			ParentUUID: "parent-111111111116",
 			CurrentPW:  "IncorrectPassword",
 			RevisionPW: "NewPassword",
@@ -189,7 +189,7 @@ func Test_default_ChangeParentPW(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusInternalServerError,
 		}, { // ChangeParentPW 에러 반환
-			UUID:       "parent-111111111118",
+			UUID:       "admin-111111111112",
 			ParentUUID: "parent-111111111118",
 			CurrentPW:  "testPW",
 			RevisionPW: "NewPassword",
@@ -293,7 +293,7 @@ func Test_default_GetParentInformWithUUID(t *testing.T) {
 			ExpectedStatus: http.StatusForbidden,
 			ExpectedInform: &model.ParentInform{},
 		}, { // no exist parent uuid
-			UUID:       "parent-111111111115",
+			UUID:       "admin-111111111111",
 			ParentUUID: "parent-111111111115",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                 {},
@@ -303,7 +303,7 @@ func Test_default_GetParentInformWithUUID(t *testing.T) {
 			ExpectedStatus: http.StatusNotFound,
 			ExpectedInform: &model.ParentInform{},
 		}, { // GetParentInformWithUUID error return
-			UUID:       "parent-111111111116",
+			UUID:       "admin-111111111112",
 			ParentUUID: "parent-111111111116",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                 {},
@@ -388,7 +388,7 @@ func Test_default_GetParentUUIDsWithInform(t *testing.T) {
 			UUID:           "student-111111111111",
 			ExpectedStatus: http.StatusForbidden,
 		}, { // no exist parent uuid with that inform
-			UUID:        "parent-111111111111",
+			UUID:        "admin-111111111111",
 			PhoneNumber: "01011111111",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
@@ -398,7 +398,7 @@ func Test_default_GetParentUUIDsWithInform(t *testing.T) {
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   code.ParentWithThatInformNoExist,
 		}, { // GetParentUUIDsWithInform error return
-			UUID:        "parent-111111111111",
+			UUID:        "admin-111111111112",
 			PhoneNumber: "01012341234",
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},

@@ -82,15 +82,14 @@ func (h _default) ChangeParentPW(ctx context.Context, req *proto.ChangeParentPWR
 		return
 	}
 
-	if !parentUUIDRegex.MatchString(req.ParentUUID) {
+	switch true {
+	case parentUUIDRegex.MatchString(req.ParentUUID) && req.UUID == req.ParentUUID:
+		break
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	default:
 		resp.Status = http.StatusForbidden
-		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "this API is for parents only")
-		return
-	}
-
-	if req.UUID != req.ParentUUID {
-		resp.Status = http.StatusForbidden
-		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not your auth, uuid: " + req.ParentUUID)
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not parent or admin uuid OR not your student uuid")
 		return
 	}
 
@@ -163,15 +162,14 @@ func (h _default) GetParentInformWithUUID(ctx context.Context, req *proto.GetPar
 		return
 	}
 
-	if !parentUUIDRegex.MatchString(req.UUID) {
+	switch true {
+	case parentUUIDRegex.MatchString(req.ParentUUID) && req.UUID == req.ParentUUID:
+		break
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	default:
 		resp.Status = http.StatusForbidden
-		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "this API is for parents only")
-		return
-	}
-
-	if req.UUID != req.ParentUUID {
-		resp.Status = http.StatusForbidden
-		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not your auth, uuid: " + req.ParentUUID)
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not parent or admin uuid OR not your student uuid")
 		return
 	}
 

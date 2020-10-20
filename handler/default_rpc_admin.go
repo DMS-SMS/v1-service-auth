@@ -90,13 +90,11 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 	switch assertedError := err.(type) {
 	case nil:
 		break
-
 	case validator.ValidationErrors:
 		access.Rollback()
 		resp.Status = http.StatusProxyAuthRequired
 		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for student auth model, err: " + err.Error())
 		return
-
 	case *mysql.MySQLError:
 		access.Rollback()
 		switch assertedError.Number {
@@ -139,6 +137,11 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected CreateStudentAuth error, err: " + assertedError.Error())
 			return
 		}
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "CreateStudentAuth returns unexpected type of error, err: " + assertedError.Error())
+		return
 	}
 
 	if string(req.Image) == "" {
@@ -181,13 +184,11 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 	switch assertedError := err.(type) {
 	case nil:
 		break
-
 	case validator.ValidationErrors:
 		access.Rollback()
 		resp.Status = http.StatusProxyAuthRequired
 		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for student inform, err: " + err.Error())
 		return
-
 	case *mysql.MySQLError:
 		access.Rollback()
 		switch assertedError.Number {
@@ -217,6 +218,11 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected CreateStudentInform error, err: " + assertedError.Error())
 			return
 		}
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "CreateStudentInform returns unexpected type of error, err: " + assertedError.Error())
+		return
 	}
 
 	access.Commit()
@@ -294,13 +300,11 @@ func (h _default) CreateNewTeacher(ctx context.Context, req *proto.CreateNewTeac
 	switch assertedError := err.(type) {
 	case nil:
 		break
-
 	case validator.ValidationErrors:
 		access.Rollback()
 		resp.Status = http.StatusProxyAuthRequired
 		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for teacher auth model, err: " + err.Error())
 		return
-
 	case *mysql.MySQLError:
 		access.Rollback()
 		switch assertedError.Number {
@@ -326,6 +330,11 @@ func (h _default) CreateNewTeacher(ctx context.Context, req *proto.CreateNewTeac
 			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected CreateTeacberAuth error, err: " + assertedError.Error())
 			return
 		}
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "CreateTeacberAuth returns unexpected type of error, err: " + assertedError.Error())
+		return
 	}
 
 	spanForDB = h.tracer.StartSpan("CreateTeacherInform", opentracing.ChildOf(parentSpan))
@@ -342,13 +351,11 @@ func (h _default) CreateNewTeacher(ctx context.Context, req *proto.CreateNewTeac
 	switch assertedError := err.(type) {
 	case nil:
 		break
-
 	case validator.ValidationErrors:
 		access.Rollback()
 		resp.Status = http.StatusProxyAuthRequired
 		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for teacher inform, err: " + err.Error())
 		return
-
 	case *mysql.MySQLError:
 		access.Rollback()
 		switch assertedError.Number {
@@ -374,6 +381,11 @@ func (h _default) CreateNewTeacher(ctx context.Context, req *proto.CreateNewTeac
 			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected CreateTeacherInform error, err: " + assertedError.Error())
 			return
 		}
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "CreateTeacherInform returns unexpected type of error, err: " + assertedError.Error())
+		return
 	}
 
 	access.Commit()
@@ -451,13 +463,11 @@ func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParen
 	switch assertedError := err.(type) {
 	case nil:
 		break
-
 	case validator.ValidationErrors:
 		access.Rollback()
 		resp.Status = http.StatusProxyAuthRequired
 		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for teacher auth model, err: " + err.Error())
 		return
-
 	case *mysql.MySQLError:
 		access.Rollback()
 		switch assertedError.Number {
@@ -483,6 +493,11 @@ func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParen
 			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected CreateTeacberAuth error, err: " + assertedError.Error())
 			return
 		}
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "CreateParentAuth returns unexpected type of error, err: " + assertedError.Error())
+		return
 	}
 
 	spanForDB = h.tracer.StartSpan("CreateParentInform", opentracing.ChildOf(parentSpan))
@@ -497,13 +512,11 @@ func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParen
 	switch assertedError := err.(type) {
 	case nil:
 		break
-
 	case validator.ValidationErrors:
 		access.Rollback()
 		resp.Status = http.StatusProxyAuthRequired
 		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for teacher inform, err: " + err.Error())
 		return
-
 	case *mysql.MySQLError:
 		access.Rollback()
 		switch assertedError.Number {
@@ -526,9 +539,14 @@ func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParen
 			return
 		default:
 			resp.Status = http.StatusInternalServerError
-			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected CreateTeacherInform error, err: " + assertedError.Error())
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected CreateParentInform error, err: " + assertedError.Error())
 			return
 		}
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "CreateParentInform returns unexpected type of error, err: " + assertedError.Error())
+		return
 	}
 
 	access.Commit()

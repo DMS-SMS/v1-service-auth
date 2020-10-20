@@ -209,6 +209,14 @@ func Test_default_CreateNewStudent(t *testing.T) {
 				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateStudentAuth return unexpected type of error
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, errors.New("unexpected type of error")},
+				"Rollback":               {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateStudentInform return invalid duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                {},
@@ -233,6 +241,15 @@ func Test_default_CreateNewStudent(t *testing.T) {
 				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
 				"CreateStudentAuth":      {&model.StudentAuth{}, nil},
 				"CreateStudentInform":    {&model.StudentInform{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
+				"Rollback":               {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateStudentInform return unexpected type of error
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, nil},
+				"CreateStudentInform":    {&model.StudentInform{}, errors.New("unexpected error")},
 				"Rollback":               {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
@@ -379,6 +396,14 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 				"Rollback":                 {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateTeacherAuth return unexpected type of error
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                  {},
+				"GetTeacherAuthWithUUID":   {&model.TeacherAuth{}, gorm.ErrRecordNotFound},
+				"CreateTeacherAuth":        {&model.TeacherAuth{}, errors.New("unexpected type of error")},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
 		}, { // CreateTeacherInform return invalid duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":                  {},
@@ -403,6 +428,15 @@ func Test_default_CreateNewTeacher(t *testing.T) {
 				"GetTeacherAuthWithUUID":   {&model.TeacherAuth{}, gorm.ErrRecordNotFound},
 				"CreateTeacherAuth":        {&model.TeacherAuth{}, nil},
 				"CreateTeacherInform":      {&model.TeacherInform{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
+				"Rollback":                 {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateTeacherInform return unexpected type of error
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                  {},
+				"GetTeacherAuthWithUUID":   {&model.TeacherAuth{}, gorm.ErrRecordNotFound},
+				"CreateTeacherAuth":        {&model.TeacherAuth{}, nil},
+				"CreateTeacherInform":      {&model.TeacherInform{}, errors.New("unexpected type of error")},
 				"Rollback":                 {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
@@ -512,7 +546,7 @@ func Test_default_CreateNewParent(t *testing.T) {
 				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
-		}, { // CreateTeacherAuth return invalid duplicate error
+		}, { // CreateParentAuth return invalid duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":               {},
 				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
@@ -520,7 +554,7 @@ func Test_default_CreateNewParent(t *testing.T) {
 				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
-		}, { // CreateTeacherAuth return unexpected key duplicate error
+		}, { // CreateParentAuth return unexpected key duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":               {},
 				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
@@ -528,7 +562,7 @@ func Test_default_CreateNewParent(t *testing.T) {
 				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
-		}, { // CreateTeacherAuth return unexpected error code
+		}, { // CreateParentAuth return unexpected error code
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":               {},
 				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
@@ -536,7 +570,15 @@ func Test_default_CreateNewParent(t *testing.T) {
 				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
-		}, { // CreateTeacherInform return invalid duplicate error
+		}, { // CreateParentAuth return unexpected type of error
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":               {},
+				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
+				"CreateParentAuth":      {&model.ParentAuth{}, errors.New("unexpected type of error")},
+				"Rollback":              {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateParentInform return invalid duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":               {},
 				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
@@ -545,7 +587,7 @@ func Test_default_CreateNewParent(t *testing.T) {
 				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
-		}, { // CreateTeacherInform return unexpected duplicate error
+		}, { // CreateParentInform return unexpected duplicate error
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":               {},
 				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
@@ -554,12 +596,21 @@ func Test_default_CreateNewParent(t *testing.T) {
 				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,
-		}, { // CreateTeacherInform return unexpected error code
+		}, { // CreateParentInform return unexpected error code
 			ExpectedMethods: map[test.Method]test.Returns{
 				"BeginTx":               {},
 				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
 				"CreateParentAuth":      {&model.ParentAuth{}, nil},
 				"CreateParentInform":    {&model.ParentInform{}, &mysql.MySQLError{Number: mysqlcode.ER_BAD_NULL_ERROR, Message: "unexpected code"}},
+				"Rollback":              {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusInternalServerError,
+		}, { // CreateParentInform return unexpected error code
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":               {},
+				"GetParentAuthWithUUID": {&model.ParentAuth{}, gorm.ErrRecordNotFound},
+				"CreateParentAuth":      {&model.ParentAuth{}, nil},
+				"CreateParentInform":    {&model.ParentInform{}, errors.New("unexpected type of error")},
 				"Rollback":              {&gorm.DB{}},
 			},
 			ExpectedStatus: http.StatusInternalServerError,

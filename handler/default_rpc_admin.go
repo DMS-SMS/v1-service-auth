@@ -141,6 +141,13 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 		}
 	}
 
+	if string(req.Image) == "" {
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "image is empty byte array")
+		return
+	}
+
 	if h.awsSession != nil {
 		_, err = s3.New(h.awsSession).PutObject(&s3.PutObjectInput{
 			Bucket: aws.String("dms-sms"),

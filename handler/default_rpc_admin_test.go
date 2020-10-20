@@ -115,6 +115,15 @@ func Test_default_CreateNewStudent(t *testing.T) {
 			},
 			ExpectedStatus: http.StatusConflict,
 			ExpectedCode:   code.ParentUUIDNoExist,
+		}, { // image empty byte array
+			Image: []byte(test.EmptyReplaceValueForString),
+			ExpectedMethods: map[test.Method]test.Returns{
+				"BeginTx":                {},
+				"GetStudentAuthWithUUID": {&model.StudentAuth{}, gorm.ErrRecordNotFound},
+				"CreateStudentAuth":      {&model.StudentAuth{}, nil},
+				"Rollback":               {&gorm.DB{}},
+			},
+			ExpectedStatus: http.StatusProxyAuthRequired,
 		}, { // student number duplicate -> Conflict -103
 			Grade:         2,
 			Class:         2,

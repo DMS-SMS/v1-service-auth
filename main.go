@@ -74,8 +74,8 @@ func main() {
 	// create service
 	port := getRandomPortNotInUsedWithRange(10000, 10100)
 	service := micro.NewService(
-		micro.Name(topic.AuthServiceName),
-		micro.Version("1.0.6"),
+		micro.Name("DMS.SMS.v1.service.auth"),
+		micro.Version("1.1.1"),
 		micro.Transport(grpc.NewTransport()),
 		micro.Address(fmt.Sprintf(":%d", port)),
 	)

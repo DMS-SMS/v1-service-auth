@@ -38,7 +38,7 @@ func Migrate(db *gorm.DB) {
 		db.CreateTable(&model.TeacherInform{})
 	}
 
-	db.AutoMigrate(&model.AdminAuth{}, &model.StudentAuth{}, &model.StudentInform{}, &model.ParentAuth{}, &model.ParentInform{}, &model.TeacherAuth{}, &model.TeacherInform{})
+	//db.AutoMigrate(&model.AdminAuth{}, &model.StudentAuth{}, &model.StudentInform{}, &model.ParentAuth{}, &model.ParentInform{}, &model.TeacherAuth{}, &model.TeacherInform{})
 	db.Model(&model.StudentAuth{}).AddForeignKey("parent_uuid", "parent_auths(uuid)", "RESTRICT", "RESTRICT")
 	db.Model(&model.StudentInform{}).AddForeignKey("student_uuid", "student_auths(uuid)", "RESTRICT", "RESTRICT")
 	db.Model(&model.TeacherInform{}).AddForeignKey("teacher_uuid", "teacher_auths(uuid)", "RESTRICT", "RESTRICT")

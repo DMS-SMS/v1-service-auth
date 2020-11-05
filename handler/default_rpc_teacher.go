@@ -12,6 +12,7 @@ import (
 	"github.com/uber/jaeger-client-go"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"reflect"
 )
 
 func (h _default) LoginTeacherAuth(ctx context.Context, req *proto.LoginTeacherAuthRequest, resp *proto.LoginTeacherAuthResponse) (_ error) {
@@ -136,8 +137,9 @@ func (h _default) ChangeTeacherPW(ctx context.Context, req *proto.ChangeTeacherP
 		return
 	}
 
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.RevisionPW), 3)
 	spanForDB = h.tracer.StartSpan("ChangeTeacherPW", opentracing.ChildOf(parentSpan))
-	err = access.ChangeTeacherPW(string(selectedAuth.UUID), req.RevisionPW)
+	err = access.ChangeTeacherPW(string(selectedAuth.UUID), string(hashedBytes))
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
 	spanForDB.Finish()
 
@@ -163,13 +165,17 @@ func (h _default) GetTeacherInformWithUUID(ctx context.Context, req *proto.GetTe
 	}
 
 	switch true {
-	case teacherUUIDRegex.MatchString(req.TeacherUUID) && req.UUID == req.TeacherUUID:
+	case studentUUIDRegex.MatchString(req.UUID):
 		break
 	case adminUUIDRegex.MatchString(req.UUID):
 		break
+	case teacherUUIDRegex.MatchString(req.UUID):
+		break
+	case parentUUIDRegex.MatchString(req.UUID):
+		break
 	default:
 		resp.Status = http.StatusForbidden
-		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not teacher or admin uuid OR not your student uuid")
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not student or admin or teacher or parent uuid")
 		return
 	}
 
@@ -221,16 +227,19 @@ func (h _default) GetTeacherUUIDsWithInform(ctx context.Context, req *proto.GetT
 	}
 
 	switch true {
-	case teacherUUIDRegex.MatchString(req.UUID):
+	case studentUUIDRegex.MatchString(req.UUID):
 		break
 	case adminUUIDRegex.MatchString(req.UUID):
 		break
+	case teacherUUIDRegex.MatchString(req.UUID):
+		break
+	case parentUUIDRegex.MatchString(req.UUID):
+		break
 	default:
 		resp.Status = http.StatusForbidden
-		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "this API is for teachers for admins only")
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not student or admin or teacher or parent uuid")
 		return
 	}
-
 	reqID := ctx.Value("X-Request-Id").(string)
 	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
 
@@ -241,13 +250,20 @@ func (h _default) GetTeacherUUIDsWithInform(ctx context.Context, req *proto.GetT
 		return
 	}
 
-	spanForDB := h.tracer.StartSpan("GetTeacherUUIDsWithInform", opentracing.ChildOf(parentSpan))
-	selectedUUIDs, err := access.GetTeacherUUIDsWithInform(&model.TeacherInform{
+	informToSelect := &model.TeacherInform{
 		Grade:         model.Grade(int64(req.Grade)),
 		Class:         model.Class(int64(req.Group)),
 		Name:          model.Name(req.Name),
 		PhoneNumber:   model.PhoneNumber(req.PhoneNumber),
-	})
+	}
+	if reflect.DeepEqual(informToSelect, &model.TeacherInform{}) {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "bad reqeust")
+		return
+	}
+
+	spanForDB := h.tracer.StartSpan("GetTeacherUUIDsWithInform", opentracing.ChildOf(parentSpan))
+	selectedUUIDs, err := access.GetTeacherUUIDsWithInform(informToSelect)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedUUIDs", selectedUUIDs), log.Error(err))
 	spanForDB.Finish()
 

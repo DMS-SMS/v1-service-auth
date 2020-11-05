@@ -136,8 +136,9 @@ func (h _default) ChangeParentPW(ctx context.Context, req *proto.ChangeParentPWR
 		return
 	}
 
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.RevisionPW), 3)
 	spanForDB = h.tracer.StartSpan("ChangeParentPW", opentracing.ChildOf(parentSpan))
-	err = access.ChangeParentPW(string(selectedAuth.UUID), req.RevisionPW)
+	err = access.ChangeParentPW(string(selectedAuth.UUID), string(hashedBytes))
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
 	spanForDB.Finish()
 

@@ -163,13 +163,17 @@ func (h _default) GetTeacherInformWithUUID(ctx context.Context, req *proto.GetTe
 	}
 
 	switch true {
-	case teacherUUIDRegex.MatchString(req.TeacherUUID) && req.UUID == req.TeacherUUID:
+	case studentUUIDRegex.MatchString(req.UUID):
 		break
 	case adminUUIDRegex.MatchString(req.UUID):
 		break
+	case teacherUUIDRegex.MatchString(req.UUID):
+		break
+	case parentUUIDRegex.MatchString(req.UUID):
+		break
 	default:
 		resp.Status = http.StatusForbidden
-		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not teacher or admin uuid OR not your student uuid")
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not student or admin or teacher or parent uuid")
 		return
 	}
 
@@ -221,16 +225,19 @@ func (h _default) GetTeacherUUIDsWithInform(ctx context.Context, req *proto.GetT
 	}
 
 	switch true {
-	case teacherUUIDRegex.MatchString(req.UUID):
+	case studentUUIDRegex.MatchString(req.UUID):
 		break
 	case adminUUIDRegex.MatchString(req.UUID):
 		break
+	case teacherUUIDRegex.MatchString(req.UUID):
+		break
+	case parentUUIDRegex.MatchString(req.UUID):
+		break
 	default:
 		resp.Status = http.StatusForbidden
-		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "this API is for teachers for admins only")
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not student or admin or teacher or parent uuid")
 		return
 	}
-
 	reqID := ctx.Value("X-Request-Id").(string)
 	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
 

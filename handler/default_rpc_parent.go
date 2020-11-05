@@ -163,13 +163,17 @@ func (h _default) GetParentInformWithUUID(ctx context.Context, req *proto.GetPar
 	}
 
 	switch true {
-	case parentUUIDRegex.MatchString(req.ParentUUID) && req.UUID == req.ParentUUID:
+	case studentUUIDRegex.MatchString(req.UUID):
 		break
 	case adminUUIDRegex.MatchString(req.UUID):
 		break
+	case teacherUUIDRegex.MatchString(req.UUID):
+		break
+	case parentUUIDRegex.MatchString(req.UUID):
+		break
 	default:
 		resp.Status = http.StatusForbidden
-		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not parent or admin uuid OR not your student uuid")
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not student or admin or teacher or parent uuid")
 		return
 	}
 
@@ -219,13 +223,17 @@ func (h _default) GetParentUUIDsWithInform(ctx context.Context, req *proto.GetPa
 	}
 
 	switch true {
-	case parentUUIDRegex.MatchString(req.UUID):
+	case studentUUIDRegex.MatchString(req.UUID):
 		break
 	case adminUUIDRegex.MatchString(req.UUID):
 		break
+	case teacherUUIDRegex.MatchString(req.UUID):
+		break
+	case parentUUIDRegex.MatchString(req.UUID):
+		break
 	default:
 		resp.Status = http.StatusForbidden
-		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "this API is for parents or admins only")
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not student or admin or teacher or parent uuid")
 		return
 	}
 

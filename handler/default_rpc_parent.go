@@ -12,6 +12,7 @@ import (
 	"github.com/uber/jaeger-client-go"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"reflect"
 )
 
 func (h _default) LoginParentAuth(ctx context.Context, req *proto.LoginParentAuthRequest, resp *proto.LoginParentAuthResponse) (_ error) {
@@ -248,11 +249,18 @@ func (h _default) GetParentUUIDsWithInform(ctx context.Context, req *proto.GetPa
 		return
 	}
 
-	spanForDB := h.tracer.StartSpan("GetParentUUIDsWithInform", opentracing.ChildOf(parentSpan))
-	selectedUUIDs, err := access.GetParentUUIDsWithInform(&model.ParentInform{
+	informToSelect := &model.ParentInform{
 		Name:          model.Name(req.Name),
 		PhoneNumber:   model.PhoneNumber(req.PhoneNumber),
-	})
+	}
+	if reflect.DeepEqual(informToSelect, &model.ParentInform{}) {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "bad reqeust")
+		return
+	}
+
+	spanForDB := h.tracer.StartSpan("GetParentUUIDsWithInform", opentracing.ChildOf(parentSpan))
+	selectedUUIDs, err := access.GetParentUUIDsWithInform(informToSelect)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedUUIDs", selectedUUIDs), log.Error(err))
 	spanForDB.Finish()
 

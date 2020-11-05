@@ -12,6 +12,7 @@ import (
 	"github.com/uber/jaeger-client-go"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"reflect"
 )
 
 func (h _default) LoginStudentAuth(ctx context.Context, req *proto.LoginStudentAuthRequest, resp *proto.LoginStudentAuthResponse) (_ error) {
@@ -322,15 +323,22 @@ func (h _default) GetStudentUUIDsWithInform(ctx context.Context, req *proto.GetS
 		return
 	}
 
-	spanForDB := h.tracer.StartSpan("GetStudentUUIDsWithInform", opentracing.ChildOf(parentSpan))
-	selectedUUIDs, err := access.GetStudentUUIDsWithInform(&model.StudentInform{
+	informToSelect := &model.StudentInform{
 		Grade:         model.Grade(int64(req.Grade)),
 		Class:         model.Class(int64(req.Group)),
 		StudentNumber: model.StudentNumber(int64(req.StudentNumber)),
 		Name:          model.Name(req.Name),
 		PhoneNumber:   model.PhoneNumber(req.PhoneNumber),
 		ProfileURI:    model.ProfileURI(req.ImageURI),
-	})
+	}
+	if reflect.DeepEqual(informToSelect, &model.StudentInform{}) {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "bad reqeust")
+		return
+	}
+
+	spanForDB := h.tracer.StartSpan("GetStudentUUIDsWithInform", opentracing.ChildOf(parentSpan))
+	selectedUUIDs, err := access.GetStudentUUIDsWithInform(informToSelect)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedUUIDs", selectedUUIDs), log.Error(err))
 	spanForDB.Finish()
 

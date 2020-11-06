@@ -15,6 +15,7 @@ import (
 	"github.com/micro/go-micro/v2"
 	log "github.com/micro/go-micro/v2/logger"
 	"github.com/micro/go-micro/v2/transport/grpc"
+	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	"math/rand"
@@ -24,6 +25,16 @@ import (
 )
 
 func main() {
+	// create service
+	port := getRandomPortNotInUsedWithRange(10000, 10100)
+	service := micro.NewService(
+		micro.Name(topic.AuthServiceName),
+		micro.Version("1.1.2"),
+		micro.Transport(grpc.NewTransport()),
+		micro.Address(fmt.Sprintf(":%d", port)),
+	)
+	srvID := fmt.Sprintf("%s-%s", service.Server().Options().Name, service.Server().Options().Id)
+
 	// create consul connection
 	consulAddr := os.Getenv("CONSUL_ADDRESS")
 	if consulAddr == "" {
@@ -54,6 +65,7 @@ func main() {
 	}
 	authSrvTracer, closer, err := jaegercfg.Configuration{
 		ServiceName: topic.AuthServiceName,
+		Tags:        []opentracing.Tag{{"sid", srvID}},
 		Reporter:    &jaegercfg.ReporterConfig{LogSpans: true, LocalAgentHostPort: jaegerAddr},
 		Sampler:     &jaegercfg.SamplerConfig{Type: jaeger.SamplerTypeConst, Param: 1},
 	}.NewTracer()
@@ -69,15 +81,6 @@ func main() {
 		handler.AWSSession(nil),
 		handler.Manager(defaultAccessManage),
 		handler.Tracer(authSrvTracer),
-	)
-
-	// create service
-	port := getRandomPortNotInUsedWithRange(10000, 10100)
-	service := micro.NewService(
-		micro.Name(topic.AuthServiceName),
-		micro.Version("1.1.2"),
-		micro.Transport(grpc.NewTransport()),
-		micro.Address(fmt.Sprintf(":%d", port)),
 	)
 
 	// register initializer for service

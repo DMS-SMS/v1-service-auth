@@ -11,6 +11,9 @@ import (
 	"fmt"
 	"github.com/InVisionApp/go-health/v2"
 	"github.com/InVisionApp/go-health/v2/checkers"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/hashicorp/consul/api"
 	"github.com/micro/go-micro/v2"
 	log "github.com/micro/go-micro/v2/logger"
@@ -29,7 +32,7 @@ func main() {
 	port := getRandomPortNotInUsedWithRange(10000, 10100)
 	service := micro.NewService(
 		micro.Name(topic.AuthServiceName),
-		micro.Version("1.1.3"),
+		micro.Version("1.1.4"),
 		micro.Transport(grpc.NewTransport()),
 		micro.Address(fmt.Sprintf(":%d", port)),
 	)
@@ -76,11 +79,32 @@ func main() {
 		_ = closer.Close()
 	}()
 
+	// create AWS session
+	awsId := os.Getenv("SMS_AWS_ID")
+	if awsId == "" {
+		log.Fatal("please set SMS_AWS_ID in environment variable")
+	}
+	awsKey := os.Getenv("SMS_AWS_KEY")
+	if awsKey == "" {
+		log.Fatal("please set SMS_AWS_KEY in environment variable")
+	}
+	s3Region := os.Getenv("SMS_AWS_REGION")
+	if s3Region == "" {
+		log.Fatal("please set SMS_AWS_REGION in environment variable")
+	}
+	awsSession, err := session.NewSession(&aws.Config{
+		Region:      aws.String(s3Region),
+		Credentials: credentials.NewStaticCredentials(awsId, awsKey, ""),
+	})
+	if err != nil {
+		log.Fatalf("error while creating new aws session, err: %v", err)
+	}
+
 	// create gRPC handler
 	rpcHandler := handler.Default(
-		handler.AWSSession(nil),
 		handler.Manager(defaultAccessManage),
 		handler.Tracer(authSrvTracer),
+		handler.AWSSession(awsSession),
 	)
 
 	// register initializer for service

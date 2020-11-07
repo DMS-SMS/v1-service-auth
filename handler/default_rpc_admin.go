@@ -154,7 +154,7 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 	if h.awsSession != nil {
 		spanForS3 := h.tracer.StartSpan("PutObject", opentracing.ChildOf(parentSpan))
 		_, err = s3.New(h.awsSession).PutObject(&s3.PutObjectInput{
-			Bucket: aws.String("dms-sms"),
+			Bucket: aws.String(s3Bucket),
 			Key:    aws.String(fmt.Sprintf("profiles/%s", string(resultAuth.UUID))),
 			Body:   bytes.NewReader(req.Image),
 		})

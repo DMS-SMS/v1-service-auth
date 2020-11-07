@@ -151,23 +151,7 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 		return
 	}
 
-	if h.awsSession != nil {
-		spanForS3 := h.tracer.StartSpan("PutObject", opentracing.ChildOf(parentSpan))
-		_, err = s3.New(h.awsSession).PutObject(&s3.PutObjectInput{
-			Bucket: aws.String(s3Bucket),
-			Key:    aws.String(fmt.Sprintf("profiles/%s", string(resultAuth.UUID))),
-			Body:   bytes.NewReader(req.Image),
-		})
-		spanForS3.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
-		spanForS3.Finish()
-		if err != nil {
-			access.Rollback()
-			resp.Status = http.StatusInternalServerError
-			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to upload profile to s3, err: " + err.Error())
-			return
-		}
-	}
-
+	profileURI := fmt.Sprintf("profiles/%s", string(resultAuth.UUID))
 	spanForDB = h.tracer.StartSpan("CreateStudentInform", opentracing.ChildOf(parentSpan))
 	resultInform, err := access.CreateStudentInform(&model.StudentInform{
 		StudentUUID:   model.StudentUUID(string(resultAuth.UUID)),
@@ -176,7 +160,7 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 		StudentNumber: model.StudentNumber(int64(req.StudentNumber)),
 		Name:          model.Name(req.Name),
 		PhoneNumber:   model.PhoneNumber(req.PhoneNumber),
-		ProfileURI:    model.ProfileURI(fmt.Sprintf("profiles/%s", string(resultAuth.UUID))),
+		ProfileURI:    model.ProfileURI(profileURI),
 	})
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedInform", resultInform), log.Error(err))
 	spanForDB.Finish()
@@ -223,6 +207,24 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 		resp.Status = http.StatusInternalServerError
 		resp.Message = fmt.Sprintf(internalServerErrorFormat, "CreateStudentInform returns unexpected type of error, err: " + assertedError.Error())
 		return
+	}
+
+	if h.awsSession != nil {
+		spanForS3 := h.tracer.StartSpan("PutObject", opentracing.ChildOf(parentSpan))
+		_, err = s3.New(h.awsSession).PutObject(&s3.PutObjectInput{
+			Bucket: aws.String(s3Bucket),
+			Key:    aws.String(profileURI),
+			Body:   bytes.NewReader(req.Image),
+
+		})
+		spanForS3.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+		spanForS3.Finish()
+		if err != nil {
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to upload profile to s3, err: " + err.Error())
+			return
+		}
 	}
 
 	access.Commit()

@@ -11,6 +11,10 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - CONSUL_ADDRESS=${CONSUL_ADDRESS}
       - JAEGER_ADDRESS=${JAEGER_ADDRESS}
+      - SMS_AWS_ID=${SMS_AWS_ID}
+      - SMS_AWS_KEY=${SMS_AWS_KEY}
+      - SMS_AWS_REGION=${SMS_AWS_REGION}
+      - SMS_AWS_BUCKET=${SMS_AWS_BUCKET}
 
 networks:
   dms_sms_local:

@@ -215,7 +215,7 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 			Bucket: aws.String(s3Bucket),
 			Key:    aws.String(profileURI),
 			Body:   bytes.NewReader(req.Image),
-
+			ACL:    aws.String("public-read"),
 		})
 		spanForS3.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
 		spanForS3.Finish()

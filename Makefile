@@ -19,3 +19,7 @@ pull:
 .PHONY: run
 run:
 	docker-compose -f ./docker-compose.yml up -d
+
+.PHONY: deploy
+deploy:
+	envsubst < ./service-auth-deployment.yaml | kubectl apply -f -

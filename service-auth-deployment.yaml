@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.22.0 (955b78124)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: service-auth
+  name: service-auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: service-auth
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/dms_sms_local: "true"
+        io.kompose.service: service-auth
+    spec:
+      containers:
+        - env:
+            - name: CONSUL_ADDRESS
+              value: "$CONSUL_ADDRESS"
+            - name: DB_PASSWORD
+              value: "$DB_PASSWORD"
+            - name: JAEGER_ADDRESS
+              value: "$JAEGER_ADDRESS"
+            - name: SMS_AWS_BUCKET
+              value: "$SMS_AWS_BUCKET"
+            - name: SMS_AWS_ID
+              value: "$SMS_AWS_ID"
+            - name: SMS_AWS_KEY
+              value: "$SMS_AWS_KEY"
+            - name: SMS_AWS_REGION
+              value: "$SMS_AWS_REGION"
+          image: jinhong0719/dms-sms-service-auth:$VERSION.RELEASE
+          name: service-auth
+          resources: {}
+      restartPolicy: Always
+status: {}

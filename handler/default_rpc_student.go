@@ -220,6 +220,68 @@ func (h _default) GetStudentInformWithUUID(ctx context.Context, req *proto.GetSt
 	return
 }
 
+func (h _default) GetParentWithStudentUUID(ctx context.Context, req *proto.GetParentWithStudentUUIDRequest, resp *proto.GetParentWithStudentUUIDResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	switch true {
+	case studentUUIDRegex.MatchString(req.StudentUUID) && req.UUID == req.StudentUUID:
+		break
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	default:
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not your student uuid or not admin uuid")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access, err := h.accessManage.BeginTx()
+	if err != nil {
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())
+		return
+	}
+
+	spanForDB := h.tracer.StartSpan("GetStudentAuthWithUUID", opentracing.ChildOf(parentSpan))
+	selectedAuth, err := access.GetStudentAuthWithUUID(req.StudentUUID)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", selectedAuth), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			resp.Status = http.StatusNotFound
+			resp.Message = fmt.Sprintf(notFoundMessageFormat, "not exist student, uuid: " + req.StudentUUID)
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " + err.Error())
+		}
+		return
+	}
+
+	spanForDB = h.tracer.StartSpan("GetParentInformWithUUID", opentracing.ChildOf(parentSpan))
+	selectedParent, err := access.GetParentInformWithUUID(string(selectedAuth.ParentUUID))
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("selectedParent", selectedParent), log.Error(err))
+	spanForDB.Finish()
+
+	access.Commit()
+	resp.ParentUUID = string(selectedParent.ParentUUID)
+	resp.Name = string(selectedParent.Name)
+	resp.PhoneNumber = string(selectedParent.PhoneNumber)
+
+	resp.Status = http.StatusOK
+	resp.Message = "succeed to get parent with student uuid"
+	return
+}
+
 func (h _default) GetStudentInformsWithUUIDs(ctx context.Context, req *proto.GetStudentInformsWithUUIDsRequest, resp *proto.GetStudentInformsWithUUIDsResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {

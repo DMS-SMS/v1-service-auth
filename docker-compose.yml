@@ -13,8 +13,12 @@ services:
       - SMS_AWS_KEY=${SMS_AWS_KEY}
       - SMS_AWS_REGION=${SMS_AWS_REGION}
       - SMS_AWS_BUCKET=${SMS_AWS_BUCKET}
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels: [APP=service-auth]
 
 networks:
   dms-sms-local:
     name: dms-sms-local
-    driver: bridge
+    driver: overlay

@@ -15,8 +15,6 @@ jobs:
           go-version: '^1.13.4'
       - name: Check out the repo
         uses: actions/checkout@v2
-      - name: test env1
-        uses: echo ${{ secrets.DOCKER_USERNAME }}
       - name: test env2
         uses: echo $VERSION
       - name: Init submodule after clone

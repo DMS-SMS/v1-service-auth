@@ -13,10 +13,10 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: '^1.13.4'
-      - name: Install make & git
-        run: sudo apt-get install make git
       - name: Check out the repo
         uses: actions/checkout@v2
+      - name: test env
+        uses: echo ${{ secrets.DOCKER_USERNAME }} && echo $VERSION
       - name: Init submodule after clone
         run: git submodule update --init
       - name: Build golang to binary file

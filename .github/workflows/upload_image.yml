@@ -15,8 +15,12 @@ jobs:
           go-version: '^1.13.4'
       - name: Install make
         run: sudo apt-get install make
+      - name: ls1
+        run: ls
       - name: Check out the repo
         uses: actions/checkout@v2
+      - name: ls2
+        run: ls
       - name: Build golang to binary file
         run: make build
       - name: Build docker image

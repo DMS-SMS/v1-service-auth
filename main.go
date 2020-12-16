@@ -28,6 +28,7 @@ import (
 )
 
 func main() {
+	fmt.Println(1)
 	// create service
 	port := getRandomPortNotInUsedWithRange(10000, 10100)
 	service := micro.NewService(

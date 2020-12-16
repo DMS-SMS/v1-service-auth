@@ -1,0 +1,33 @@
+name: 'upload_image'
+description: 'build and upload new or updated image'
+
+on:
+  push:
+    branches:
+      - master
+  merge:
+    branches:
+      - master
+
+jobs:
+  BUILD_AND_UPLOAD_IMAGE:
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: [1.13.4]
+      - name: Install make
+        run: sudo apt-get install make
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Build golang to binary file
+        run: make build
+      - name: Build docker image
+        run: VERSION=${{ secrets.VERSION }} make image
+      - name: Push image to docker hub
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: jinhong0719/dms-sms-service-auth:${{ secrets.VERSION }}

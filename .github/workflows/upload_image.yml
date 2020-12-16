@@ -1,5 +1,4 @@
-name: 'upload_image'
-description: 'build and upload new or updated image'
+name: upload_image
 
 on:
   push:

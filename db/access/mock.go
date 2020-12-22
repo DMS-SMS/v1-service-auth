@@ -144,6 +144,11 @@ func (m _mock) GetStudentInformsWithUUIDs(uuidArr []string) ([]*model.StudentInf
 	return args.Get(0).([]*model.StudentInform), args.Error(1)
 }
 
+func (m _mock) GetStudentInformsWithParentUUID(parentUUID string) ([]*model.StudentInform, error) {
+	args := m.mock.Called(parentUUID)
+	return args.Get(0).([]*model.StudentInform), args.Error(1)
+}
+
 func (m _mock) GetTeacherInformWithUUID(uuid string) (*model.TeacherInform, error) {
 	args := m.mock.Called(uuid)
 	return args.Get(0).(*model.TeacherInform), args.Error(1)

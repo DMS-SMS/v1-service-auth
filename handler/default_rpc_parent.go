@@ -284,3 +284,69 @@ func (h _default) GetParentUUIDsWithInform(ctx context.Context, req *proto.GetPa
 	resp.Message = "get parent uuids having that inform success"
 	return
 }
+
+func (h _default) GetChildrenInformsWithUUID(ctx context.Context, req *proto.GetChildrenInformsWithUUIDRequest, resp *proto.GetChildrenInformsWithUUIDResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	switch true {
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	case parentUUIDRegex.MatchString(req.UUID) && req.UUID == req.ParentUUID:
+		break
+	default:
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not admin or your parent uuid")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access, err := h.accessManage.BeginTx()
+	if err != nil {
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())
+		return
+	}
+
+	spanForDB := h.tracer.StartSpan("GetStudentInformsWithParentUUID", opentracing.ChildOf(parentSpan))
+	selectedInforms, err := access.GetStudentInformsWithParentUUID(req.ParentUUID)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedInforms", selectedInforms), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			resp.Status = http.StatusNotFound
+			resp.Message = fmt.Sprintf(notFoundMessageFormat, "children not exist parent, uuid: " + req.ParentUUID)
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " + err.Error())
+		}
+		return
+	}
+
+	access.Commit()
+	resp.ChildrenInform = make([]*proto.StudentInform, len(selectedInforms))
+	for index, inform := range selectedInforms {
+		resp.ChildrenInform[index] = &proto.StudentInform{
+			StudentUUID:   string(inform.StudentUUID),
+			Grade:         uint32(inform.Grade),
+			Group:         uint32(inform.Class),
+			StudentNumber: uint32(inform.StudentNumber),
+			Name:          string(inform.Name),
+			PhoneNumber:   string(inform.PhoneNumber),
+			ImageURI:      string(inform.ProfileURI),
+		}
+	}
+
+	resp.Status = http.StatusOK
+	resp.Message = "get children informs success"
+	return
+}

@@ -153,6 +153,13 @@ func (d *_default) GetStudentInformsWithUUIDs(uuidArr []string) (informs []*mode
 	return
 }
 
+func (d *_default) GetStudentInformsWithParentUUID(parentUUID string) (informs []*model.StudentInform, err error) {
+	informs = make([]*model.StudentInform, 1, 3)
+	err = d.tx.Raw("SELECT student_informs.* FROM student_auths, student_informs " +
+		"WHERE student_auths.uuid = student_informs.student_uuid AND student_auths.parent_uuid = ?", parentUUID).Scan(&informs).Error
+	return 
+}
+
 func (d *_default) GetTeacherInformWithUUID(uuid string) (inform *model.TeacherInform, err error) {
 	inform = new(model.TeacherInform)
 	err = d.tx.Where("teacher_uuid = ?", uuid).Find(inform).Error

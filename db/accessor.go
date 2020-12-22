@@ -47,6 +47,7 @@ type Accessor interface {
 	// 계정 UUID로 정보 조회 메서드
 	GetStudentInformWithUUID(uuid string) (*model.StudentInform, error)
 	GetStudentInformsWithUUIDs(uuidArr []string) ([]*model.StudentInform, error)
+	GetStudentInformsWithParentUUID(parentUUID string) ([]*model.StudentInform, error)
 	GetTeacherInformWithUUID(uuid string) (*model.TeacherInform, error)
 	GetParentInformWithUUID(uuid string) (*model.ParentInform, error)
 

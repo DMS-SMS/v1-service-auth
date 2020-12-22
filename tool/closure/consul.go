@@ -17,7 +17,7 @@ func ConsulServiceRegistrar(s server.Server, consul *api.Client) func() error {
 		if err != nil {
 			log.Fatalf("unable to get port number from server option, err: %v\n", err)
 		}
-		localAddr, err := getMyLocalAddr()
+		localAddr, err := getLocalIP()
 		if err != nil {
 			log.Fatalf("unable to get local address, err: %v\n", err)
 		}
@@ -27,7 +27,7 @@ func ConsulServiceRegistrar(s server.Server, consul *api.Client) func() error {
 			ID:      srvID,
 			Name:    s.Options().Name,
 			Port:    port,
-			Address: localAddr.IP.String(),
+			Address: localAddr,
 		})
 		if err != nil {
 			log.Fatalf("unable to register service in consul, err: %v\n", err)
@@ -95,5 +95,20 @@ func getMyLocalAddr() (addr *net.UDPAddr, err error) {
 		return
 	}
 
+	return
+}
+
+func getLocalIP() (addr string, err error) {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return
+	}
+	for _, address := range addrs {
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String(), nil
+			}
+		}
+	}
 	return
 }

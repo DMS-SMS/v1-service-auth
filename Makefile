@@ -23,3 +23,7 @@ run:
 .PHONY: deploy
 deploy:
 	envsubst < ./service-auth-deployment.yaml | kubectl apply -f -
+
+.PHONY: stack
+stack:
+	env VERSION=${VERSION} docker stack deploy -c docker-compose.yml DSM_SMS

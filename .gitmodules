@@ -2,4 +2,5 @@
 	path = proto
 	url = https://github.com/DMS-SMS/v1-protocol-buffer.git
 [submodule "utils"]
+	path = utils
 	url = https://github.com/DMS-SMS/v1-utils.git

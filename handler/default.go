@@ -3,6 +3,7 @@ package handler
 import (
 	"auth/db"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -11,6 +12,9 @@ type _default struct {
 	tracer       opentracing.Tracer
 	awsSession   *session.Session
 }
+
+// function signature used in subscriber (add in v.1.1.6)
+type SQSMessageHandler func(*sqs.ReceiveMessageOutput)
 
 type FieldSetter func(*_default)
 

@@ -16,6 +16,9 @@ func Mock(mock *mock.Mock) _mock {
 	return _mock{mock: mock}
 }
 
+func (m _mock) ChangeAllServiceNodes() { // add in v.1.1.6
+	m.mock.Called()
+}
 
 func (m _mock) GetNextServiceNode(service string) (*registry.Node, error) {
 	args := m.mock.Called(service)

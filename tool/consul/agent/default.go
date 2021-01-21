@@ -10,15 +10,15 @@ import (
 	"sync"
 )
 
-type serviceName string
+type ServiceName string
 
 type _default struct {
 	Strategy  selector.Strategy
 	client    *api.Client
 //  next      selector.Next                    // before v.1.1.6
 //  nodes     []*registry.Node                 // before v.1.1.6
-	next      map[serviceName]selector.Next    // change in v.1.1.6
-	nodes     map[serviceName][]*registry.Node // change in v.1.1.6
+	next      map[ServiceName]selector.Next    // change in v.1.1.6
+	nodes     map[ServiceName][]*registry.Node // change in v.1.1.6
 	nodeMutex sync.RWMutex                     // add in v.1.1.6
 }
 
@@ -31,7 +31,7 @@ func newDefault(setters ...FieldSetter) (h *_default) {
 	for _, setter := range setters {
 		setter(h)
 	}
-	h.nodes = map[serviceName][]*registry.Node{}
+	h.nodes = map[ServiceName][]*registry.Node{}
 	h.nodeMutex = sync.RWMutex{}
 	return
 }

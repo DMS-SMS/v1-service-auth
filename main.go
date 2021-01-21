@@ -7,6 +7,7 @@ import (
 	"auth/handler"
 	proto "auth/proto/golang/auth"
 	"auth/tool/closure"
+	"auth/tool/consul"
 	consulagent "auth/tool/consul/agent"
 	"auth/tool/network"
 	topic "auth/utils/topic/golang"
@@ -46,19 +47,19 @@ func main() {
 	}
 	consulCfg := api.DefaultConfig()
 	consulCfg.Address = consulAddr
-	consul, err := api.NewClient(consulCfg)
+	consulCli, err := api.NewClient(consulCfg)
 	if err != nil {
 		log.Fatalf("consul connect fail, err: %v", err)
 	}
 	consulAgent := consulagent.Default( // add in v.1.1.6
 		consulagent.Strategy(selector.RoundRobin),
-		consulagent.Client(consul),
+		consulagent.Client(consulCli),
 		consulagent.Services([]consulagent.ServiceName{topic.AuthServiceName, topic.ClubServiceName,
 			topic.OutingServiceName, topic.ScheduleServiceName, topic.AnnouncementServiceName}),
 	)
 
 	// create db access manager
-	dbc, _, err := adapter.ConnectDBWithConsul(consul, "db/auth/local")
+	dbc, _, err := adapter.ConnectDBWithConsul(consulCli, "db/auth/local")
 	if err != nil {
 		log.Fatalf("db connect fail, err: %v", err)
 	}
@@ -117,8 +118,8 @@ func main() {
 
 	// register initializer for service
 	service.Init(
-		micro.AfterStart(closure.ConsulServiceRegistrar(service.Server(), consul)),
-		micro.BeforeStop(closure.ConsulServiceDeregistrar(service.Server(), consul)),
+		micro.AfterStart(closure.ConsulServiceRegistrar(service.Server(), consulCli)),
+		micro.BeforeStop(closure.ConsulServiceDeregistrar(service.Server(), consulCli)),
 	)
 
 	// register gRPC handler in service
@@ -139,7 +140,7 @@ func main() {
 		Name:       "DB-Checker",
 		Checker:    dbChecker,
 		Interval:   time.Second * 5,
-		OnComplete: closure.TTLCheckHandlerAboutDB(service.Server(), consul),
+		OnComplete: closure.TTLCheckHandlerAboutDB(service.Server(), consulCli),
 	}
 	if err = h.AddChecks([]*health.Config{dbHealthCfg}); err != nil {
 		log.Fatalf("unable to register health checks, err: %v", err)

@@ -54,7 +54,7 @@ func main() {
 	consulAgent := consulagent.Default( // add in v.1.1.6
 		consulagent.Strategy(selector.RoundRobin),
 		consulagent.Client(consulCli),
-		consulagent.Services([]consulagent.ServiceName{topic.AuthServiceName, topic.ClubServiceName,
+		consulagent.Services([]consul.ServiceName{topic.AuthServiceName, topic.ClubServiceName,
 			topic.OutingServiceName, topic.ScheduleServiceName, topic.AnnouncementServiceName}),
 	)
 

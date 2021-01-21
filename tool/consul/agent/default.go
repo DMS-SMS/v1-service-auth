@@ -19,6 +19,7 @@ type _default struct {
 //  nodes     []*registry.Node                 // before v.1.1.6
 	next      map[ServiceName]selector.Next    // change in v.1.1.6
 	nodes     map[ServiceName][]*registry.Node // change in v.1.1.6
+	services  []ServiceName                    // add in v.1.1.6
 	nodeMutex sync.RWMutex                     // add in v.1.1.6
 }
 
@@ -47,5 +48,11 @@ func Client(c *api.Client) FieldSetter {
 func Strategy(s selector.Strategy) FieldSetter {
 	return func(d *_default) {
 		d.Strategy = s
+	}
+}
+
+func Services(s []ServiceName) FieldSetter {
+	return func(d *_default) {
+		d.services = s
 	}
 }

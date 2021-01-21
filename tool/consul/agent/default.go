@@ -10,13 +10,15 @@ import (
 	"github.com/micro/go-micro/v2/client/selector"
 	"github.com/micro/go-micro/v2/registry"
 	"reflect"
+	"sync"
 )
 
 type _default struct {
-	Strategy selector.Strategy
-	client   *api.Client
-	next     selector.Next
-	nodes    []*registry.Node
+	Strategy  selector.Strategy
+	client    *api.Client
+	next      selector.Next
+	nodes     []*registry.Node
+	nodeMutex sync.RWMutex
 }
 
 func Default(setters ...FieldSetter) *_default {
@@ -28,6 +30,7 @@ func newDefault(setters ...FieldSetter) (h *_default) {
 	for _, setter := range setters {
 		setter(h)
 	}
+	h.nodeMutex = sync.RWMutex{}
 	return
 }
 

@@ -13,10 +13,11 @@ import (
 type serviceName string
 
 type _default struct {
-	Strategy selector.Strategy
-	client   *api.Client
-	next     selector.Next
-	// nodes     []*registry.Node // before v.1.1.6
+	Strategy  selector.Strategy
+	client    *api.Client
+//  next      selector.Next                    // before v.1.1.6
+//  nodes     []*registry.Node                 // before v.1.1.6
+	next      map[serviceName]selector.Next    // change in v.1.1.6
 	nodes     map[serviceName][]*registry.Node // change in v.1.1.6
 	nodeMutex sync.RWMutex                     // add in v.1.1.6
 }

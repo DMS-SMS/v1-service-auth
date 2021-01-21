@@ -10,8 +10,6 @@ import (
 	"sync"
 )
 
-type ServiceName string
-
 type _default struct {
 	Strategy  selector.Strategy
 	client    *api.Client

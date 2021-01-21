@@ -5,6 +5,8 @@ package consul
 
 import "github.com/micro/go-micro/v2/registry"
 
+type ServiceName string
+
 type Agent interface {
 	// method to refresh all service node list
 	ChangeAllServiceNodes()  // add in v.1.1.6

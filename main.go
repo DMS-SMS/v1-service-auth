@@ -7,6 +7,7 @@ import (
 	"auth/handler"
 	proto "auth/proto/golang/auth"
 	"auth/tool/closure"
+	consulagent "auth/tool/consul/agent"
 	"auth/tool/network"
 	topic "auth/utils/topic/golang"
 	"fmt"
@@ -17,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/hashicorp/consul/api"
 	"github.com/micro/go-micro/v2"
+	"github.com/micro/go-micro/v2/client/selector"
 	log "github.com/micro/go-micro/v2/logger"
 	"github.com/micro/go-micro/v2/transport/grpc"
 	"github.com/opentracing/opentracing-go"
@@ -48,6 +50,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("consul connect fail, err: %v", err)
 	}
+	consulAgent := consulagent.Default( // add in v.1.1.6
+		consulagent.Strategy(selector.RoundRobin),
+		consulagent.Client(consul),
+		consulagent.Services([]consulagent.ServiceName{topic.AuthServiceName, topic.ClubServiceName,
+			topic.OutingServiceName, topic.ScheduleServiceName, topic.AnnouncementServiceName}),
+	)
 
 	// create db access manager
 	dbc, _, err := adapter.ConnectDBWithConsul(consul, "db/auth/local")
@@ -104,6 +112,7 @@ func main() {
 		handler.Manager(defaultAccessManage),
 		handler.Tracer(authSrvTracer),
 		handler.AWSSession(awsSession),
+		handler.ConsulAgent(consulAgent),
 	)
 
 	// register initializer for service

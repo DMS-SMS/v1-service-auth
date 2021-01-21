@@ -9,8 +9,8 @@ type ServiceName string
 
 type Agent interface {
 	// method to refresh all service node list
-	ChangeAllServiceNodes()         // add in v.1.1.6
+	ChangeAllServiceNodes() error         // add in v.1.1.6
 	// method to refresh specific service node list
-	ChangeServiceNodes(ServiceName) // add in v.1.1.6
+	ChangeServiceNodes(ServiceName) error // add in v.1.1.6
 	GetNextServiceNode(ServiceName) (*registry.Node, error)
 }

@@ -7,6 +7,7 @@ import (
 	"auth/handler"
 	proto "auth/proto/golang/auth"
 	"auth/tool/closure"
+	"auth/tool/network"
 	topic "auth/utils/topic/golang"
 	"fmt"
 	"github.com/InVisionApp/go-health/v2"
@@ -21,18 +22,16 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
-	"math/rand"
-	"net"
 	"os"
 	"time"
 )
 
 func main() {
 	// create service
-	port := getRandomPortNotInUsedWithRange(10000, 10100)
+	port := network.GetRandomPortNotInUsedWithRange(10000, 10100) // change from function to method (in v.1.1.6)
 	service := micro.NewService(
 		micro.Name(topic.AuthServiceName),
-		micro.Version("1.1.4"),
+		micro.Version("1.1.6"),
 		micro.Transport(grpc.NewTransport()),
 		micro.Address(fmt.Sprintf(":%d", port)),
 	)
@@ -145,47 +144,3 @@ func main() {
 		log.Fatal(err)
 	}
 }
-
-func getRandomPortNotInUsedWithRange(min, max int) (port int) {
-	for {
-		port = rand.Intn(max - min) + min
-		conn, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-		if err != nil {
-			continue
-		}
-		_ = conn.Close()
-		break
-	}
-	return
-}
-
-//http.HandleFunc("/profiles", func(writer http.ResponseWriter, request *http.Request) {
-//	file, fileHeader, err := request.FormFile("profile")
-//	if err != nil {
-//		http.Error(writer, fmt.Sprintf("%s, err: %v", http.StatusText(http.StatusBadRequest), err.Error()), http.StatusBadRequest)
-//		return
-//	}
-//
-//	buf := make([]byte, fileHeader.Size)
-//	_, _ = file.Read(buf)
-//
-//	service := micro.NewService()
-//	authService := proto.NewAuthAdminService("DMS.SMS.v1.service.auth", service.Client())
-//	now := time.Now()
-//	fmt.Println(authService.CreateNewStudent(context.Background(), &proto.CreateNewStudentRequest{
-//		UUID:          "",
-//		StudentID:     "",
-//		StudentPW:     "",
-//		ParentUUID:    "",
-//		Grade:         0,
-//		Class:         0,
-//		StudentNumber: 0,
-//		Name:          "",
-//		PhoneNumber:   "",
-//		Image:         buf,
-//	}))
-//	fmt.Println(time.Now().Sub(now).Seconds())
-//	return
-//})
-//
-//log.Fatal(http.ListenAndServe(":8080", nil))

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"auth/db"
+	"auth/tool/consul"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/opentracing/opentracing-go"
@@ -11,6 +12,7 @@ type _default struct {
 	accessManage db.AccessorManage
 	tracer       opentracing.Tracer
 	awsSession   *session.Session
+	consulAgent  consul.Agent
 }
 
 // function signature used in subscriber (add in v.1.1.6)
@@ -45,5 +47,11 @@ func Tracer(t opentracing.Tracer) FieldSetter {
 func AWSSession(s *session.Session) FieldSetter {
 	return func(h *_default) {
 		h.awsSession = s
+	}
+}
+
+func ConsulAgent(a consul.Agent) FieldSetter {
+	return func(h *_default) {
+		h.consulAgent = a
 	}
 }

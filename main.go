@@ -118,9 +118,9 @@ func main() {
 	// register initializer for service
 	service.Init(
 		micro.BeforeStart(consulAgent.ChangeAllServiceNodes),
-		micro.AfterStart(closure.ConsulServiceRegistrar(service.Server(), consulCli)),
 		micro.AfterStart(consulAgent.ChangeAllServiceNodes),
-		micro.BeforeStop(closure.ConsulServiceDeregistrar(service.Server(), consulCli)),
+		micro.AfterStart(consulAgent.ServiceNodeRegistry(service.Server())),
+		micro.BeforeStop(consulAgent.ServiceNodeDeregistry(service.Server())),
 	)
 
 	// register gRPC handler in service

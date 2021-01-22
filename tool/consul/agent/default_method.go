@@ -14,6 +14,16 @@ import (
 
 const StatusMustBePassing = "Status==passing"
 
+
+// call changeServiceNode once with mutex.Lock & Unlock
+func (d *_default) ChangeServiceNodes(service consul.ServiceName) (err error) {
+	d.nodeMutex.Lock()
+	defer d.nodeMutex.Unlock()
+
+	err = d.changeServiceNodes(service)
+	return
+}
+
 // private method to handle business logic of changing specific service node list
 func (d *_default) changeServiceNodes(service consul.ServiceName) error {
 	checks, _, err := d.client.Health().Checks(string(service), &api.QueryOptions{Filter: StatusMustBePassing})

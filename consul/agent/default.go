@@ -1,5 +1,6 @@
 // add package in v.1.1.6
 // clone from tool/consul/agent in club
+// move directory from tool/consul/agent to consul/agent in v.1.1.6
 
 package agent
 

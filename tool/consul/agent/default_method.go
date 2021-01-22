@@ -75,6 +75,11 @@ func (d *_default) GetNextServiceNode(service consul.ServiceName) (*registry.Nod
 	if !d.checkIfExistService(service) {
 		return nil, ErrUndefinedService
 	}
+	
+	if _, exist := d.nodes[service]; !exist {
+		_ = d.ChangeServiceNodes(service)
+		return nil, ErrUnavailableService
+	}
 
 	if len(d.nodes[service]) == 0 {
 		return nil, ErrAvailableNodeNotFound

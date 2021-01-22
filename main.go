@@ -1,7 +1,6 @@
 package main
 
 import (
-	"auth/adapter"
 	"auth/db"
 	"auth/db/access"
 	"auth/handler"
@@ -59,12 +58,12 @@ func main() {
 	)
 
 	// create db access manager
-	dbc, _, err := adapter.ConnectDBWithConsul(consulCli, "db/auth/local")
+	dbc, _, err := db.ConnectWithConsul(consulCli, "db/auth/local")
 	if err != nil {
 		log.Fatalf("db connect fail, err: %v", err)
 	}
 	db.Migrate(dbc)
-	defaultAccessManage, err := db.NewAccessorManage(access.Default(dbc))
+	accessManage, err := db.NewAccessorManage(access.Default(dbc))
 	if err != nil {
 		log.Fatalf("db accessor create fail, err: %v", err)
 	}
@@ -110,7 +109,7 @@ func main() {
 
 	// create gRPC handler
 	rpcHandler := handler.Default(
-		handler.Manager(defaultAccessManage),
+		handler.Manager(accessManage),
 		handler.Tracer(authSrvTracer),
 		handler.AWSSession(awsSession),
 		handler.ConsulAgent(consulAgent),

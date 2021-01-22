@@ -80,7 +80,7 @@ func (d *_default) GetNextServiceNode(service consul.ServiceName) (*registry.Nod
 	}
 	
 	if _, exist := d.nodes[service]; !exist {
-		_ = d.ChangeServiceNodes(service)
+		_ = d.changeServiceNodes(service)
 		return nil, ErrUnavailableService
 	}
 

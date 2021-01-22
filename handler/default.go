@@ -1,8 +1,8 @@
 package handler
 
 import (
+	"auth/consul"
 	"auth/db"
-	"auth/tool/consul"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/opentracing/opentracing-go"

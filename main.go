@@ -1,13 +1,13 @@
 package main
 
 import (
+	"auth/consul"
+	consulagent "auth/consul/agent"
 	"auth/db"
 	"auth/db/access"
 	"auth/handler"
 	proto "auth/proto/golang/auth"
 	"auth/tool/closure"
-	"auth/tool/consul"
-	consulagent "auth/tool/consul/agent"
 	"auth/tool/network"
 	topic "auth/utils/topic/golang"
 	"fmt"

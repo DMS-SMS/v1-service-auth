@@ -22,7 +22,7 @@ func (d *_default) ChangeAllServiceNodes() (err error) {
 	for _, service := range d.services {
 		// when tmpErr is nil
 		if tmpErr := d.changeServiceNodes(service); tmpErr == nil {
-			break
+			continue
 			// when tmpErr is nil, but err is not nil
 		} else if err == nil {
 			err = tmpErr

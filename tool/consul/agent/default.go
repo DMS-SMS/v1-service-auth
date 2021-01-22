@@ -31,6 +31,7 @@ func newDefault(setters ...FieldSetter) (h *_default) {
 	for _, setter := range setters {
 		setter(h)
 	}
+	h.next = map[consul.ServiceName]selector.Next{}
 	h.nodes = map[consul.ServiceName][]*registry.Node{}
 	h.nodeMutex = sync.RWMutex{}
 	return

@@ -73,7 +73,7 @@ func (d *_default) changeServiceNodes(service consul.ServiceName) error {
 // migrate change logic to changeServiceNodes method in v.1.1.6
 func (d *_default) GetNextServiceNode(service consul.ServiceName) (*registry.Node, error) {
 	if !d.checkIfExistService(service) {
-		return nil, ErrUnavailableService
+		return nil, ErrUndefinedService
 	}
 
 	if len(d.nodes[service]) == 0 {

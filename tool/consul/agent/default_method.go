@@ -4,6 +4,7 @@
 package agent
 
 import (
+	"auth/tool/consul"
 	"errors"
 	"fmt"
 	"github.com/hashicorp/consul/api"
@@ -12,6 +13,32 @@ import (
 )
 
 const StatusMustBePassing = "Status==passing"
+
+// private method to handle business logic of changing specific service node list
+func (d *_default) changeServiceNodes(service consul.ServiceName) error {
+	checks, _, err := d.client.Health().Checks(string(service), &api.QueryOptions{Filter: StatusMustBePassing})
+	if err != nil {
+		return errors.New(fmt.Sprintf("unable to query health checkes, err: %v", err))
+	}
+
+	var nodes []*registry.Node
+	for _, check := range checks {
+		as, _, err := d.client.Agent().Service(check.ServiceID, nil)
+		if err != nil {
+			return errors.New(fmt.Sprintf("unable to query service, err: %v", err))
+		}
+		var md = map[string]string{"CheckID": check.CheckID}
+		node := &registry.Node{Id: as.ID, Address: fmt.Sprintf("%s:%d", as.Address, as.Port), Metadata: md}
+		nodes = append(nodes, node)
+	}
+
+	if !reflect.DeepEqual(d.nodes[service], nodes) {
+		d.nodes[service] = nodes
+		d.next[service] = d.Strategy([]*registry.Service{{Nodes: nodes}})
+	}
+
+	return nil
+}
 
 // move from agent/default.go to agent/default_method.go
 func (d *_default) GetNextServiceNode(service string) (*registry.Node, error) {

@@ -14,6 +14,25 @@ import (
 
 const StatusMustBePassing = "Status==passing"
 
+// call changeServiceNode multiple as count as length of services array with mutex.Lock & Unlock
+func (d *_default) ChangeAllServiceNodes() (err error) {
+	d.nodeMutex.Lock()
+	defer d.nodeMutex.Unlock()
+
+	for _, service := range d.services {
+		// when tmpErr is nil
+		if tmpErr := d.changeServiceNodes(service); tmpErr == nil {
+			break
+			// when tmpErr is nil, but err is not nil
+		} else if err == nil {
+			err = tmpErr
+			// when tmpErr and err both not nil
+		} else {
+			err = errors.New(err.Error() + " " + tmpErr.Error())
+		}
+	}
+	return
+}
 
 // call changeServiceNode once with mutex.Lock & Unlock
 func (d *_default) ChangeServiceNodes(service consul.ServiceName) (err error) {

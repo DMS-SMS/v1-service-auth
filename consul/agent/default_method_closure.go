@@ -57,6 +57,26 @@ func (d *_default) ServiceNodeRegistry(s server.Server) func() error {
 	}
 }
 
+// move from /tool/closure/consul.go in v.1.1.6
+func (d *_default) ServiceNodeDeregistry(s server.Server) func() error {
+	return func() (err error) {
+		srvID := fmt.Sprintf("%s-%s", s.Options().Name, s.Options().Id)
+		err = d.client.Agent().ServiceDeregister(srvID)
+		if err != nil {
+			log.Fatalf("unable to deregister service in consul, err: %v\n", err)
+		}
+
+		checkID := fmt.Sprintf("service:%s", srvID)
+		err = d.client.Agent().CheckDeregister(checkID)
+		if err != nil {
+			log.Fatalf("unable to deregister check in consul, err: %v\n", err)
+		}
+
+		log.Infof("succeed to deregistry service and check to consul!! (service id: %s | checker id: %s)", srvID, checkID)
+		return
+	}
+}
+
 // get port number by parsing server.Options.Address
 func getPortFromServerOption(opts server.Options) (port int, err error) {
 	const portIndex = 3

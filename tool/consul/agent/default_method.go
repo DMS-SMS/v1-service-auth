@@ -23,10 +23,10 @@ func (d *_default) ChangeAllServiceNodes() (err error) {
 		// when tmpErr is nil
 		if tmpErr := d.changeServiceNodes(service); tmpErr == nil {
 			continue
-			// when tmpErr is nil, but err is not nil
+		// when tmpErr is nil, but err is not nil
 		} else if err == nil {
 			err = tmpErr
-			// when tmpErr and err both not nil
+		// when tmpErr and err both not nil
 		} else {
 			err = errors.New(err.Error() + " " + tmpErr.Error())
 		}

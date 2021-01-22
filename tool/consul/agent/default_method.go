@@ -72,6 +72,9 @@ func (d *_default) changeServiceNodes(service consul.ServiceName) error {
 // move from agent/default.go to agent/default_method.go
 // migrate change logic to changeServiceNodes method in v.1.1.6
 func (d *_default) GetNextServiceNode(service consul.ServiceName) (*registry.Node, error) {
+	d.nodeMutex.RLock()
+	defer d.nodeMutex.RUnlock()
+	
 	if !d.checkIfExistService(service) {
 		return nil, ErrUndefinedService
 	}

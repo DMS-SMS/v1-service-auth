@@ -83,3 +83,16 @@ func (d *_default) GetNextServiceNode(service consul.ServiceName) (*registry.Nod
 
 	return selectedNode, nil
 }
+
+// check if _default.services array contain srv parameter
+func (d *_default) checkIfExistService(srv consul.ServiceName) (exist bool) {
+	for _, service := range d.services {
+		if service == srv {
+			exist = true
+			return
+		}
+	}
+
+	exist = false
+	return
+}

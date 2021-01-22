@@ -4,7 +4,7 @@
 package agent
 
 import (
-	"auth/tool/consul"
+	"auth/consul"
 	"errors"
 	"fmt"
 	"github.com/hashicorp/consul/api"

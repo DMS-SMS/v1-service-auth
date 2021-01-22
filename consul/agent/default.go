@@ -4,7 +4,7 @@
 package agent
 
 import (
-	"auth/tool/consul"
+	"auth/consul"
 	"github.com/hashicorp/consul/api"
 	"github.com/micro/go-micro/v2/client/selector"
 	"github.com/micro/go-micro/v2/registry"
@@ -19,7 +19,7 @@ type _default struct {
 	next      map[consul.ServiceName]selector.Next    // change in v.1.1.6
 	nodes     map[consul.ServiceName][]*registry.Node // change in v.1.1.6
 	services  []consul.ServiceName                    // add in v.1.1.6
-	nodeMutex sync.RWMutex                     // add in v.1.1.6
+	nodeMutex sync.RWMutex                            // add in v.1.1.6
 }
 
 func Default(setters ...FieldSetter) *_default {

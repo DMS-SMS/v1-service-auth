@@ -4,7 +4,7 @@
 package agent
 
 import (
-	"auth/tool/consul"
+	"auth/consul"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/server"
 	"github.com/stretchr/testify/mock"

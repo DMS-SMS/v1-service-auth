@@ -3,8 +3,13 @@
 
 package handler
 
-import "github.com/aws/aws-sdk-go/service/sqs"
+import (
+	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/micro/go-micro/v2/util/log"
+)
 
-func (h *_default) ChangeConsulNodes(output *sqs.ReceiveMessageOutput) {
-
+func (h *_default) ChangeConsulNodes(message *sqs.Message) (err error) {
+	err = h.consulAgent.ChangeAllServiceNodes()
+	log.Infof("change all service nodes!, err: %v\n", err)
+	return
 }

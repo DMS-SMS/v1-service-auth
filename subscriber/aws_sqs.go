@@ -1,6 +1,6 @@
 // Add package in v.1.1.6
 // listener is function that return closure used in subscribe
-// listener.go is file that declare closure listening message from aws sqs, rabbitMQ, etc ...
+// aws_sqs.go is file that declare various closure about aws sqs like listening message, purging queue, etc ...
 
 package subscriber
 

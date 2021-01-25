@@ -10,6 +10,7 @@ import (
 
 type _default struct {
 	awsSession *session.Session
+	listeners  []func()
 }
 
 type FieldSetter func(*_default)
@@ -23,6 +24,7 @@ func newDefault(setters ...FieldSetter) (h *_default) {
 	for _, setter := range setters {
 		setter(h)
 	}
+	h.listeners = []func(){}
 	return
 }
 

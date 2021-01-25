@@ -7,7 +7,7 @@ package subscriber
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/micro/go-micro/v2/util/log"
+	log "github.com/micro/go-micro/v2/logger"
 	systemlog "log"
 )
 
@@ -21,7 +21,7 @@ func SqsMsgListener(queue string, handler sqsMsgHandler, rcvInput *sqs.ReceiveMe
 		QueueName: aws.String(queue),
 	})
 	if err != nil {
-		systemlog.Fatalf("unable to get queue url from queue name, name: %s\n", queue)
+		systemlog.Fatalf("unable to get queue url from queue name, name: %s, err:%v", queue, err)
 	}
 
 	if rcvInput == nil {
@@ -37,14 +37,20 @@ func SqsMsgListener(queue string, handler sqsMsgHandler, rcvInput *sqs.ReceiveMe
 		for {
 			rcvOutput, err = sqsSrv.ReceiveMessage(rcvInput)
 			if err != nil {
-				log.Errorf("some error occurs while pulling from aws sqs, queue: %s, err: %s\n", rcvInput.QueueUrl, err)
+				log.Errorf("some error occurs while pulling from aws sqs, queue: %s, err: %v", *rcvInput.QueueUrl, err)
 				return
 			}
 
 			for _, msg = range rcvOutput.Messages {
 				go func(msg *sqs.Message) {
 					if err := handler(msg); err != nil {
-						log.Errorf("some error occurs while handling aws sqs message, queue: %s, msg id: %s err: %s\n", rcvInput.QueueUrl, msg.MessageId, err)
+						log.Errorf("some error occurs while handling aws sqs message, queue: %s, msg id: %s err: %v", *rcvInput.QueueUrl, *msg.MessageId, err)
+					}
+					if _, err := sqsSrv.DeleteMessage(&sqs.DeleteMessageInput{
+						QueueUrl:      urlResult.QueueUrl,
+						ReceiptHandle: msg.ReceiptHandle,
+					}); err != nil {
+						log.Errorf("some error occurs while deleting aws sqs message, queue: %s, msg id: %s err: %v", *rcvInput.QueueUrl, *msg.MessageId, err)
 					}
 				} (msg)
 			}

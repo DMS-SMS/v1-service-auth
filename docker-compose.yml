@@ -13,6 +13,7 @@ services:
       - SMS_AWS_KEY=${SMS_AWS_KEY}
       - SMS_AWS_REGION=${SMS_AWS_REGION}
       - SMS_AWS_BUCKET=${SMS_AWS_BUCKET}
+      - CHANGE_CONSUL_SQS_NAME=${CHANGE_CONSUL_SQS_NAME}
     deploy:
       mode: replicated
       replicas: 1

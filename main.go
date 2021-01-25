@@ -7,6 +7,7 @@ import (
 	"auth/db/access"
 	"auth/handler"
 	proto "auth/proto/golang/auth"
+	"auth/subscriber"
 	"auth/tool/closure"
 	"auth/tool/network"
 	topic "auth/utils/topic/golang"
@@ -16,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/consul/api"
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/client/selector"
@@ -115,10 +117,25 @@ func main() {
 		handler.ConsulAgent(consulAgent),
 	)
 
+	// create subscriber & register listener (add in v.1.1.6)
+	consulQueue := os.Getenv("CHANGE_CONSUL_SQS_NAME")
+	if consulQueue == "" {
+		log.Fatal("please set CHANGE_CONSUL_SQS_NAME in environment variable")
+	}
+	subscriber.SetAwsSession(awsSession)
+	defaultSubscriber := subscriber.Default()
+	defaultSubscriber.RegisterListeners(
+		subscriber.SqsMsgListener(consulQueue, defaultHandler.ChangeConsulNodes, &sqs.ReceiveMessageInput{
+			MaxNumberOfMessages: aws.Int64(10),
+			WaitTimeSeconds:     aws.Int64(2),
+		}),
+	)
+
 	// register initializer for service
 	service.Init(
 		micro.BeforeStart(consulAgent.ChangeAllServiceNodes),
 		micro.AfterStart(consulAgent.ChangeAllServiceNodes),
+		micro.AfterStart(defaultSubscriber.StartListening),
 		micro.AfterStart(consulAgent.ServiceNodeRegistry(service.Server())),
 		micro.BeforeStop(consulAgent.ServiceNodeDeregistry(service.Server())),
 	)

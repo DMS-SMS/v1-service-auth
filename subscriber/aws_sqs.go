@@ -57,3 +57,22 @@ func SqsMsgListener(queue string, handler sqsMsgHandler, rcvInput *sqs.ReceiveMe
 		}
 	}
 }
+
+func SqsQueuePurger(queue string) func() {
+	sqsSrv := sqs.New(awsSession)
+	urlResult, err := sqsSrv.GetQueueUrl(&sqs.GetQueueUrlInput{
+		QueueName: aws.String(queue),
+	})
+	if err != nil {
+		systemlog.Fatalf("unable to get queue url from queue name, name: %s, err:%v", queue, err)
+	}
+
+	purgeInput := &sqs.PurgeQueueInput{}
+	purgeInput.QueueUrl = urlResult.QueueUrl
+
+	return func() {
+		if _, err := sqsSrv.PurgeQueue(purgeInput); err != nil {
+			log.Errorf("some error occurs while deleting aws sqs message, queue: %s, err: %v", *purgeInput.QueueUrl, err)
+		}
+	}
+}

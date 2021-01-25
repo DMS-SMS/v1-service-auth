@@ -1,7 +1,9 @@
-package closure
+// Add file in v.1.1.6
+// default_method_closure.go is file for declaring method to return closure of default struct
+
+package agent
 
 import (
-	"errors"
 	"fmt"
 	"github.com/hashicorp/consul/api"
 	log "github.com/micro/go-micro/v2/logger"
@@ -11,31 +13,32 @@ import (
 	"strings"
 )
 
-func ConsulServiceRegistrar(s server.Server, consul *api.Client) func() error {
+// move from /tool/closure/consul.go in v.1.1.6
+func (d *_default) ServiceNodeRegistry(s server.Server) func() error {
 	return func() (err error) {
 		port, err := getPortFromServerOption(s.Options())
 		if err != nil {
-			log.Fatalf("unable to get port number from server option, err: %v\n", err)
+			log.Fatalf("unable to get port number from server option, err: %v", err)
 		}
 		localAddr, err := getLocalIP()
 		if err != nil {
-			log.Fatalf("unable to get local address, err: %v\n", err)
+			log.Fatalf("unable to get local address, err: %v", err)
 		}
 
 		srvID := fmt.Sprintf("%s-%s", s.Options().Name, s.Options().Id)
-		err = consul.Agent().ServiceRegister(&api.AgentServiceRegistration{
+		err = d.client.Agent().ServiceRegister(&api.AgentServiceRegistration{
 			ID:      srvID,
 			Name:    s.Options().Name,
 			Port:    port,
 			Address: localAddr,
 		})
 		if err != nil {
-			log.Fatalf("unable to register service in consul, err: %v\n", err)
+			log.Fatalf("unable to register service in consul, err: %v", err)
 		}
 
 		checkID := fmt.Sprintf("service:%s", srvID)
 		checkName := fmt.Sprintf("service '%s' check", s.Options().Name)
-		err = consul.Agent().CheckRegister(&api.AgentCheckRegistration{
+		err = d.client.Agent().CheckRegister(&api.AgentCheckRegistration{
 			ID:                checkID,
 			Name:              checkName,
 			ServiceID:         srvID,
@@ -46,7 +49,7 @@ func ConsulServiceRegistrar(s server.Server, consul *api.Client) func() error {
 			},
 		})
 		if err != nil {
-			log.Fatalf("unable to register check in consul, err: %v\n", err)
+			log.Fatalf("unable to register check in consul, err: %v", err)
 		}
 
 		log.Infof("succeed to registry service and check to consul!! (service id: %s | checker id: %s)", srvID, checkID)
@@ -54,18 +57,19 @@ func ConsulServiceRegistrar(s server.Server, consul *api.Client) func() error {
 	}
 }
 
-func ConsulServiceDeregistrar(s server.Server, consul *api.Client) func() error {
+// move from /tool/closure/consul.go in v.1.1.6
+func (d *_default) ServiceNodeDeregistry(s server.Server) func() error {
 	return func() (err error) {
 		srvID := fmt.Sprintf("%s-%s", s.Options().Name, s.Options().Id)
-		err = consul.Agent().ServiceDeregister(srvID)
+		err = d.client.Agent().ServiceDeregister(srvID)
 		if err != nil {
-			log.Fatalf("unable to deregister service in consul, err: %v\n", err)
+			log.Fatalf("unable to deregister service in consul, err: %v", err)
 		}
 
 		checkID := fmt.Sprintf("service:%s", srvID)
-		err = consul.Agent().CheckDeregister(checkID)
+		err = d.client.Agent().CheckDeregister(checkID)
 		if err != nil {
-			log.Fatalf("unable to deregister check in consul, err: %v\n", err)
+			log.Fatalf("unable to deregister check in consul, err: %v", err)
 		}
 
 		log.Infof("succeed to deregistry service and check to consul!! (service id: %s | checker id: %s)", srvID, checkID)
@@ -73,6 +77,7 @@ func ConsulServiceDeregistrar(s server.Server, consul *api.Client) func() error 
 	}
 }
 
+// get port number by parsing server.Options.Address
 func getPortFromServerOption(opts server.Options) (port int, err error) {
 	const portIndex = 3
 	portStr := strings.Split(opts.Address, ":")[portIndex]
@@ -80,24 +85,7 @@ func getPortFromServerOption(opts server.Options) (port int, err error) {
 	return
 }
 
-func getMyLocalAddr() (addr *net.UDPAddr, err error) {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		return
-	}
-	defer func() {
-		_ = conn.Close()
-	}()
-
-	addr, ok := conn.LocalAddr().(*net.UDPAddr)
-	if !ok {
-		err = errors.New("unable to assert type to *net.UDPAddr")
-		return
-	}
-
-	return
-}
-
+// get my local ip address to register node in consul
 func getLocalIP() (addr string, err error) {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {

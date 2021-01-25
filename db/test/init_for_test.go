@@ -1,7 +1,6 @@
 package test
 
 import (
-	"auth/adapter"
 	"auth/db"
 	"auth/db/access"
 	"github.com/hashicorp/consul/api"
@@ -15,7 +14,7 @@ func init() {
 		log.Fatal(err)
 	}
 
-	dbc, _, err = adapter.ConnectDBWithConsul(cli, "db/auth/local_test")
+	dbc, _, err = db.ConnectWithConsul(cli, "db/auth/local_test")
 	if err != nil {
 		log.Fatal(err)
 	}

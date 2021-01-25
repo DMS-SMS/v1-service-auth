@@ -1,12 +1,15 @@
 package main
 
 import (
-	"auth/adapter"
+	"auth/consul"
+	consulagent "auth/consul/agent"
 	"auth/db"
 	"auth/db/access"
 	"auth/handler"
 	proto "auth/proto/golang/auth"
+	"auth/subscriber"
 	"auth/tool/closure"
+	"auth/tool/network"
 	topic "auth/utils/topic/golang"
 	"fmt"
 	"github.com/InVisionApp/go-health/v2"
@@ -14,25 +17,25 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/consul/api"
 	"github.com/micro/go-micro/v2"
+	"github.com/micro/go-micro/v2/client/selector"
 	log "github.com/micro/go-micro/v2/logger"
 	"github.com/micro/go-micro/v2/transport/grpc"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
-	"math/rand"
-	"net"
 	"os"
 	"time"
 )
 
 func main() {
 	// create service
-	port := getRandomPortNotInUsedWithRange(10000, 10100)
+	port := network.GetRandomPortNotInUsedWithRange(10000, 10100) // change from function to method (in v.1.1.6)
 	service := micro.NewService(
 		micro.Name(topic.AuthServiceName),
-		micro.Version("1.1.4"),
+		micro.Version("1.1.6"),
 		micro.Transport(grpc.NewTransport()),
 		micro.Address(fmt.Sprintf(":%d", port)),
 	)
@@ -45,18 +48,24 @@ func main() {
 	}
 	consulCfg := api.DefaultConfig()
 	consulCfg.Address = consulAddr
-	consul, err := api.NewClient(consulCfg)
+	consulCli, err := api.NewClient(consulCfg)
 	if err != nil {
 		log.Fatalf("consul connect fail, err: %v", err)
 	}
+	consulAgent := consulagent.Default( // add in v.1.1.6
+		consulagent.Strategy(selector.RoundRobin),
+		consulagent.Client(consulCli),
+		consulagent.Services([]consul.ServiceName{topic.AuthServiceName, topic.ClubServiceName,
+			topic.OutingServiceName, topic.ScheduleServiceName, topic.AnnouncementServiceName}),
+	)
 
 	// create db access manager
-	dbc, _, err := adapter.ConnectDBWithConsul(consul, "db/auth/local")
+	dbc, _, err := db.ConnectWithConsul(consulCli, "db/auth/local")
 	if err != nil {
 		log.Fatalf("db connect fail, err: %v", err)
 	}
 	db.Migrate(dbc)
-	defaultAccessManage, err := db.NewAccessorManage(access.Default(dbc))
+	accessManage, err := db.NewAccessorManage(access.Default(dbc))
 	if err != nil {
 		log.Fatalf("db accessor create fail, err: %v", err)
 	}
@@ -101,23 +110,44 @@ func main() {
 	}
 
 	// create gRPC handler
-	rpcHandler := handler.Default(
-		handler.Manager(defaultAccessManage),
+	defaultHandler := handler.Default(
+		handler.Manager(accessManage),
 		handler.Tracer(authSrvTracer),
 		handler.AWSSession(awsSession),
+		handler.ConsulAgent(consulAgent),
+	)
+
+	// create subscriber & register listener (add in v.1.1.6)
+	consulChangeQueue := os.Getenv("CHANGE_CONSUL_SQS_NAME")
+	if consulChangeQueue == "" {
+		log.Fatal("please set CHANGE_CONSUL_SQS_NAME in environment variable")
+	}
+	subscriber.SetAwsSession(awsSession)
+	defaultSubscriber := subscriber.Default()
+	defaultSubscriber.RegisterBeforeStart(
+		subscriber.SqsQueuePurger(consulChangeQueue),
+	)
+	defaultSubscriber.RegisterListeners(
+		subscriber.SqsMsgListener(consulChangeQueue, defaultHandler.ChangeConsulNodes, &sqs.ReceiveMessageInput{
+			MaxNumberOfMessages: aws.Int64(10),
+			WaitTimeSeconds:     aws.Int64(2),
+		}),
 	)
 
 	// register initializer for service
 	service.Init(
-		micro.AfterStart(closure.ConsulServiceRegistrar(service.Server(), consul)),
-		micro.BeforeStop(closure.ConsulServiceDeregistrar(service.Server(), consul)),
+		micro.BeforeStart(consulAgent.ChangeAllServiceNodes),
+		micro.AfterStart(consulAgent.ChangeAllServiceNodes),
+		micro.AfterStart(defaultSubscriber.StartListening),
+		micro.AfterStart(consulAgent.ServiceNodeRegistry(service.Server())),
+		micro.BeforeStop(consulAgent.ServiceNodeDeregistry(service.Server())),
 	)
 
 	// register gRPC handler in service
-	_ = proto.RegisterAuthAdminHandler(service.Server(), rpcHandler)
-	_ = proto.RegisterAuthStudentHandler(service.Server(), rpcHandler)
-	_ = proto.RegisterAuthTeacherHandler(service.Server(), rpcHandler)
-	_ = proto.RegisterAuthParentHandler(service.Server(), rpcHandler)
+	_ = proto.RegisterAuthAdminHandler(service.Server(), defaultHandler)
+	_ = proto.RegisterAuthStudentHandler(service.Server(), defaultHandler)
+	_ = proto.RegisterAuthTeacherHandler(service.Server(), defaultHandler)
+	_ = proto.RegisterAuthParentHandler(service.Server(), defaultHandler)
 
 	// run DB Health checker
 	h := health.New()
@@ -131,7 +161,7 @@ func main() {
 		Name:       "DB-Checker",
 		Checker:    dbChecker,
 		Interval:   time.Second * 5,
-		OnComplete: closure.TTLCheckHandlerAboutDB(service.Server(), consul),
+		OnComplete: closure.TTLCheckHandlerAboutDB(service.Server(), consulCli),
 	}
 	if err = h.AddChecks([]*health.Config{dbHealthCfg}); err != nil {
 		log.Fatalf("unable to register health checks, err: %v", err)
@@ -145,47 +175,3 @@ func main() {
 		log.Fatal(err)
 	}
 }
-
-func getRandomPortNotInUsedWithRange(min, max int) (port int) {
-	for {
-		port = rand.Intn(max - min) + min
-		conn, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-		if err != nil {
-			continue
-		}
-		_ = conn.Close()
-		break
-	}
-	return
-}
-
-//http.HandleFunc("/profiles", func(writer http.ResponseWriter, request *http.Request) {
-//	file, fileHeader, err := request.FormFile("profile")
-//	if err != nil {
-//		http.Error(writer, fmt.Sprintf("%s, err: %v", http.StatusText(http.StatusBadRequest), err.Error()), http.StatusBadRequest)
-//		return
-//	}
-//
-//	buf := make([]byte, fileHeader.Size)
-//	_, _ = file.Read(buf)
-//
-//	service := micro.NewService()
-//	authService := proto.NewAuthAdminService("DMS.SMS.v1.service.auth", service.Client())
-//	now := time.Now()
-//	fmt.Println(authService.CreateNewStudent(context.Background(), &proto.CreateNewStudentRequest{
-//		UUID:          "",
-//		StudentID:     "",
-//		StudentPW:     "",
-//		ParentUUID:    "",
-//		Grade:         0,
-//		Class:         0,
-//		StudentNumber: 0,
-//		Name:          "",
-//		PhoneNumber:   "",
-//		Image:         buf,
-//	}))
-//	fmt.Println(time.Now().Sub(now).Seconds())
-//	return
-//})
-//
-//log.Fatal(http.ListenAndServe(":8080", nil))

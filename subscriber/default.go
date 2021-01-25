@@ -6,6 +6,7 @@ package subscriber
 
 import (
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/prometheus/common/log"
 )
 
 var awsSession *session.Session
@@ -39,4 +40,16 @@ func AwsSession(awsSession *session.Session) FieldSetter {
 	return func(s *_default) {
 		s.awsSession = awsSession
 	}
+}
+
+func (s *_default) RegisterListeners(listeners ...func()) {
+	s.listeners = append(s.listeners, listeners...)
+}
+
+func (s *_default) StartListening() (_ error) {
+	log.Info("Default subscriber start listening!!")
+	for _, listener := range s.listeners {
+		go listener()
+	}
+	return
 }

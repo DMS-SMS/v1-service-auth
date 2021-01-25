@@ -58,6 +58,7 @@ func SqsMsgListener(queue string, handler sqsMsgHandler, rcvInput *sqs.ReceiveMe
 	}
 }
 
+// function that returns closure purging (deleting) all message in aws sqs queue
 func SqsQueuePurger(queue string) func() {
 	sqsSrv := sqs.New(awsSession)
 	urlResult, err := sqsSrv.GetQueueUrl(&sqs.GetQueueUrlInput{

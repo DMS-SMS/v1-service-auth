@@ -42,10 +42,12 @@ func AwsSession(awsSession *session.Session) FieldSetter {
 	}
 }
 
+// function that register listeners to run in StartListening method
 func (s *_default) RegisterListeners(listeners ...func()) {
 	s.listeners = append(s.listeners, listeners...)
 }
 
+// function that start listening with listeners that register in RegisterListeners method
 func (s *_default) StartListening() (_ error) {
 	log.Info("Default subscriber start listening!!")
 	for _, listener := range s.listeners {

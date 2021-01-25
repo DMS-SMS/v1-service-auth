@@ -55,6 +55,10 @@ func (s *_default) RegisterBeforeStart(fn ...func()) {
 
 // function that start listening with listeners that register in RegisterListeners method
 func (s *_default) StartListening() (_ error) {
+	for _, before := range s.beforeStart {
+		before()
+	}
+	
 	log.Info("Default subscriber start listening!!")
 	for _, listener := range s.listeners {
 		go listener()

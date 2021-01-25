@@ -108,7 +108,7 @@ func main() {
 	}
 
 	// create gRPC handler
-	rpcHandler := handler.Default(
+	defaultHandler := handler.Default(
 		handler.Manager(accessManage),
 		handler.Tracer(authSrvTracer),
 		handler.AWSSession(awsSession),
@@ -124,10 +124,10 @@ func main() {
 	)
 
 	// register gRPC handler in service
-	_ = proto.RegisterAuthAdminHandler(service.Server(), rpcHandler)
-	_ = proto.RegisterAuthStudentHandler(service.Server(), rpcHandler)
-	_ = proto.RegisterAuthTeacherHandler(service.Server(), rpcHandler)
-	_ = proto.RegisterAuthParentHandler(service.Server(), rpcHandler)
+	_ = proto.RegisterAuthAdminHandler(service.Server(), defaultHandler)
+	_ = proto.RegisterAuthStudentHandler(service.Server(), defaultHandler)
+	_ = proto.RegisterAuthTeacherHandler(service.Server(), defaultHandler)
+	_ = proto.RegisterAuthParentHandler(service.Server(), defaultHandler)
 
 	// run DB Health checker
 	h := health.New()

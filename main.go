@@ -118,14 +118,17 @@ func main() {
 	)
 
 	// create subscriber & register listener (add in v.1.1.6)
-	consulQueue := os.Getenv("CHANGE_CONSUL_SQS_NAME")
-	if consulQueue == "" {
+	consulChangeQueue := os.Getenv("CHANGE_CONSUL_SQS_NAME")
+	if consulChangeQueue == "" {
 		log.Fatal("please set CHANGE_CONSUL_SQS_NAME in environment variable")
 	}
 	subscriber.SetAwsSession(awsSession)
 	defaultSubscriber := subscriber.Default()
+	defaultSubscriber.RegisterBeforeStart(
+		subscriber.SqsQueuePurger(consulChangeQueue),
+	)
 	defaultSubscriber.RegisterListeners(
-		subscriber.SqsMsgListener(consulQueue, defaultHandler.ChangeConsulNodes, &sqs.ReceiveMessageInput{
+		subscriber.SqsMsgListener(consulChangeQueue, defaultHandler.ChangeConsulNodes, &sqs.ReceiveMessageInput{
 			MaxNumberOfMessages: aws.Int64(10),
 			WaitTimeSeconds:     aws.Int64(2),
 		}),

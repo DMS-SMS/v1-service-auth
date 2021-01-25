@@ -16,8 +16,9 @@ func SetAwsSession(s *session.Session) {
 }
 
 type _default struct {
-	awsSession *session.Session
-	listeners  []func()
+	awsSession  *session.Session
+	listeners   []func()
+	beforeStart []func()
 }
 
 type FieldSetter func(*_default)
@@ -33,6 +34,7 @@ func newDefault(setters ...FieldSetter) (h *_default) {
 		setter(h)
 	}
 	h.listeners = []func(){}
+	h.beforeStart = []func(){}
 	return
 }
 
@@ -43,8 +45,12 @@ func AwsSession(awsSession *session.Session) FieldSetter {
 }
 
 // function that register listeners to run in StartListening method
-func (s *_default) RegisterListeners(listeners ...func()) {
-	s.listeners = append(s.listeners, listeners...)
+func (s *_default) RegisterListeners(fn ...func()) {
+	s.listeners = append(s.listeners, fn...)
+}
+
+func (s *_default) RegisterBeforeStart(fn ...func()) {
+	s.beforeStart = append(s.beforeStart, fn...)
 }
 
 // function that start listening with listeners that register in RegisterListeners method

@@ -6,7 +6,7 @@ package subscriber
 
 import (
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/prometheus/common/log"
+	log "github.com/micro/go-micro/v2/logger"
 )
 
 var awsSession *session.Session

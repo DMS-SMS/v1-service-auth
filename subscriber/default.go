@@ -8,6 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 )
 
+var awsSession *session.Session
+
+func SetAwsSession(s *session.Session) {
+	awsSession = s
+}
+
 type _default struct {
 	awsSession *session.Session
 	listeners  []func()
@@ -21,6 +27,7 @@ func Default(setters ...FieldSetter) *_default {
 
 func newDefault(setters ...FieldSetter) (h *_default) {
 	h = new(_default)
+	h.awsSession = awsSession
 	for _, setter := range setters {
 		setter(h)
 	}
@@ -28,7 +35,7 @@ func newDefault(setters ...FieldSetter) (h *_default) {
 	return
 }
 
-func AWSSession(awsSession *session.Session) FieldSetter {
+func AwsSession(awsSession *session.Session) FieldSetter {
 	return func(s *_default) {
 		s.awsSession = awsSession
 	}

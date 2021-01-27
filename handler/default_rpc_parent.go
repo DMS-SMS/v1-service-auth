@@ -52,7 +52,11 @@ func (h _default) LoginParentAuth(ctx context.Context, req *proto.LoginParentAut
 		return
 	}
 
+	spanForHash := h.tracer.StartSpan("CompareHashAndPassword", opentracing.ChildOf(parentSpan))
 	err = bcrypt.CompareHashAndPassword([]byte(resultAuth.ParentPW), []byte(req.ParentPW))
+	spanForHash.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+	spanForHash.Finish()
+
 	if err != nil {
 		access.Rollback()
 		switch err {

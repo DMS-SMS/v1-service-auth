@@ -52,7 +52,11 @@ func (h _default) LoginStudentAuth(ctx context.Context, req *proto.LoginStudentA
 		return
 	}
 
+	spanForHash := h.tracer.StartSpan("CompareHashAndPassword", opentracing.ChildOf(parentSpan))
 	err = bcrypt.CompareHashAndPassword([]byte(resultAuth.StudentPW), []byte(req.StudentPW))
+	spanForHash.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+	spanForHash.Finish()
+
 	if err != nil {
 		access.Rollback()
 		switch err {

@@ -145,7 +145,11 @@ func (h _default) ChangeTeacherPW(ctx context.Context, req *proto.ChangeTeacherP
 		return
 	}
 
+	spanForHash = h.tracer.StartSpan("GenerateFromPassword", opentracing.ChildOf(parentSpan))
 	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.RevisionPW), bcrypt.MinCost)
+	spanForHash.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+	spanForHash.Finish()
+
 	if err != nil {
 		access.Rollback()
 		resp.Status = http.StatusInternalServerError

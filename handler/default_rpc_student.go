@@ -141,7 +141,7 @@ func (h _default) ChangeStudentPW(ctx context.Context, req *proto.ChangeStudentP
 		return
 	}
 
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.RevisionPW), 3)
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.RevisionPW), bcrypt.MinCost)
 	spanForDB = h.tracer.StartSpan("ChangeStudentPW", opentracing.ChildOf(parentSpan))
 	err = access.ChangeStudentPW(string(selectedAuth.UUID), string(hashedBytes))
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))

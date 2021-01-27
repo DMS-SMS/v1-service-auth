@@ -69,7 +69,7 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 		continue
 	}
 
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.StudentPW), 3)
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.StudentPW), bcrypt.MinCost)
 	if err != nil {
 		access.Rollback()
 		resp.Status = http.StatusInternalServerError
@@ -282,7 +282,7 @@ func (h _default) CreateNewTeacher(ctx context.Context, req *proto.CreateNewTeac
 		continue
 	}
 	
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.TeacherPW), 3)
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.TeacherPW), bcrypt.MinCost)
 	if err != nil {
 		access.Rollback()
 		resp.Status = http.StatusInternalServerError
@@ -445,7 +445,7 @@ func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParen
 		continue
 	}
 
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.ParentPW), 3)
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.ParentPW), bcrypt.MinCost)
 	if err != nil {
 		access.Rollback()
 		resp.Status = http.StatusInternalServerError

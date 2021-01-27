@@ -69,7 +69,11 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 		continue
 	}
 
+	spanForHash := h.tracer.StartSpan("GenerateFromPassword", opentracing.ChildOf(parentSpan))
 	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.StudentPW), bcrypt.MinCost)
+	spanForHash.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+	spanForHash.Finish()
+
 	if err != nil {
 		access.Rollback()
 		resp.Status = http.StatusInternalServerError
@@ -281,8 +285,12 @@ func (h _default) CreateNewTeacher(ctx context.Context, req *proto.CreateNewTeac
 		tUUID = fmt.Sprintf("teacher-%s", random.StringConsistOfIntWithLength(12))
 		continue
 	}
-	
+
+	spanForHash := h.tracer.StartSpan("GenerateFromPassword", opentracing.ChildOf(parentSpan))
 	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.TeacherPW), bcrypt.MinCost)
+	spanForHash.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+	spanForHash.Finish()
+
 	if err != nil {
 		access.Rollback()
 		resp.Status = http.StatusInternalServerError
@@ -445,7 +453,11 @@ func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParen
 		continue
 	}
 
+	spanForHash := h.tracer.StartSpan("GenerateFromPassword", opentracing.ChildOf(parentSpan))
 	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.ParentPW), bcrypt.MinCost)
+	spanForHash.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+	spanForHash.Finish()
+
 	if err != nil {
 		access.Rollback()
 		resp.Status = http.StatusInternalServerError

@@ -286,6 +286,13 @@ func (h _default) GetParentWithStudentUUID(ctx context.Context, req *proto.GetPa
 		return
 	}
 
+	if selectedAuth.ParentUUID == "" {
+		access.Commit()
+		resp.Status = http.StatusConflict
+		resp.Message = fmt.Sprintf(conflictErrorFormat, "not exist teacher uuid in student, uuid: " + req.StudentUUID)
+		return
+	}
+
 	spanForDB = h.tracer.StartSpan("GetParentInformWithUUID", opentracing.ChildOf(parentSpan))
 	selectedParent, err := access.GetParentInformWithUUID(string(selectedAuth.ParentUUID))
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("selectedParent", selectedParent), log.Error(err))

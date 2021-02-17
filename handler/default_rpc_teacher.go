@@ -52,7 +52,11 @@ func (h _default) LoginTeacherAuth(ctx context.Context, req *proto.LoginTeacherA
 		return
 	}
 
+	spanForHash := h.tracer.StartSpan("CompareHashAndPassword", opentracing.ChildOf(parentSpan))
 	err = bcrypt.CompareHashAndPassword([]byte(resultAuth.TeacherPW), []byte(req.TeacherPW))
+	spanForHash.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+	spanForHash.Finish()
+
 	if err != nil {
 		access.Rollback()
 		switch err {
@@ -122,7 +126,11 @@ func (h _default) ChangeTeacherPW(ctx context.Context, req *proto.ChangeTeacherP
 		return
 	}
 
+	spanForHash := h.tracer.StartSpan("CompareHashAndPassword", opentracing.ChildOf(parentSpan))
 	err = bcrypt.CompareHashAndPassword([]byte(selectedAuth.TeacherPW), []byte(req.CurrentPW))
+	spanForHash.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+	spanForHash.Finish()
+
 	if err != nil {
 		access.Rollback()
 		switch err {
@@ -137,7 +145,18 @@ func (h _default) ChangeTeacherPW(ctx context.Context, req *proto.ChangeTeacherP
 		return
 	}
 
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.RevisionPW), 3)
+	spanForHash = h.tracer.StartSpan("GenerateFromPassword", opentracing.ChildOf(parentSpan))
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.RevisionPW), bcrypt.MinCost)
+	spanForHash.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+	spanForHash.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to hash pw, err: " + err.Error())
+		return
+	}
+
 	spanForDB = h.tracer.StartSpan("ChangeTeacherPW", opentracing.ChildOf(parentSpan))
 	err = access.ChangeTeacherPW(string(selectedAuth.UUID), string(hashedBytes))
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))

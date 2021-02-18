@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/consul/api"
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/client/selector"
@@ -124,15 +123,15 @@ func main() {
 	}
 	subscriber.SetAwsSession(awsSession)
 	defaultSubscriber := subscriber.Default()
-	defaultSubscriber.RegisterBeforeStart(
-		subscriber.SqsQueuePurger(consulChangeQueue),
-	)
-	defaultSubscriber.RegisterListeners(
-		subscriber.SqsMsgListener(consulChangeQueue, defaultHandler.ChangeConsulNodes, &sqs.ReceiveMessageInput{
-			MaxNumberOfMessages: aws.Int64(10),
-			WaitTimeSeconds:     aws.Int64(2),
-		}),
-	)
+	//defaultSubscriber.RegisterBeforeStart(
+	//	subscriber.SqsQueuePurger(consulChangeQueue),
+	//)
+	//defaultSubscriber.RegisterListeners(
+	//	subscriber.SqsMsgListener(consulChangeQueue, defaultHandler.ChangeConsulNodes, &sqs.ReceiveMessageInput{
+	//		MaxNumberOfMessages: aws.Int64(10),
+	//		WaitTimeSeconds:     aws.Int64(2),
+	//	}),
+	//)
 
 	// register initializer for service
 	service.Init(
@@ -148,6 +147,7 @@ func main() {
 	_ = proto.RegisterAuthStudentHandler(service.Server(), defaultHandler)
 	_ = proto.RegisterAuthTeacherHandler(service.Server(), defaultHandler)
 	_ = proto.RegisterAuthParentHandler(service.Server(), defaultHandler)
+	_ = proto.RegisterAuthEventHandler(service.Server(), defaultHandler)
 
 	// run DB Health checker
 	h := health.New()

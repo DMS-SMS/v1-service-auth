@@ -70,3 +70,14 @@ func (d *_default) CreateParentInform(inform *model.ParentInform) (*model.Parent
 	}
 	return nil, result.Error
 }
+
+func (d *_default) AddUnsignedStudent(student *model.UnsignedStudent) (*model.UnsignedStudent, error) {
+	result := d.tx.Create(student)
+	if inform, ok := result.Value.(*model.UnsignedStudent); ok {
+		return inform, result.Error
+	}
+	if result.Error == nil {
+		result.Error = errors.ParentInformAssertionError
+	}
+	return nil, result.Error
+}

@@ -190,6 +190,14 @@ func (m _mock) DeleteParentInform(parentUUID string) error {
 
 // ---
 
+// 예비 계정 생성 메서드
+func (m _mock) AddUnsignedStudent(student *model.UnsignedStudent) (*model.UnsignedStudent, error) {
+	args := m.mock.Called(student)
+	return args.Get(0).(*model.UnsignedStudent), args.Error(1)
+}
+
+// ---
+
 // 트랜잭션 관련 메서드
 func (m _mock) BeginTx() {
 	m.mock.Called()

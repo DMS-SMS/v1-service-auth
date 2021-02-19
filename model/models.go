@@ -25,6 +25,18 @@ type StudentInform struct {
 	ProfileURI    profileURI    `gorm:"Type:varchar(150);NOT NULL"`                                   // 제약 조건 나중에 추가 예정
 }
 
+// 계정 생성 전 사전에 인증된 사용자 정보 테이블
+type UnsignedStudent struct {
+	gorm.Model
+	AuthCode      authCode      `gorm:"Type:int(11);NOT NULL" validate:"range=100000~999999"`   // 6자리 숫자
+	Grade         grade         `gorm:"Type:tinyint(1);NOT NULL" validate:"range=1~3"`          // 1~3 사이 값
+	Class         class         `gorm:"Type:tinyint(1);NOT NULL" validate:"range=1~4"`          // 1~4 사이 값
+	StudentNumber studentNumber `gorm:"Type:tinyint(1);NOT NULL" validate:"range=1~21"`         // 1~21 사이 값
+	Name          name          `gorm:"Type:varchar(4);NOT NULL" validate:"min=2,max=4,korean"` // 2~4자 사이 한글
+	PhoneNumber   phoneNumber   `gorm:"Type:char(11);NOT NULL" validate:"len=11,phone_number"`  // 11자
+	PreProfileURI preProfileURI `gorm:"Type:varchar(150);NOT NULL"`
+}
+
 // 선생님 계정 테이블
 type TeacherAuth struct {
 	gorm.Model

@@ -63,6 +63,11 @@ type Accessor interface {
 
 	// ---
 
+	// 예비 계정 생성 메서드
+	AddUnsignedStudent(*model.UnsignedStudent) (result *model.UnsignedStudent, err error)
+
+	// ---
+
 	// 트랜잭션 관련 메서드
 	BeginTx()
 	Commit() *gorm.DB

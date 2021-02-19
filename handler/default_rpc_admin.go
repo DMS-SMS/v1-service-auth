@@ -634,3 +634,24 @@ func (h _default) LoginAdminAuth(ctx context.Context, req *proto.LoginAdminAuthR
 
 	return
 }
+
+func (h _default) AddUnsignedStudents(ctx context.Context, req *proto.AddUnsignedStudentsRequest, resp *proto.AddUnsignedStudentsResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	//reqID := ctx.Value("X-Request-Id").(string)
+	//parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+	//
+	//access, err := h.accessManage.BeginTx()
+	//if err != nil {
+	//	resp.Status = http.StatusInternalServerError
+	//	resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())
+	//	return
+	//}
+	
+	return
+}

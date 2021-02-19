@@ -157,3 +157,21 @@ func ProfileURI(s string) profileURI { return profileURI(s) }
 func (pu profileURI) Value() (driver.Value, error) { return string(pu), nil }
 func (pu *profileURI) Scan(src interface{}) (err error) { *pu = profileURI(src.([]uint8)); return }
 func (pu profileURI) KeyName() string { return "profile_uri" }
+
+// PreProfileURI 필드에서 사용할 사용자 정의 타입
+type preProfileURI string
+func PreProfileURI(s string) preProfileURI { return preProfileURI(s) }
+func (pu preProfileURI) Value() (driver.Value, error) { return string(pu), nil }
+func (pu *preProfileURI) Scan(src interface{}) (err error) { *pu = preProfileURI(src.([]uint8)); return }
+func (pu preProfileURI) KeyName() string { return "pre_profile_uri" }
+
+// AuthCode 필드에서 사용할 사용자 정의 타입
+type authCode int64
+func AuthCode(i int64) authCode { return authCode(i) }
+func (ac authCode) Value() (value driver.Value, err error) {
+	value = int64(ac)
+	if value == int64(0) { value = nil }
+	return
+}
+func (ac *authCode) Scan(src interface{}) (err error) { *ac = authCode(src.(int64)); return }
+func (ac authCode) KeyName() string { return "auth_code" }

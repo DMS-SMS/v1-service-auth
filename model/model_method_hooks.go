@@ -154,3 +154,35 @@ func (pi *ParentInform) BeforeUpdate() (err error) {
 
 	return validate.DBValidator.Struct(informForValidate)
 }
+
+func (us *UnsignedStudent) BeforeCreate(tx *gorm.DB) (err error) {
+	if err = validate.DBValidator.Struct(us); err != nil {
+		return
+	}
+
+	query := tx.Where("auth_code = ?", us.AuthCode).Find(&UnsignedStudent{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(UnsignedStudentInstance.AuthCode.KeyName(), string(us.AuthCode))
+		return
+	}
+
+	query = tx.Where("phone_number = ?", us.PhoneNumber).Find(&UnsignedStudent{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(UnsignedStudentInstance.PhoneNumber.KeyName(), string(us.PhoneNumber))
+		return
+	}
+
+	query = tx.Where("pre_profile_uri = ?", us.PreProfileURI).Find(&UnsignedStudent{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(UnsignedStudentInstance.PreProfileURI.KeyName(), string(us.PreProfileURI))
+		return
+	}
+
+	query = tx.Where("grade = ? AND class = ? AND student_number = ?", us.Grade, us.Class, us.StudentNumber).Find(&UnsignedStudent{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(us.StudentNumber.KeyName(), fmt.Sprintf("%d%d%02d", us.Grade, us.Class, us.StudentNumber))
+		return
+	}
+
+	return
+}

@@ -2,9 +2,12 @@ package model
 
 var (
 	StudentAuthInstance = new(StudentAuth)
-	TeacherAuthInstance = new(TeacherAuth)
-	ParentAuthInstance = new(ParentAuth)
 	StudentInformInstance = new(StudentInform)
+	UnsignedStudentInstance = new(UnsignedStudent)
+	
+	TeacherAuthInstance = new(TeacherAuth)
 	TeacherInformInstance = new(TeacherInform)
+	
+	ParentAuthInstance = new(ParentAuth)
 	ParentInformInstance = new(ParentInform)
 )

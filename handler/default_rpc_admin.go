@@ -19,7 +19,9 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/uber/jaeger-client-go"
 	"golang.org/x/crypto/bcrypt"
+	"math/rand"
 	"net/http"
+	"time"
 )
 
 func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStudentRequest, resp *proto.CreateNewStudentResponse) (_ error) {
@@ -643,15 +645,85 @@ func (h _default) AddUnsignedStudents(ctx context.Context, req *proto.AddUnsigne
 		return
 	}
 
-	//reqID := ctx.Value("X-Request-Id").(string)
-	//parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
-	//
-	//access, err := h.accessManage.BeginTx()
-	//if err != nil {
-	//	resp.Status = http.StatusInternalServerError
-	//	resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())
-	//	return
-	//}
-	
+	if !adminUUIDRegex.MatchString(req.UUID) {
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not admin")
+		return
+	}
+
+	access, err := h.accessManage.BeginTx()
+	if err != nil {
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())
+		return
+	}
+
+	svc := s3.New(h.awsSession)
+	var addCount uint32 = 0
+	var noAddCount uint32 = 0
+	var duplicateLog string
+
+	for _, student := range req.Students {
+		preProfileUri := fmt.Sprintf("profiles/years/2021/grades/%d/groups/%d/numbers/%d", student.Grade, student.Group, student.StudentNumber)
+		_, err := svc.HeadObject(&s3.HeadObjectInput{
+			Bucket: aws.String(s3Bucket),
+			Key:    aws.String(preProfileUri),
+		})
+		if err != nil {
+			resp.Status = http.StatusNotFound
+			resp.Message = fmt.Sprintf("pre profile not exist in s3, uri: %s, name: %s. (not save anything)", preProfileUri, student.Name)
+			access.Rollback()
+			return
+		}
+
+		rand.Seed(time.Now().UnixNano())
+		min := 100000
+		max := 999999
+		authCode := rand.Intn(max - min + 1) + min
+
+		_, err = access.AddUnsignedStudent(&model.UnsignedStudent{
+			AuthCode:      model.AuthCode(int64(authCode)),
+			Grade:         model.Grade(int64(student.Grade)),
+			Class:         model.Class(int64(student.Group)),
+			StudentNumber: model.StudentNumber(int64(student.StudentNumber)),
+			Name:          model.Name(student.Name),
+			PhoneNumber:   model.PhoneNumber(student.PhoneNumber),
+			PreProfileURI: model.PreProfileURI(preProfileUri),
+		})
+
+		switch assertedError := err.(type) {
+		case nil:
+			addCount++
+			continue
+		case validator.ValidationErrors:
+			access.Rollback()
+			resp.Status = http.StatusProxyAuthRequired
+			resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for unsigned students, err: " + err.Error())
+			return
+		case *mysql.MySQLError:
+			switch assertedError.Number {
+			case mysqlcode.ER_DUP_ENTRY:
+				noAddCount++
+				duplicateLog += fmt.Sprintf("\nuri: %s, name: %s, duplicate err: %v", preProfileUri, student.Name, assertedError)
+				continue
+			default:
+				access.Rollback()
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected AddUnsignedStudent error, err: " + assertedError.Error())
+				return
+			}
+		default:
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "AddUnsignedStudent returns unexpected type of error, err: " + assertedError.Error())
+			return
+		}
+	}
+	access.Commit()
+
+	resp.Status = http.StatusCreated
+	resp.Message = fmt.Sprintf("succeed to add unsigned students. duplicate log: %s", duplicateLog)
+	resp.AddCount = addCount
+	resp.NoAddCount = noAddCount
 	return
 }

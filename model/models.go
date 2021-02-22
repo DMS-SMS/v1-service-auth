@@ -23,6 +23,7 @@ type StudentInform struct {
 	Name          name          `gorm:"Type:varchar(4);NOT NULL" validate:"min=2,max=4,korean"`       // 2~4자 사이 한글
 	PhoneNumber   phoneNumber   `gorm:"Type:char(11);NOT NULL" validate:"len=11,phone_number"`        // 11자
 	ProfileURI    profileURI    `gorm:"Type:varchar(150);NOT NULL"`                                   // 제약 조건 나중에 추가 예정
+	ParentStatus  parentStatus  `gorm:"Type:varchar(30);NOT NULL;default:OK_CONN_OK_NOTIFY"`
 }
 
 // 계정 생성 전 사전에 인증된 사용자 정보 테이블

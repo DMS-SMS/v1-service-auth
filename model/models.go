@@ -71,6 +71,16 @@ type ParentInform struct {
 	PhoneNumber phoneNumber `gorm:"Type:char(11);NOT NULL" validate:"len=11,phone_number"`       // 11자
 }
 
+// 학부모 자녀 정보 테이블
+type ParentChildren struct {
+	gorm.Model
+	ParentUUID    parentUUID    `gorm:"Type:char(19);UNIQUE;NOT NULL" validate:"uuid=parent,len=19"` // 형식 => 'parent-' + 12자리 랜덤 수 (19자)
+	Grade         grade         `gorm:"Type:tinyint(1);NOT NULL" validate:"range=1~3"`               // 1~3 사이 값
+	Class         class         `gorm:"Type:tinyint(1);NOT NULL" validate:"range=1~4"`               // 1~4 사이 값
+	StudentNumber studentNumber `gorm:"Type:tinyint(1);NOT NULL" validate:"range=1~21"`              // 1~21 사이 값
+	Name          name          `gorm:"Type:varchar(4);NOT NULL" validate:"min=2,max=4,korean"`       // 2~4자 사이 한글
+}
+
 // 관리자 계정 테이블
 type AdminAuth struct {
 	gorm.Model

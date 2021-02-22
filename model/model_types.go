@@ -161,6 +161,38 @@ func (pu profileURI) Value() (driver.Value, error) { return string(pu), nil }
 func (pu *profileURI) Scan(src interface{}) (err error) { *pu = profileURI(src.([]uint8)); return }
 func (pu profileURI) KeyName() string { return "profile_uri" }
 
+// parentStatus 필드에서 사용할 사용자 정의 타입
+type parentStatus string
+func ParentStatus(s string) parentStatus { return parentStatus(s) }
+func (ps parentStatus) Value() (driver.Value, error) { return string(ps), nil }
+func (ps *parentStatus) Scan(src interface{}) (err error) { *ps = parentStatus(src.([]uint8)); return }
+func (ps parentStatus) KeyName() string { return "parent_status" }
+func (ps parentStatus) SetWithBool(conn, notify bool) (value string) {
+	if !conn && !notify {
+		value = "NOT_CONN_NOT_NOTIFY"
+	} else if !conn && notify {
+		value = "NOT_CONN_OK_NOTIFY"
+	} else if conn && !notify {
+		value = "OK_CONN_NOT_NOTIFY"
+	} else if conn && notify {
+		value = "OK_CONN_OK_NOTIFY"
+	}
+	return
+}
+func (ps parentStatus) GetBool() (conn, notify bool) {
+	switch ps {
+	case "NOT_CONN_NOT_NOTIFY":
+		conn, notify = false, false
+	case "NOT_CONN_OK_NOTIFY":
+		conn, notify = false, true
+	case "OK_CONN_NOT_NOTIFY":
+		conn, notify = true, false
+	case "OK_CONN_OK_NOTIFY":
+		conn, notify = true, true
+	}
+	return
+}
+
 // PreProfileURI 필드에서 사용할 사용자 정의 타입
 type preProfileURI string
 func PreProfileURI(s string) preProfileURI { return preProfileURI(s) }

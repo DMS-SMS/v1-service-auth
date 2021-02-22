@@ -28,7 +28,7 @@ func (g grade) Value() (value driver.Value, err error) {
 	if value == int64(0) { value = nil }
 	return
 }
-func (g *grade) Scan(src interface{}) (_ error) { *g = grade(src.(int64)); return }
+func (g *grade) Scan(src interface{}) (_ error) { *g = grade(convertToInt64(src)); return }
 func (g grade) KeyName() string { return "grade" }
 func (g grade) NullReplaceValue() int64 { return nullReplaceValueForGrade  }
 
@@ -40,7 +40,7 @@ func (c class) Value() (value driver.Value, err error) {
 	if value == int64(0) { value = nil }
 	return
 }
-func (c *class) Scan(src interface{}) (err error) { *c = class(src.(int64)); return }
+func (c *class) Scan(src interface{}) (err error) { *c = class(convertToInt64(src)); return }
 func (c class) KeyName() string { return "class" }
 func (c class) NullReplaceValue() int64 { return nullReplaceValueForClass  }
 
@@ -48,7 +48,7 @@ func (c class) NullReplaceValue() int64 { return nullReplaceValueForClass  }
 type studentNumber int64
 func StudentNumber(i int64) studentNumber { return studentNumber(i) }
 func (sn studentNumber) Value() (driver.Value, error) { return int64(sn), nil }
-func (sn *studentNumber) Scan(src interface{}) (err error) { *sn = studentNumber(src.(int64)); return }
+func (sn *studentNumber) Scan(src interface{}) (err error) { *sn = studentNumber(convertToInt64(src)); return }
 func (sn studentNumber) KeyName() string { return "student_number" }
 
 // UUID 필드에서 사용할 사용자 정의 타입
@@ -176,7 +176,7 @@ func (ac authCode) Value() (value driver.Value, err error) {
 	if value == int64(0) { value = nil }
 	return
 }
-func (ac *authCode) Scan(src interface{}) (err error) { *ac = authCode(src.(int64)); return }
+func (ac *authCode) Scan(src interface{}) (err error) { *ac = authCode(convertToInt64(src)); return }
 func (ac authCode) KeyName() string { return "auth_code" }
 
 func convertToInt64(src interface{}) int64 {

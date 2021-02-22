@@ -450,3 +450,53 @@ func (h _default) GetStudentUUIDsWithInform(ctx context.Context, req *proto.GetS
 	resp.Message = "get student uuids having that inform success"
 	return
 }
+
+func (h _default) GetUnsignedStudentWithAuthCode(ctx context.Context, req *proto.GetUnsignedStudentWithAuthCodeRequest, resp *proto.GetUnsignedStudentWithAuthCodeResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access, err := h.accessManage.BeginTx()
+	if err != nil {
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())
+		return
+	}
+
+	spanForDB := h.tracer.StartSpan("GetUnsignedStudentWithAuthCode", opentracing.ChildOf(parentSpan))
+	selectedStudent, err := access.GetUnsignedStudentWithAuthCode(int64(req.AuthCode))
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedStudent", selectedStudent), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			resp.Status = http.StatusNotFound
+			resp.Message = fmt.Sprintf(notFoundMessageFormat, "unsigned student with that auth code is not exist")
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " +err.Error())
+		}
+		return
+	}
+
+	access.Commit()
+	resp.AuthCode = uint32(selectedStudent.AuthCode)
+	resp.Name = string(selectedStudent.Name)
+	resp.Grade = uint32(selectedStudent.Grade)
+	resp.Group = uint32(selectedStudent.Class)
+	resp.StudentNumber = uint32(selectedStudent.StudentNumber)
+	resp.PhoneNumber = string(selectedStudent.PhoneNumber)
+	resp.Group = uint32(selectedStudent.Class)
+
+	resp.Status = http.StatusOK
+	resp.Message = "succeed to get unsigned student with auth code"
+	return
+}

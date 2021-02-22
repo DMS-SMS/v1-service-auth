@@ -56,3 +56,4 @@ func (si *StudentInform)   TableName() string { return "student_informs" }
 func (ti *TeacherInform)   TableName() string { return "teacher_informs" }
 func (pi *ParentInform)    TableName() string { return "parent_informs" }
 func (us *UnsignedStudent) TableName() string { return "unsigned_students" }
+func (pc *ParentChildren)  TableName() string { return "parent_children" }

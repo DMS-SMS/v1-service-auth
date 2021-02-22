@@ -211,6 +211,10 @@ func (m _mock) GetParentChildWithInform(grade, group, number int64, name string)
 	return args.Get(0).(*model.ParentChildren), args.Error(1)
 }
 
+func (m _mock) DeleteUnsignedStudent(authCode int64) error {
+	return m.mock.Called(authCode).Error(0)
+}
+
 // ---
 
 // 트랜잭션 관련 메서드

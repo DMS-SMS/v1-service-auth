@@ -26,3 +26,12 @@ func init() {
 		log.Fatal("please set ALIGO_SENDER in environment variable")
 	}
 }
+
+type SendMassToReceiversResponse struct {
+	ResultCode int    `json:"result_code"`
+	Message    string `json:"message"`
+	MsgID      string `json:"msg_id"`
+	SuccessCnt int    `json:"success_cnt"`
+	ErrorCnt   int    `json:"error_cnt"`
+	MsgType    string `json:"msg_type"`
+}

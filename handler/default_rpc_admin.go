@@ -158,9 +158,9 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 		return
 	}
 
-	profileURI := fmt.Sprintf("profiles/%s", string(resultAuth.UUID))
+	profileURI := fmt.Sprintf("profiles/uuids/%s", string(resultAuth.UUID))
 	spanForDB = h.tracer.StartSpan("CreateStudentInform", opentracing.ChildOf(parentSpan))
-	resultInform, err := access.CreateStudentInform(&model.StudentInform{
+	studentInform := &model.StudentInform{
 		StudentUUID:   model.StudentUUID(string(resultAuth.UUID)),
 		Grade:         model.Grade(int64(req.Grade)),
 		Class:         model.Class(int64(req.Group)),
@@ -168,7 +168,13 @@ func (h _default) CreateNewStudent(ctx context.Context, req *proto.CreateNewStud
 		Name:          model.Name(req.Name),
 		PhoneNumber:   model.PhoneNumber(req.PhoneNumber),
 		ProfileURI:    model.ProfileURI(profileURI),
-	})
+	}
+	if req.ParentUUID != "" {
+		studentInform.ParentStatus.SetWithBool(true, false)
+	} else {
+		studentInform.ParentStatus.SetWithBool(false, false)
+	}
+	resultInform, err := access.CreateStudentInform(studentInform)
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedInform", resultInform), log.Error(err))
 	spanForDB.Finish()
 

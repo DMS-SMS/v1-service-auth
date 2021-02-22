@@ -3,15 +3,23 @@ package handler
 import (
 	"auth/model"
 	proto "auth/proto/golang/auth"
+	"auth/tool/mysqlerr"
+	"auth/tool/random"
 	code "auth/utils/code/golang"
 	"context"
 	"fmt"
+	mysqlcode "github.com/VividCortex/mysqlerr"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/go-playground/validator/v10"
+	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/uber/jaeger-client-go"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"net/url"
 	"reflect"
 )
 
@@ -498,5 +506,217 @@ func (h _default) GetUnsignedStudentWithAuthCode(ctx context.Context, req *proto
 
 	resp.Status = http.StatusOK
 	resp.Message = "succeed to get unsigned student with auth code"
+	return
+}
+
+func (h _default) CreateNewStudentWithAuthCode(ctx context.Context, req *proto.CreateNewStudentWithAuthCodeRequest, resp *proto.CreateNewStudentWithAuthCodeResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access, err := h.accessManage.BeginTx()
+	if err != nil {
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())
+		return
+	}
+
+	spanForDB := h.tracer.StartSpan("GetUnsignedStudentWithAuthCode", opentracing.ChildOf(parentSpan))
+	student, err := access.GetUnsignedStudentWithAuthCode(int64(req.AuthCode))
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedStudent", student), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			resp.Status = http.StatusNotFound
+			resp.Message = fmt.Sprintf(notFoundMessageFormat, "unsigned student with that auth code is not exist")
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " +err.Error())
+		}
+		return
+	}
+
+	var sUUID string
+	for {
+		sUUID = fmt.Sprintf("student-%s", random.StringConsistOfIntWithLength(12))
+		spanForDB := h.tracer.StartSpan("GetStudentAuthWithUUID", opentracing.ChildOf(parentSpan))
+		selectedAuth, err := access.GetStudentAuthWithUUID(sUUID)
+		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("selectedAuth", selectedAuth), log.Error(err))
+		spanForDB.Finish()
+		if err == gorm.ErrRecordNotFound {
+			break
+		}
+		if err != nil {
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " + err.Error())
+			return
+		}
+		continue
+	}
+
+	spanForDB = h.tracer.StartSpan("GetParentChildWithInform", opentracing.ChildOf(parentSpan))
+	child, err := access.GetParentChildWithInform(int64(student.Grade), int64(student.Class), int64(student.StudentNumber), string(student.Name))
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedChild", child), log.Error(err))
+	spanForDB.Finish()
+
+	var parentUUID string
+	var parentConn bool
+	switch err {
+	case nil:
+		parentUUID = string(child.ParentUUID)
+		parentConn = true
+	case gorm.ErrRecordNotFound:
+		parentUUID = ""
+		parentConn = false
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " +err.Error())
+		return
+	}
+
+	spanForHash := h.tracer.StartSpan("GenerateFromPassword", opentracing.ChildOf(parentSpan))
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.StudentPW), bcrypt.MinCost)
+	spanForHash.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+	spanForHash.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to hash pw, err: " + err.Error())
+		return
+	}
+
+	spanForDB = h.tracer.StartSpan("CreateStudentAuth", opentracing.ChildOf(parentSpan))
+	resultAuth, err := access.CreateStudentAuth(&model.StudentAuth{
+		UUID:       model.UUID(sUUID),
+		StudentID:  model.StudentID(req.StudentID),
+		StudentPW:  model.StudentPW(string(hashedBytes)),
+		ParentUUID: model.ParentUUID(parentUUID),
+	})
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreateStudentAuth", resultAuth), log.Error(err))
+	spanForDB.Finish()
+
+	switch assertedError := err.(type) {
+	case nil:
+		break
+	case validator.ValidationErrors:
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for student auth model, err: " + err.Error())
+		return
+	case *mysql.MySQLError:
+		access.Rollback()
+		switch assertedError.Number {
+		case mysqlcode.ER_DUP_ENTRY:
+			key, entry, err := mysqlerr.ParseDuplicateEntryErrorFrom(assertedError)
+			if err != nil {
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to parse duplicate error, err: " + err.Error())
+				return
+			}
+			switch key {
+			case model.StudentAuthInstance.StudentID.KeyName():
+				resp.Status = http.StatusConflict
+				resp.Message = fmt.Sprintf(conflictErrorFormat, "student id duplicate, entry: " + entry)
+			default:
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected duplicate error, key: " + key)
+			}
+			return
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected CreateStudentAuth error, err: " + assertedError.Error())
+			return
+		}
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "CreateStudentAuth returns unexpected type of error, err: " + assertedError.Error())
+		return
+	}
+
+	profileURI := fmt.Sprintf("profiles/uuids/%s", string(resultAuth.UUID))
+	spanForDB = h.tracer.StartSpan("CreateStudentInform", opentracing.ChildOf(parentSpan))
+	studentInform := &model.StudentInform{
+		StudentUUID:   model.StudentUUID(string(resultAuth.UUID)),
+		Grade:         student.Grade,
+		Class:         student.Class,
+		StudentNumber: student.StudentNumber,
+		Name:          student.Name,
+		PhoneNumber:   student.PhoneNumber,
+		ProfileURI:    model.ProfileURI(profileURI),
+	}
+	studentInform.ParentStatus.SetWithBool(parentConn, false)
+	resultInform, err := access.CreateStudentInform(studentInform)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedInform", resultInform), log.Error(err))
+	spanForDB.Finish()
+
+	switch assertedError := err.(type) {
+	case nil:
+		break
+	case validator.ValidationErrors:
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for student inform, err: " + err.Error())
+		return
+	case *mysql.MySQLError:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected CreateStudentInform error, err: " + assertedError.Error())
+		return
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "CreateStudentInform returns unexpected type of error, err: " + assertedError.Error())
+		return
+	}
+
+	spanForDB = h.tracer.StartSpan("DeleteUnsignedStudent", opentracing.ChildOf(parentSpan))
+	studentInform.ParentStatus.SetWithBool(parentConn, false)
+	err = access.DeleteUnsignedStudent(int64(student.AuthCode))
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "some error occurs in DeleteUnsignedStudent, err: " + err.Error())
+		return
+	}
+
+	spanForS3 := h.tracer.StartSpan("CopyObject", opentracing.ChildOf(parentSpan))
+	preProfileUri := fmt.Sprintf("profiles/years/2021/grades/%d/groups/%d/numbers/%d", student.Grade, student.Class, student.StudentNumber)
+	source := s3Bucket + "/" + preProfileUri
+	_, err = s3.New(h.awsSession).CopyObject(&s3.CopyObjectInput{
+		Bucket:     aws.String(s3Bucket),
+		CopySource: aws.String(url.PathEscape(source)),
+		Key:        aws.String(profileURI),
+		ACL:        aws.String("public-read"),
+	})
+	spanForS3.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+	spanForS3.Finish()
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, fmt.Sprintf( "unable to copy s3, err: %v, copy: %s, key: %s", err, preProfileUri, profileURI))
+		return
+	}
+
+	access.Commit()
+	resp.Status = http.StatusCreated
+	resp.Message = "succeed to create new student with auth code"
+	resp.StudentUUID = string(resultAuth.UUID)
+
 	return
 }

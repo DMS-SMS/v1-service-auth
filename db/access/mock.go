@@ -206,6 +206,11 @@ func (m _mock) GetUnsignedStudentWithAuthCode(authCode int64) (*model.UnsignedSt
 	return args.Get(0).(*model.UnsignedStudent), args.Error(1)
 }
 
+func (m _mock) GetParentChildWithInform(grade, group, number int64, name string) (*model.ParentChildren, error) {
+	args := m.mock.Called(grade, group, number, name)
+	return args.Get(0).(*model.ParentChildren), args.Error(1)
+}
+
 // ---
 
 // 트랜잭션 관련 메서드

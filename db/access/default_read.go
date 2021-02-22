@@ -189,3 +189,9 @@ func (d *_default) GetUnsignedStudentWithAuthCode(authCode int64) (student *mode
 	err = d.tx.Where("auth_code = ?", authCode).Find(student).Error
 	return
 }
+
+func (d *_default) GetParentChildWithInform(grade, group, number int64, name string) (child *model.ParentChildren, err error) {
+	child = new(model.ParentChildren)
+	err = d.tx.Where("grade = ? AND class = ? AND student_number = ? AND name = ?", grade, group, number, name).Find(child).Error
+	return
+}

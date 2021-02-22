@@ -186,3 +186,17 @@ func (us *UnsignedStudent) BeforeCreate(tx *gorm.DB) (err error) {
 
 	return
 }
+
+func (pc *ParentChildren) BeforeCreate(tx *gorm.DB) (err error) {
+	if err = validate.DBValidator.Struct(pc); err != nil {
+		return
+	}
+
+	query := tx.Where("grade = ? AND class = ? AND student_number = ?", pc.Grade, pc.Class, pc.StudentNumber).Find(&ParentChildren{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(pc.StudentNumber.KeyName(), fmt.Sprintf("%d%d%02d", pc.Grade, pc.Class, pc.StudentNumber))
+		return
+	}
+
+	return
+}

@@ -770,5 +770,45 @@ func (h _default) SendJoinSMSToUnsignedStudents(ctx context.Context, req *proto.
 		}
 		return
 	}
+
+	smsFormat := `
+[대덕소프트웨어마이스터고등학교]
+
+학교 지원 시스템(SMS) 회원가입 안내 문자입니다.
+
+[가입 대상: %d%d%02d %s]
+[인증 번호: %d]
+
+Play 스토어 또는 앱스토어에서 'SMS - 학교 지원 시스템' 앱 다운로드 후 진행해주세요.
+
+모든 재학생분들(신입생 포함)은 3/5(금)까지 회원가입을 완료해주세요.
+
+* 해당 문자는 전공동아리 DMS에서 발신되었습니다.
+* 페이스북 'DSM 기숙사 지원 시스템' 페이지 팔로우!`
+
+	receivers := make([]string, len(selectedStudents))
+	contents := make([]string, len(selectedStudents))
+	for i, student := range selectedStudents {
+		receivers[i] = string(student.PhoneNumber)
+		contents[i] = fmt.Sprintf(smsFormat, student.Grade, student.Class, student.StudentNumber, student.Name, student.AuthCode)
+	}
+
+	spanForMsg := h.tracer.StartSpan("SendMassToReceivers", opentracing.ChildOf(parentSpan))
+	jsonResp, err := message.SendMassToReceivers(receivers, contents, "LMS", "DSM 학교 지원 시스템(SMS) 회원가입 안내")
+	spanForMsg.SetTag("X-Request-Id", reqID).LogFields(log.Object("JsonResponse", jsonResp), log.Error(err))
+	spanForMsg.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "fail to send mass message, err: " + err.Error())
+		return
+	}
+
+	resp.Status = http.StatusOK
+	resp.Message = "succeed to send mass message"
+	resp.SendCount = uint32(jsonResp.SuccessCnt)
+	resp.NoSendCount = uint32(jsonResp.ErrorCnt)
+	access.Commit()
 	return
 }

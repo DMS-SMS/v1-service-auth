@@ -67,6 +67,7 @@ type Accessor interface {
 	AddUnsignedStudent(*model.UnsignedStudent) (result *model.UnsignedStudent, err error)
 	GetUnsignedStudents(targetGrade, targetGroup int64) ([]*model.UnsignedStudent, error)
 	GetUnsignedStudentWithAuthCode(authCode int64) (*model.UnsignedStudent, error)
+	GetParentChildWithInform(grade, group, number int64, name string) (*model.ParentChildren, error)
 
 	// ---
 

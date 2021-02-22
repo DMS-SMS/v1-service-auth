@@ -3,6 +3,7 @@ package handler
 import (
 	"auth/model"
 	proto "auth/proto/golang/auth"
+	"auth/tool/message"
 	"auth/tool/mysqlerr"
 	"auth/tool/random"
 	code "auth/utils/code/golang"
@@ -725,5 +726,49 @@ func (h _default) AddUnsignedStudents(ctx context.Context, req *proto.AddUnsigne
 	resp.Message = fmt.Sprintf("succeed to add unsigned students. duplicate log: %s", duplicateLog)
 	resp.AddCount = addCount
 	resp.NoAddCount = noAddCount
+	return
+}
+
+func (h _default) SendJoinSMSToUnsignedStudents(ctx context.Context, req *proto.SendJoinSMSToUnsignedStudentsRequest, resp *proto.SendJoinSMSToUnsignedStudentsResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	if !adminUUIDRegex.MatchString(req.UUID) {
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "you are not admin")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access, err := h.accessManage.BeginTx()
+	if err != nil {
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())
+		return
+	}
+
+	spanForDB := h.tracer.StartSpan("GetUnsignedStudents", opentracing.ChildOf(parentSpan))
+	selectedStudents, err := access.GetUnsignedStudents(int64(req.TargetGrade), int64(req.TargetGroup))
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedStudents", selectedStudents), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			resp.Status = http.StatusNotFound
+			resp.Message = fmt.Sprintf(notFoundMessageFormat, "unsigned student not exists with that grade & group")
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " +err.Error())
+		}
+		return
+	}
 	return
 }

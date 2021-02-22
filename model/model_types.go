@@ -3,6 +3,9 @@ package model
 import (
 	"auth/tool/random"
 	"database/sql/driver"
+	"fmt"
+	"reflect"
+	"strconv"
 )
 
 var (
@@ -175,3 +178,18 @@ func (ac authCode) Value() (value driver.Value, err error) {
 }
 func (ac *authCode) Scan(src interface{}) (err error) { *ac = authCode(src.(int64)); return }
 func (ac authCode) KeyName() string { return "auth_code" }
+
+func convertToInt64(src interface{}) int64 {
+	switch src := src.(type) {
+	case int64:
+		return src
+	case []uint8:
+		i, err := strconv.Atoi(string(src))
+		if err != nil {
+			panic(fmt.Sprintf("cannot convert string to int in convertToInt64, err: %v", err))
+		}
+		return int64(i)
+	default:
+		panic(fmt.Sprintf("cannot convert interface{} to int64, src: %v, type: %s", src, reflect.TypeOf(src).String()))
+	}
+}

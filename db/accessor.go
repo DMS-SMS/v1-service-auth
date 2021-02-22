@@ -66,6 +66,7 @@ type Accessor interface {
 	// 예비 계정 관련 메서드
 	AddUnsignedStudent(*model.UnsignedStudent) (result *model.UnsignedStudent, err error)
 	GetUnsignedStudents(targetGrade, targetGroup int64) ([]*model.UnsignedStudent, error)
+	GetUnsignedStudentWithAuthCode(authCode int64) (*model.UnsignedStudent, error)
 
 	// ---
 

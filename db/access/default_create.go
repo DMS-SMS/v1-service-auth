@@ -77,7 +77,7 @@ func (d *_default) AddUnsignedStudent(student *model.UnsignedStudent) (*model.Un
 		return inform, result.Error
 	}
 	if result.Error == nil {
-		result.Error = errors.ParentInformAssertionError
+		result.Error = errors.UnsignedStudentAssertionError
 	}
 	return nil, result.Error
 }

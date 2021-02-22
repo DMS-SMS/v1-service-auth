@@ -10,4 +10,5 @@ var (
 	
 	ParentAuthInstance = new(ParentAuth)
 	ParentInformInstance = new(ParentInform)
+	ParentChildrenInstance = new(ParentChildren)
 )

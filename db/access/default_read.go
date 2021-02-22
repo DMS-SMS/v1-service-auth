@@ -183,3 +183,9 @@ func (d *_default) GetUnsignedStudents(targetGrade, targetGroup int64) (students
 	
 	return 
 }
+
+func (d *_default) GetUnsignedStudentWithAuthCode(authCode int64) (student *model.UnsignedStudent, err error) {
+	student = new(model.UnsignedStudent)
+	err = d.tx.Where("auth_code = ?", authCode).Find(student).Error
+	return
+}

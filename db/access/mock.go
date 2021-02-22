@@ -201,6 +201,11 @@ func (m _mock) GetUnsignedStudents(targetGrade, targetGroup int64) ([]*model.Uns
 	return args.Get(0).([]*model.UnsignedStudent), args.Error(1)
 }
 
+func (m _mock) GetUnsignedStudentWithAuthCode(authCode int64) (*model.UnsignedStudent, error) {
+	args := m.mock.Called(authCode)
+	return args.Get(0).(*model.UnsignedStudent), args.Error(1)
+}
+
 // ---
 
 // 트랜잭션 관련 메서드

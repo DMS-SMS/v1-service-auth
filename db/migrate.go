@@ -50,6 +50,7 @@ func Migrate(db *gorm.DB) {
 	db.Model(&model.TeacherInform{}).AddForeignKey("teacher_uuid", "teacher_auths(uuid)", "RESTRICT", "RESTRICT")
 	db.Model(&model.ParentInform{}).AddForeignKey("parent_uuid", "parent_auths(uuid)", "RESTRICT", "RESTRICT")
 	db.Model(&model.ParentChildren{}).AddForeignKey("parent_uuid", "parent_auths(uuid)", "RESTRICT", "RESTRICT")
+	db.Model(&model.ParentChildren{}).AddForeignKey("student_uuid", "student_auths(uuid)", "RESTRICT", "RESTRICT")
 
 	// 데이터 무결성 제약조건 추가 필요
 }

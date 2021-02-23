@@ -33,6 +33,11 @@ func (m _mock) CreateParentAuth(auth *model.ParentAuth) (resultAuth *model.Paren
 	return args.Get(0).(*model.ParentAuth), args.Error(1)
 }
 
+func (m _mock) CreateParentChildren(auth *model.ParentChildren) (*model.ParentChildren, error) {
+	args := m.mock.Called(auth)
+	return args.Get(0).(*model.ParentChildren), args.Error(1)
+}
+
 // 계정 ID로 계정 정보 조회 메서드
 func (m _mock) GetStudentAuthWithID(studentID string) (*model.StudentAuth, error) {
 	args := m.mock.Called(studentID)

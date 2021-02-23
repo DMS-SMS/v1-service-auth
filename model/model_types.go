@@ -86,6 +86,13 @@ func (tp teacherPW) Value() (driver.Value, error) { return string(tp), nil }
 func (tp *teacherPW) Scan(src interface{}) (err error) { *tp = teacherPW(src.([]uint8)); return }
 func (tp teacherPW) KeyName() string { return "teacher_pw" }
 
+// TeacherPW 필드에서 사용할 사용자 정의 타입
+type certified bool
+func Certified(s bool) certified { return certified(s) }
+func (c certified) Value() (driver.Value, error) { return bool(c), nil }
+func (c *certified) Scan(src interface{}) (err error) { *c = certified(convertToBool(src)); return }
+func (c certified) KeyName() string { return "certified" }
+
 // ParentID 필드에서 사용할 사용자 정의 타입
 type parentID string
 func ParentID(s string) parentID { return parentID(s) }
@@ -223,5 +230,16 @@ func convertToInt64(src interface{}) int64 {
 		return int64(i)
 	default:
 		panic(fmt.Sprintf("cannot convert interface{} to int64, src: %v, type: %s", src, reflect.TypeOf(src).String()))
+	}
+}
+
+func convertToBool(src interface{}) bool {
+	switch src := src.(int64); src {
+	case 0:
+		return false
+	case 1:
+		return true
+	default:
+		return false
 	}
 }

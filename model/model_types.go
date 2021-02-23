@@ -167,15 +167,15 @@ func ParentStatus(s string) parentStatus { return parentStatus(s) }
 func (ps parentStatus) Value() (driver.Value, error) { return string(ps), nil }
 func (ps *parentStatus) Scan(src interface{}) (err error) { *ps = parentStatus(src.([]uint8)); return }
 func (ps parentStatus) KeyName() string { return "parent_status" }
-func (ps parentStatus) SetWithBool(conn, notify bool) (value string) {
+func (ps *parentStatus) SetWithBool(conn, notify bool) {
 	if !conn && !notify {
-		value = "NOT_CONN_NOT_NOTIFY"
+		*ps = "NOT_CONN_NOT_NOTIFY"
 	} else if !conn && notify {
-		value = "NOT_CONN_OK_NOTIFY"
+		*ps = "NOT_CONN_OK_NOTIFY"
 	} else if conn && !notify {
-		value = "OK_CONN_NOT_NOTIFY"
+		*ps = "OK_CONN_NOT_NOTIFY"
 	} else if conn && notify {
-		value = "OK_CONN_OK_NOTIFY"
+		*ps = "OK_CONN_OK_NOTIFY"
 	}
 	return
 }

@@ -200,9 +200,9 @@ func (pc *ParentChildren) BeforeCreate(tx *gorm.DB) (err error) {
 		return
 	}
 
-	query := tx.Where("grade = ? AND class = ? AND student_number = ?", pc.Grade, pc.Class, pc.StudentNumber).Find(&ParentChildren{})
+	query := tx.Where("grade = ? AND class = ? AND student_number = ? AND name = ?", pc.Grade, pc.Class, pc.StudentNumber, pc.Name).Find(&ParentChildren{})
 	if query.RowsAffected != 0 {
-		err = mysqlerr.DuplicateEntry(pc.StudentNumber.KeyName(), fmt.Sprintf("%d%d%02d", pc.Grade, pc.Class, pc.StudentNumber))
+		err = mysqlerr.DuplicateEntry(pc.StudentNumber.KeyName(), fmt.Sprintf("%d%d%02d %s", pc.Grade, pc.Class, pc.StudentNumber, pc.Name))
 		return
 	}
 

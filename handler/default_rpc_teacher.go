@@ -222,6 +222,14 @@ func (h _default) LoginTeacherAuth(ctx context.Context, req *proto.LoginTeacherA
 		}
 		return
 	}
+	
+	if !resultAuth.Certified {
+		access.Rollback()
+		resp.Status = http.StatusConflict
+		resp.Code = code.NotCertifiedTeacherAccount
+		resp.Message = fmt.Sprintf(conflictErrorFormat, "not certified annount")
+		return 
+	}
 
 	spanForHash := h.tracer.StartSpan("CompareHashAndPassword", opentracing.ChildOf(parentSpan))
 	err = bcrypt.CompareHashAndPassword([]byte(resultAuth.TeacherPW), []byte(req.TeacherPW))

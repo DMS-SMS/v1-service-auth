@@ -91,6 +91,10 @@ func (m _mock) ChangeParentPW(uuid string, parentPW string) error {
 	return m.mock.Called(uuid, parentPW).Error(0)
 }
 
+func (m _mock) ChangeParentUUID(studentUUID string, parentUUID string) error {
+	return m.mock.Called(studentUUID, parentUUID).Error(0)
+}
+
 // 계성 삭제 메서드 (Soft Delete)
 func (m _mock) DeleteStudentAuth(uuid string) error {
 	return m.mock.Called(uuid).Error(0)

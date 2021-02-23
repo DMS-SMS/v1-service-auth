@@ -85,3 +85,8 @@ func (d *_default) ChangeParentPW(uuid string, parentPW string) (err error) {
 	err = d.tx.Model(&model.ParentAuth{}).Where("uuid = ?", uuid).Update("parent_pw", parentPW).Error
 	return
 }
+
+func (d *_default) ChangeParentUUID(uuid string, parentUUID string) (err error) {
+	err = d.tx.Model(&model.StudentAuth{}).Where("uuid = ?", uuid).Update("parent_uuid", parentUUID).Error
+	return
+}

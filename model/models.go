@@ -23,7 +23,7 @@ type StudentInform struct {
 	Name          name          `gorm:"Type:varchar(4);NOT NULL" validate:"min=2,max=4,korean"`       // 2~4자 사이 한글
 	PhoneNumber   phoneNumber   `gorm:"Type:char(11);NOT NULL" validate:"len=11,phone_number"`        // 11자
 	ProfileURI    profileURI    `gorm:"Type:varchar(150);NOT NULL"`                                   // 제약 조건 나중에 추가 예정
-	ParentStatus  parentStatus  `gorm:"Type:varchar(30);NOT NULL;default:OK_CONN_OK_NOTIFY"`
+	ParentStatus  parentStatus  `gorm:"varchar(30);default:OK_CONN_OK_NOTIFY;NOT NULL"`
 }
 
 // 계정 생성 전 사전에 인증된 사용자 정보 테이블
@@ -44,6 +44,7 @@ type TeacherAuth struct {
 	UUID      uuid      `gorm:"PRIMARY_KEY;Type:char(20);UNIQUE;INDEX" validate:"uuid=teacher,len=20"` // 형식 => 'teacher-' + 12자리 랜덤 수 (20자)
 	TeacherID teacherID `gorm:"varchar(20);NOT NULL" validate:"min=4,max=20,ascii"`                    // 4~20자 사이
 	TeacherPW teacherPW `gorm:"varchar(100):NOT NULL"`
+	Certified certified `gorm:"bool;default:false;NOT NULL"`
 }
 
 // 선생님 사용자 정보 테이블

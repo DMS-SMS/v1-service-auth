@@ -118,6 +118,14 @@ func (ti *TeacherInform) BeforeCreate(tx *gorm.DB) (err error) {
 	if query.RowsAffected != 0 {
 		err = mysqlerr.DuplicateEntry(TeacherInformInstance.PhoneNumber.KeyName(), string(ti.PhoneNumber))
 	}
+
+	if ti.Grade != emptyInt && ti.Class != emptyInt  {
+		query = tx.Where("grade = ? AND class = ?", ti.Grade, ti.Class).Find(&TeacherInform{})
+		if query.RowsAffected != 0 {
+			err = mysqlerr.DuplicateEntry(ti.Class.KeyName(), fmt.Sprintf("%d%d", ti.Grade, ti.Class))
+			return
+		}
+	}
 	return
 }
 

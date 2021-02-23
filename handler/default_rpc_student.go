@@ -234,6 +234,28 @@ func (h _default) GetStudentInformWithUUID(ctx context.Context, req *proto.GetSt
 		return
 	}
 
+	var parentStatus string
+	if conn, notify := selectedAuth.ParentStatus.GetBool(); !notify {
+		if conn {
+			parentStatus = "CONNECTED"
+		} else {
+			parentStatus = "UN_CONNECTED"
+		}
+		revisionInform := &model.StudentInform{}
+		revisionInform.ParentStatus.SetWithBool(conn, true)
+
+		spanForDB := h.tracer.StartSpan("ModifyStudentInform", opentracing.ChildOf(parentSpan))
+		err := access.ModifyStudentInform(string(selectedAuth.StudentUUID), revisionInform)
+		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+		spanForDB.Finish()
+		if err != nil {
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "some error occurs in ModifyStudentInform, err: " + err.Error())
+			return
+		}
+	}
+
 	access.Commit()
 	resp.Grade = uint32(selectedAuth.Grade)
 	resp.Group = uint32(selectedAuth.Class)
@@ -241,6 +263,7 @@ func (h _default) GetStudentInformWithUUID(ctx context.Context, req *proto.GetSt
 	resp.Name = string(selectedAuth.Name)
 	resp.PhoneNumber = string(selectedAuth.PhoneNumber)
 	resp.ImageURI = string(selectedAuth.ProfileURI)
+	resp.ParentStatus = parentStatus
 
 	resp.Status = http.StatusOK
 	resp.Message = "get student auth success"

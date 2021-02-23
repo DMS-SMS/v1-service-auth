@@ -10,6 +10,7 @@ type Accessor interface {
 	CreateStudentAuth(auth *model.StudentAuth) (resultAuth *model.StudentAuth, err error)
 	CreateTeacherAuth(auth *model.TeacherAuth) (resultAuth *model.TeacherAuth, err error)
 	CreateParentAuth(auth *model.ParentAuth) (resultAuth *model.ParentAuth, err error)
+	CreateParentChildren(auth *model.ParentChildren) (result *model.ParentChildren, err error)
 
 	// 계정 ID로 계정 정보 조회 메서드
 	GetStudentAuthWithID(studentID string) (*model.StudentAuth, error)

@@ -272,12 +272,9 @@ func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParen
 		return
 	}
 
-	pUUID, ok := ctx.Value("ParentUUID").(string)
-	if !ok || pUUID == "" {
-		pUUID = fmt.Sprintf("parent-%s", random.StringConsistOfIntWithLength(12))
-	}
-
+	var pUUID string
 	for {
+		pUUID = fmt.Sprintf("parent-%s", random.StringConsistOfIntWithLength(12))
 		spanForDB := h.tracer.StartSpan("GetParentAuthWithUUID", opentracing.ChildOf(parentSpan))
 		selectedAuth, err := access.GetParentAuthWithUUID(pUUID)
 		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("selectedAuth", selectedAuth), log.Error(err))
@@ -291,7 +288,6 @@ func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParen
 			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " + err.Error())
 			return
 		}
-		pUUID = fmt.Sprintf("parent-%s", random.StringConsistOfIntWithLength(12))
 		continue
 	}
 
@@ -403,6 +399,81 @@ func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParen
 		resp.Status = http.StatusInternalServerError
 		resp.Message = fmt.Sprintf(internalServerErrorFormat, "CreateParentInform returns unexpected type of error, err: " + assertedError.Error())
 		return
+	}
+
+	for _, child := range req.ChildrenInform {
+		spanForDB := h.tracer.StartSpan("GetStudentUUIDsWithInform", opentracing.ChildOf(parentSpan))
+		uuidArr, err := access.GetStudentUUIDsWithInform(&model.StudentInform{
+			Grade:         model.Grade(int64(child.Grade)),
+			Class:         model.Class(int64(child.Group)),
+			StudentNumber: model.StudentNumber(int64(child.StudentNumber)),
+			Name:          model.Name(child.Name),
+		})
+		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("UUIDs", uuidArr), log.Error(err))
+		spanForDB.Finish()
+
+		spanForDB = h.tracer.StartSpan("CreateParentChildren", opentracing.ChildOf(parentSpan))
+		newChild := &model.ParentChildren{
+			ParentUUID:    model.ParentUUID(string(resultAuth.UUID)),
+			Grade:         model.Grade(int64(child.Grade)),
+			Class:         model.Class(int64(child.Group)),
+			StudentNumber: model.StudentNumber(int64(child.StudentNumber)),
+			Name:          model.Name(child.Name),
+		}
+		if len(uuidArr) >= 1 {
+			newChild.StudentUUID = model.StudentUUID(uuidArr[0])
+		}
+		resultChild, err := access.CreateParentChildren(newChild)
+		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("ResultChild", resultChild), log.Error(err))
+		spanForDB.Finish()
+
+		switch assertedError := err.(type) {
+		case nil:
+			break
+		case validator.ValidationErrors:
+			access.Rollback()
+			resp.Status = http.StatusProxyAuthRequired
+			resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for parent children, err: " + err.Error())
+			return
+		case *mysql.MySQLError:
+			access.Rollback()
+			resp.Status = http.StatusConflict
+			resp.Message = fmt.Sprintf(conflictErrorFormat, "mysql error occurs in CreateParentChildren, err: " + err.Error())
+			return
+		default:
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "CreateParentInform returns unexpected type of error, err: " + assertedError.Error())
+			return
+		}
+
+		if len(uuidArr) >= 1 {
+			spanForDB = h.tracer.StartSpan("ModifyStudentInform", opentracing.ChildOf(parentSpan))
+			revisionStudent := &model.StudentInform{}
+			revisionStudent.ParentStatus.SetWithBool(true, false)
+			err = access.ModifyStudentInform(uuidArr[0], revisionStudent)
+			spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+			spanForDB.Finish()
+
+			if err != nil {
+				access.Rollback()
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "ModifyStudentInform returns error, err: " + err.Error())
+				return
+			}
+
+			spanForDB = h.tracer.StartSpan("ChangeParentUUID", opentracing.ChildOf(parentSpan))
+			err = access.ChangeParentUUID(uuidArr[0], string(resultAuth.UUID))
+			spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+			spanForDB.Finish()
+
+			if err != nil {
+				access.Rollback()
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "ChangeParentUUID returns error, err: " + err.Error())
+				return
+			}
+		}
 	}
 
 	access.Commit()

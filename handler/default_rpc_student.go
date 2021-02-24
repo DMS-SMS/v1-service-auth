@@ -705,6 +705,23 @@ func (h _default) CreateNewStudentWithAuthCode(ctx context.Context, req *proto.C
 		return
 	}
 
+	if parentUUID != "" {
+		spanForDB = h.tracer.StartSpan("ModifyParentChildren", opentracing.ChildOf(parentSpan))
+		revision := &model.ParentChildren{
+			StudentUUID: model.StudentUUID(string(resultAuth.UUID)),
+		}
+		err := access.ModifyParentChildren(child, revision)
+		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+		spanForDB.Finish()
+
+		if err != nil {
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "some error occurs in ModifyParentChildren, err: " + err.Error())
+			return
+		}
+	}
+
 	spanForDB = h.tracer.StartSpan("DeleteUnsignedStudent", opentracing.ChildOf(parentSpan))
 	studentInform.ParentStatus.SetWithBool(parentConn, false)
 	err = access.DeleteUnsignedStudent(int64(student.AuthCode))

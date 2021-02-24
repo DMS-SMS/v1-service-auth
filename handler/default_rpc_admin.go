@@ -411,19 +411,21 @@ func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParen
 		})
 		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("UUIDs", uuidArr), log.Error(err))
 		spanForDB.Finish()
+		
+		var childUUID string
+		if len(uuidArr) >= 1 {
+			childUUID = uuidArr[0]
+		}
 
 		spanForDB = h.tracer.StartSpan("CreateParentChildren", opentracing.ChildOf(parentSpan))
-		newChild := &model.ParentChildren{
+		resultChild, err := access.CreateParentChildren(&model.ParentChildren{
 			ParentUUID:    model.ParentUUID(string(resultAuth.UUID)),
 			Grade:         model.Grade(int64(child.Grade)),
 			Class:         model.Class(int64(child.Group)),
 			StudentNumber: model.StudentNumber(int64(child.StudentNumber)),
 			Name:          model.Name(child.Name),
-		}
-		if len(uuidArr) >= 1 {
-			newChild.StudentUUID = model.StudentUUID(uuidArr[0])
-		}
-		resultChild, err := access.CreateParentChildren(newChild)
+			StudentUUID:   model.StudentUUID(childUUID),
+		})
 		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("ResultChild", resultChild), log.Error(err))
 		spanForDB.Finish()
 
@@ -447,7 +449,7 @@ func (h _default) CreateNewParent(ctx context.Context, req *proto.CreateNewParen
 			return
 		}
 
-		if len(uuidArr) >= 1 {
+		if childUUID != "" {
 			spanForDB = h.tracer.StartSpan("ModifyStudentInform", opentracing.ChildOf(parentSpan))
 			revisionStudent := &model.StudentInform{}
 			revisionStudent.ParentStatus.SetWithBool(true, false)

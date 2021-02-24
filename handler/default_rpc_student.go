@@ -3,10 +3,13 @@ package handler
 import (
 	"auth/model"
 	proto "auth/proto/golang/auth"
+	"auth/tool/message"
 	"auth/tool/mysqlerr"
 	"auth/tool/random"
 	code "auth/utils/code/golang"
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	mysqlcode "github.com/VividCortex/mysqlerr"
 	"github.com/aws/aws-sdk-go/aws"
@@ -21,6 +24,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"strconv"
 )
 
 func (h _default) LoginStudentAuth(ctx context.Context, req *proto.LoginStudentAuthRequest, resp *proto.LoginStudentAuthResponse) (_ error) {
@@ -757,6 +761,56 @@ func (h _default) CreateNewStudentWithAuthCode(ctx context.Context, req *proto.C
 	resp.Status = http.StatusCreated
 	resp.Message = "succeed to create new student with auth code"
 	resp.StudentUUID = string(resultAuth.UUID)
+
+	if studentInform.Grade != 1 {
+		return
+	}
+
+	smsContent := `
+[대덕소프트웨어마이스터고등학교]
+
+신입생 대상 기숙사 지원 시스템(DMS) 안내 문자입니다.
+
+앞서, 저희 학교 지원 시스템(SMS)에 가입해주셔서 감사합니다.
+
+저희는 이 외에도 'DMS'라는 기숙사 지원 시스템을 제공하여 현재 모든 재학생분들이 사용중입니다.
+
+여러분들의 빠른 회원가입을 위하여 SMS에서 입력하신 계정 정보로 DMS 계정을 발급하였습니다.
+
+Play 스토어 또는 App Store에서 'DMS - 기숙사 지원 시스템' 앱을 다운 받아 사용해보세요!
+
+PC 전용 웹 사이트 또한 제공중이니 많이 방문해주세요.
+https://www.dsm-dms.com
+
+* 해당 문자는 전공동아리 DMS에서 발신되었습니다.
+`
+
+	spanForMsg := h.tracer.StartSpan("SendToReceivers", opentracing.ChildOf(parentSpan))
+	jsonResp, err := message.SendToReceivers([]string{string(student.PhoneNumber)}, smsContent, "LMS", "DSM 신입생 대상 기숙사 지원 시스템(DMS) 안내 문자")
+	spanForMsg.SetTag("X-Request-Id", reqID).LogFields(log.Object("JsonResponse", jsonResp), log.Error(err))
+	spanForMsg.Finish()
+	if err != nil {
+		resp.Message += fmt.Sprintf("SendToReceivers error: %v", err)
+	}
+
+	go func() {
+		number, _ := strconv.Atoi(fmt.Sprintf("%d%d%02d", studentInform.Grade, studentInform.Class, studentInform.StudentNumber))
+		dmsReq := map[string]interface{}{
+			"key":      dmsAPIKey,
+			"id":       req.StudentID,
+			"password": req.StudentPW,
+			"number":   number,
+			"name":     string(studentInform.Name),
+		}
+		dmsReqJson, _ := json.Marshal(dmsReq)
+		spanForDMS := h.tracer.StartSpan("PostToDMS", opentracing.ChildOf(parentSpan))
+		dmsResp, err := http.Post("https://api.dsm-dms.com/account/signup","application/json", bytes.NewBuffer(dmsReqJson))
+		spanForDMS.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+		if err == nil {
+			spanForDMS.LogFields(log.Int("status", dmsResp.StatusCode), log.Object("DMSResp", dmsResp))
+		}
+		spanForDMS.Finish()
+	}()
 
 	return
 }

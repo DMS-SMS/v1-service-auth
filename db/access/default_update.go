@@ -90,3 +90,21 @@ func (d *_default) ChangeParentUUID(uuid string, parentUUID string) (err error) 
 	err = d.tx.Model(&model.StudentAuth{}).Where("uuid = ?", uuid).Update("parent_uuid", parentUUID).Error
 	return
 }
+
+func (d *_default) ModifyParentChildren(child *model.ParentChildren, revision *model.ParentChildren) (err error) {
+	contextForUpdate := make(map[string]interface{}, 6)
+
+	if revision.ParentUUID != emptyString {
+		err = errors.ParentUUIDCannotBeChanged
+		return
+	}
+
+	if revision.StudentUUID != emptyString {
+		contextForUpdate[revision.StudentUUID.KeyName()] = revision.StudentUUID
+	}
+	
+	whereDB := d.tx.Model(&model.ParentChildren{}).Where("parent_uuid = ?", child.ParentUUID).
+		Where("grade = ? AND class = ? AND student_number = ?", child.Grade, child.Class, child.StudentNumber)
+	err = whereDB.Updates(contextForUpdate).Error
+	return
+}

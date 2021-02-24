@@ -124,7 +124,11 @@ func (ap adminPW) KeyName() string { return "admin_pw" }
 // StudentUUID 필드에서 사용할 사용자 정의 타입
 type studentUUID string
 func StudentUUID(s string) studentUUID { return studentUUID(s) }
-func (su studentUUID) Value() (driver.Value, error) { return string(su), nil }
+func (su studentUUID) Value() (value driver.Value, err error) {
+	value = string(su)
+	if value == "" { value = nil }
+	return
+}
 func (su *studentUUID) Scan(src interface{}) (err error) { *su = studentUUID(src.([]uint8)); return }
 func (su studentUUID) KeyName() string { return "student_uuid" }
 

@@ -171,3 +171,27 @@ func (d *_default) GetParentInformWithUUID(uuid string) (inform *model.ParentInf
 	err = d.tx.Where("parent_uuid = ?", uuid).Find(inform).Error
 	return
 }
+
+func (d *_default) GetUnsignedStudents(targetGrade, targetGroup int64) (students []*model.UnsignedStudent, err error) {
+	cascadeTx := d.tx.New()
+
+	if targetGrade != emptyInt  { cascadeTx = cascadeTx.Where("grade = ?", model.Grade(targetGrade)) }
+	if targetGroup != emptyInt  { cascadeTx = cascadeTx.Where("class = ?", model.Class(targetGroup)) }
+
+	students = []*model.UnsignedStudent{}
+	err = cascadeTx.Find(&students).Error
+	
+	return 
+}
+
+func (d *_default) GetUnsignedStudentWithAuthCode(authCode int64) (student *model.UnsignedStudent, err error) {
+	student = new(model.UnsignedStudent)
+	err = d.tx.Where("auth_code = ?", authCode).Find(student).Error
+	return
+}
+
+func (d *_default) GetParentChildWithInform(grade, group, number int64, name string) (child *model.ParentChildren, err error) {
+	child = new(model.ParentChildren)
+	err = d.tx.Where("grade = ? AND class = ? AND student_number = ? AND name = ?", grade, group, number, name).Find(child).Error
+	return
+}

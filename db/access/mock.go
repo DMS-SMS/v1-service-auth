@@ -33,6 +33,11 @@ func (m _mock) CreateParentAuth(auth *model.ParentAuth) (resultAuth *model.Paren
 	return args.Get(0).(*model.ParentAuth), args.Error(1)
 }
 
+func (m _mock) CreateParentChildren(auth *model.ParentChildren) (*model.ParentChildren, error) {
+	args := m.mock.Called(auth)
+	return args.Get(0).(*model.ParentChildren), args.Error(1)
+}
+
 // 계정 ID로 계정 정보 조회 메서드
 func (m _mock) GetStudentAuthWithID(studentID string) (*model.StudentAuth, error) {
 	args := m.mock.Called(studentID)
@@ -84,6 +89,10 @@ func (m _mock) ChangeTeacherPW(uuid string, teacherPW string) error {
 func (m _mock) ChangeParentPW(uuid string, parentPW string) error {
 	parentPW = ""
 	return m.mock.Called(uuid, parentPW).Error(0)
+}
+
+func (m _mock) ChangeParentUUID(studentUUID string, parentUUID string) error {
+	return m.mock.Called(studentUUID, parentUUID).Error(0)
 }
 
 // 계성 삭제 메서드 (Soft Delete)
@@ -186,6 +195,37 @@ func (m _mock) DeleteTeacherInform(teacherUUID string) error {
 
 func (m _mock) DeleteParentInform(parentUUID string) error {
 	return m.mock.Called(parentUUID).Error(0)
+}
+
+// ---
+
+// 예비 계정 생성 메서드
+func (m _mock) AddUnsignedStudent(student *model.UnsignedStudent) (*model.UnsignedStudent, error) {
+	args := m.mock.Called(student)
+	return args.Get(0).(*model.UnsignedStudent), args.Error(1)
+}
+
+func (m _mock) GetUnsignedStudents(targetGrade, targetGroup int64) ([]*model.UnsignedStudent, error) {
+	args := m.mock.Called(targetGrade, targetGroup)
+	return args.Get(0).([]*model.UnsignedStudent), args.Error(1)
+}
+
+func (m _mock) GetUnsignedStudentWithAuthCode(authCode int64) (*model.UnsignedStudent, error) {
+	args := m.mock.Called(authCode)
+	return args.Get(0).(*model.UnsignedStudent), args.Error(1)
+}
+
+func (m _mock) GetParentChildWithInform(grade, group, number int64, name string) (*model.ParentChildren, error) {
+	args := m.mock.Called(grade, group, number, name)
+	return args.Get(0).(*model.ParentChildren), args.Error(1)
+}
+
+func (m _mock) ModifyParentChildren(current *model.ParentChildren, revision *model.ParentChildren) error {
+	return m.mock.Called(current, revision).Error(0)
+}
+
+func (m _mock) DeleteUnsignedStudent(authCode int64) error {
+	return m.mock.Called(authCode).Error(0)
 }
 
 // ---

@@ -33,3 +33,8 @@ func (d *_default) DeleteParentInform(parentUUID string) (err error) {
 	err = d.tx.Where("parent_uuid = ?", parentUUID).Delete(&model.ParentInform{}).Error
 	return
 }
+
+func (d *_default) DeleteUnsignedStudent(authCode int64) (err error) {
+	err = d.tx.Where("auth_code = ?", authCode).Delete(&model.UnsignedStudent{}).Error
+	return
+}

@@ -26,12 +26,13 @@ func exceptGormModel(model interface{}) (gormModelExceptTable interface{}) {
 }
 
 // DeepCopy 메서드 -> 리시버 변수에 대한 DeepCopy 본사본 생성 및 반환 메서드
-func (sa *StudentAuth)   DeepCopy() *StudentAuth   { return deepCopyModel(sa).(*StudentAuth) }
-func (ta *TeacherAuth)   DeepCopy() *TeacherAuth   { return deepCopyModel(ta).(*TeacherAuth) }
-func (pa *ParentAuth)    DeepCopy() *ParentAuth    { return deepCopyModel(pa).(*ParentAuth) }
-func (si *StudentInform) DeepCopy() *StudentInform { return deepCopyModel(si).(*StudentInform) }
-func (ti *TeacherInform) DeepCopy() *TeacherInform { return deepCopyModel(ti).(*TeacherInform) }
-func (pi *ParentInform)  DeepCopy() *ParentInform  { return deepCopyModel(pi).(*ParentInform) }
+func (sa *StudentAuth)     DeepCopy() *StudentAuth     { return deepCopyModel(sa).(*StudentAuth) }
+func (ta *TeacherAuth)     DeepCopy() *TeacherAuth     { return deepCopyModel(ta).(*TeacherAuth) }
+func (pa *ParentAuth)      DeepCopy() *ParentAuth      { return deepCopyModel(pa).(*ParentAuth) }
+func (si *StudentInform)   DeepCopy() *StudentInform   { return deepCopyModel(si).(*StudentInform) }
+func (ti *TeacherInform)   DeepCopy() *TeacherInform   { return deepCopyModel(ti).(*TeacherInform) }
+func (pi *ParentInform)    DeepCopy() *ParentInform    { return deepCopyModel(pi).(*ParentInform) }
+func (us *UnsignedStudent) DeepCopy() *UnsignedStudent { return deepCopyModel(us).(*UnsignedStudent) }
 
 // ExceptGormModel 메서드 -> 리시버 변수로부터 gorm.Model(임베딩 객체)에 포함되어있는 필드 값 초기화 후 반환 메서드
 func (sa *StudentAuth)   ExceptGormModel() *StudentAuth   { return exceptGormModel(sa).(*StudentAuth) }
@@ -48,9 +49,11 @@ func (ti *TeacherInform) TeacherUUIDConstraintName() string { return "teacher_in
 func (pi *ParentInform)  ParentUUIDConstraintName()  string { return "parent_informs_parent_uuid_parent_auths_uuid_foreign" }
 
 // TableName 메서드 -> 리시버 변수에 해당되는 테이블의 이름 반환 메서드
-func (sa *StudentAuth)   TableName() string { return "student_auths" }
-func (ta *TeacherAuth)   TableName() string { return "teacher_auths" }
-func (pa *ParentAuth)    TableName() string { return "parent_auths" }
-func (si *StudentInform) TableName() string { return "student_informs" }
-func (ti *TeacherInform) TableName() string { return "teacher_informs" }
-func (pi *ParentInform)  TableName() string { return "parent_informs" }
+func (sa *StudentAuth)     TableName() string { return "student_auths" }
+func (ta *TeacherAuth)     TableName() string { return "teacher_auths" }
+func (pa *ParentAuth)      TableName() string { return "parent_auths" }
+func (si *StudentInform)   TableName() string { return "student_informs" }
+func (ti *TeacherInform)   TableName() string { return "teacher_informs" }
+func (pi *ParentInform)    TableName() string { return "parent_informs" }
+func (us *UnsignedStudent) TableName() string { return "unsigned_students" }
+func (pc *ParentChildren)  TableName() string { return "parent_children" }

@@ -3,6 +3,9 @@ package model
 import (
 	"auth/tool/random"
 	"database/sql/driver"
+	"fmt"
+	"reflect"
+	"strconv"
 )
 
 var (
@@ -25,7 +28,7 @@ func (g grade) Value() (value driver.Value, err error) {
 	if value == int64(0) { value = nil }
 	return
 }
-func (g *grade) Scan(src interface{}) (_ error) { *g = grade(src.(int64)); return }
+func (g *grade) Scan(src interface{}) (_ error) { *g = grade(convertToInt64(src)); return }
 func (g grade) KeyName() string { return "grade" }
 func (g grade) NullReplaceValue() int64 { return nullReplaceValueForGrade  }
 
@@ -37,7 +40,7 @@ func (c class) Value() (value driver.Value, err error) {
 	if value == int64(0) { value = nil }
 	return
 }
-func (c *class) Scan(src interface{}) (err error) { *c = class(src.(int64)); return }
+func (c *class) Scan(src interface{}) (err error) { *c = class(convertToInt64(src)); return }
 func (c class) KeyName() string { return "class" }
 func (c class) NullReplaceValue() int64 { return nullReplaceValueForClass  }
 
@@ -45,7 +48,7 @@ func (c class) NullReplaceValue() int64 { return nullReplaceValueForClass  }
 type studentNumber int64
 func StudentNumber(i int64) studentNumber { return studentNumber(i) }
 func (sn studentNumber) Value() (driver.Value, error) { return int64(sn), nil }
-func (sn *studentNumber) Scan(src interface{}) (err error) { *sn = studentNumber(src.(int64)); return }
+func (sn *studentNumber) Scan(src interface{}) (err error) { *sn = studentNumber(convertToInt64(src)); return }
 func (sn studentNumber) KeyName() string { return "student_number" }
 
 // UUID 필드에서 사용할 사용자 정의 타입
@@ -83,6 +86,13 @@ func (tp teacherPW) Value() (driver.Value, error) { return string(tp), nil }
 func (tp *teacherPW) Scan(src interface{}) (err error) { *tp = teacherPW(src.([]uint8)); return }
 func (tp teacherPW) KeyName() string { return "teacher_pw" }
 
+// TeacherPW 필드에서 사용할 사용자 정의 타입
+type certified bool
+func Certified(s bool) certified { return certified(s) }
+func (c certified) Value() (driver.Value, error) { return bool(c), nil }
+func (c *certified) Scan(src interface{}) (err error) { *c = certified(convertToBool(src)); return }
+func (c certified) KeyName() string { return "certified" }
+
 // ParentID 필드에서 사용할 사용자 정의 타입
 type parentID string
 func ParentID(s string) parentID { return parentID(s) }
@@ -114,7 +124,11 @@ func (ap adminPW) KeyName() string { return "admin_pw" }
 // StudentUUID 필드에서 사용할 사용자 정의 타입
 type studentUUID string
 func StudentUUID(s string) studentUUID { return studentUUID(s) }
-func (su studentUUID) Value() (driver.Value, error) { return string(su), nil }
+func (su studentUUID) Value() (value driver.Value, err error) {
+	value = string(su)
+	if value == "" { value = nil }
+	return
+}
 func (su *studentUUID) Scan(src interface{}) (err error) { *su = studentUUID(src.([]uint8)); return }
 func (su studentUUID) KeyName() string { return "student_uuid" }
 
@@ -157,3 +171,79 @@ func ProfileURI(s string) profileURI { return profileURI(s) }
 func (pu profileURI) Value() (driver.Value, error) { return string(pu), nil }
 func (pu *profileURI) Scan(src interface{}) (err error) { *pu = profileURI(src.([]uint8)); return }
 func (pu profileURI) KeyName() string { return "profile_uri" }
+
+// parentStatus 필드에서 사용할 사용자 정의 타입
+type parentStatus string
+func ParentStatus(s string) parentStatus { return parentStatus(s) }
+func (ps parentStatus) Value() (driver.Value, error) { return string(ps), nil }
+func (ps *parentStatus) Scan(src interface{}) (err error) { *ps = parentStatus(src.([]uint8)); return }
+func (ps parentStatus) KeyName() string { return "parent_status" }
+func (ps *parentStatus) SetWithBool(conn, notify bool) {
+	if !conn && !notify {
+		*ps = "NOT_CONN_NOT_NOTIFY"
+	} else if !conn && notify {
+		*ps = "NOT_CONN_OK_NOTIFY"
+	} else if conn && !notify {
+		*ps = "OK_CONN_NOT_NOTIFY"
+	} else if conn && notify {
+		*ps = "OK_CONN_OK_NOTIFY"
+	}
+	return
+}
+func (ps parentStatus) GetBool() (conn, notify bool) {
+	switch ps {
+	case "NOT_CONN_NOT_NOTIFY":
+		conn, notify = false, false
+	case "NOT_CONN_OK_NOTIFY":
+		conn, notify = false, true
+	case "OK_CONN_NOT_NOTIFY":
+		conn, notify = true, false
+	case "OK_CONN_OK_NOTIFY":
+		conn, notify = true, true
+	}
+	return
+}
+
+// PreProfileURI 필드에서 사용할 사용자 정의 타입
+type preProfileURI string
+func PreProfileURI(s string) preProfileURI { return preProfileURI(s) }
+func (pu preProfileURI) Value() (driver.Value, error) { return string(pu), nil }
+func (pu *preProfileURI) Scan(src interface{}) (err error) { *pu = preProfileURI(src.([]uint8)); return }
+func (pu preProfileURI) KeyName() string { return "pre_profile_uri" }
+
+// AuthCode 필드에서 사용할 사용자 정의 타입
+type authCode int64
+func AuthCode(i int64) authCode { return authCode(i) }
+func (ac authCode) Value() (value driver.Value, err error) {
+	value = int64(ac)
+	if value == int64(0) { value = nil }
+	return
+}
+func (ac *authCode) Scan(src interface{}) (err error) { *ac = authCode(convertToInt64(src)); return }
+func (ac authCode) KeyName() string { return "auth_code" }
+
+func convertToInt64(src interface{}) int64 {
+	switch src := src.(type) {
+	case int64:
+		return src
+	case []uint8:
+		i, err := strconv.Atoi(string(src))
+		if err != nil {
+			panic(fmt.Sprintf("cannot convert string to int in convertToInt64, err: %v", err))
+		}
+		return int64(i)
+	default:
+		panic(fmt.Sprintf("cannot convert interface{} to int64, src: %v, type: %s", src, reflect.TypeOf(src).String()))
+	}
+}
+
+func convertToBool(src interface{}) bool {
+	switch src := src.(int64); src {
+	case 0:
+		return false
+	case 1:
+		return true
+	default:
+		return false
+	}
+}

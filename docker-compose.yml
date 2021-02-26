@@ -14,6 +14,10 @@ services:
       - SMS_AWS_REGION=${SMS_AWS_REGION}
       - SMS_AWS_BUCKET=${SMS_AWS_BUCKET}
       - CHANGE_CONSUL_SQS_AUTH=${CHANGE_CONSUL_SQS_AUTH}
+      - ALIGO_API_KEY=${ALIGO_API_KEY}
+      - ALIGO_ACCOUNT_ID=${ALIGO_ACCOUNT_ID}
+      - ALIGO_SENDER=${ALIGO_SENDER}
+      - DMS_API_KEY=${DMS_API_KEY}
     deploy:
       mode: replicated
       replicas: 1

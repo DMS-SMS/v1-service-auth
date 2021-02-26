@@ -37,12 +37,20 @@ func Migrate(db *gorm.DB) {
 	if !db.HasTable(&model.TeacherInform{}) {
 		db.CreateTable(&model.TeacherInform{})
 	}
+	if !db.HasTable(&model.UnsignedStudent{}) {
+		db.CreateTable(&model.UnsignedStudent{})
+	}
+	if !db.HasTable(&model.ParentChildren{}) {
+		db.CreateTable(&model.ParentChildren{})
+	}
 
 	//db.AutoMigrate(&model.AdminAuth{}, &model.StudentAuth{}, &model.StudentInform{}, &model.ParentAuth{}, &model.ParentInform{}, &model.TeacherAuth{}, &model.TeacherInform{})
 	db.Model(&model.StudentAuth{}).AddForeignKey("parent_uuid", "parent_auths(uuid)", "RESTRICT", "RESTRICT")
 	db.Model(&model.StudentInform{}).AddForeignKey("student_uuid", "student_auths(uuid)", "RESTRICT", "RESTRICT")
 	db.Model(&model.TeacherInform{}).AddForeignKey("teacher_uuid", "teacher_auths(uuid)", "RESTRICT", "RESTRICT")
 	db.Model(&model.ParentInform{}).AddForeignKey("parent_uuid", "parent_auths(uuid)", "RESTRICT", "RESTRICT")
+	db.Model(&model.ParentChildren{}).AddForeignKey("parent_uuid", "parent_auths(uuid)", "RESTRICT", "RESTRICT")
+	db.Model(&model.ParentChildren{}).AddForeignKey("student_uuid", "student_auths(uuid)", "RESTRICT", "RESTRICT")
 
 	// 데이터 무결성 제약조건 추가 필요
 }

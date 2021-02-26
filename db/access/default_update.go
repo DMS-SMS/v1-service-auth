@@ -13,12 +13,13 @@ func (d *_default) ModifyStudentInform(uuid string, revisionInform *model.Studen
 		return
 	}
 
-	if revisionInform.Grade != emptyInt          { contextForUpdate[revisionInform.Grade.KeyName()] = revisionInform.Grade }
-	if revisionInform.Class != emptyInt          { contextForUpdate[revisionInform.Class.KeyName()] = revisionInform.Class }
-	if revisionInform.StudentNumber != emptyInt  { contextForUpdate[revisionInform.StudentNumber.KeyName()] = revisionInform.StudentNumber }
-	if revisionInform.Name != emptyString        { contextForUpdate[revisionInform.Name.KeyName()] = revisionInform.Name }
-	if revisionInform.PhoneNumber != emptyString { contextForUpdate[revisionInform.PhoneNumber.KeyName()] = revisionInform.PhoneNumber }
-	if revisionInform.ProfileURI != emptyString  { contextForUpdate[revisionInform.ProfileURI.KeyName()] = revisionInform.ProfileURI }
+	if revisionInform.Grade != emptyInt           { contextForUpdate[revisionInform.Grade.KeyName()] = revisionInform.Grade }
+	if revisionInform.Class != emptyInt           { contextForUpdate[revisionInform.Class.KeyName()] = revisionInform.Class }
+	if revisionInform.StudentNumber != emptyInt   { contextForUpdate[revisionInform.StudentNumber.KeyName()] = revisionInform.StudentNumber }
+	if revisionInform.Name != emptyString         { contextForUpdate[revisionInform.Name.KeyName()] = revisionInform.Name }
+	if revisionInform.PhoneNumber != emptyString  { contextForUpdate[revisionInform.PhoneNumber.KeyName()] = revisionInform.PhoneNumber }
+	if revisionInform.ProfileURI != emptyString   { contextForUpdate[revisionInform.ProfileURI.KeyName()] = revisionInform.ProfileURI }
+	if revisionInform.ParentStatus != emptyString { contextForUpdate[revisionInform.ParentStatus.KeyName()] = revisionInform.ParentStatus }
 
 	err = d.tx.Model(&model.StudentInform{}).Where("student_uuid = ?", uuid).Updates(contextForUpdate).Error
 	return
@@ -82,5 +83,28 @@ func (d *_default) ChangeTeacherPW(uuid string, teacherPW string) (err error) {
 
 func (d *_default) ChangeParentPW(uuid string, parentPW string) (err error) {
 	err = d.tx.Model(&model.ParentAuth{}).Where("uuid = ?", uuid).Update("parent_pw", parentPW).Error
+	return
+}
+
+func (d *_default) ChangeParentUUID(uuid string, parentUUID string) (err error) {
+	err = d.tx.Model(&model.StudentAuth{}).Where("uuid = ?", uuid).Update("parent_uuid", parentUUID).Error
+	return
+}
+
+func (d *_default) ModifyParentChildren(child *model.ParentChildren, revision *model.ParentChildren) (err error) {
+	contextForUpdate := make(map[string]interface{}, 6)
+
+	if revision.ParentUUID != emptyString {
+		err = errors.ParentUUIDCannotBeChanged
+		return
+	}
+
+	if revision.StudentUUID != emptyString {
+		contextForUpdate[revision.StudentUUID.KeyName()] = revision.StudentUUID
+	}
+	
+	whereDB := d.tx.Model(&model.ParentChildren{}).Where("parent_uuid = ?", child.ParentUUID).
+		Where("grade = ? AND class = ? AND student_number = ?", child.Grade, child.Class, child.StudentNumber)
+	err = whereDB.Updates(contextForUpdate).Error
 	return
 }

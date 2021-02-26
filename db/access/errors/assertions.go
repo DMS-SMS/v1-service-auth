@@ -16,4 +16,6 @@ var (
 	StudentInformAssertionError = errors.New(fmt.Sprintf(InterfaceAssertionErrorFormat, "*model.StudentInform"))
 	TeacherInformAssertionError = errors.New(fmt.Sprintf(InterfaceAssertionErrorFormat, "*model.TeacherInform"))
 	ParentInformAssertionError = errors.New(fmt.Sprintf(InterfaceAssertionErrorFormat, "*model.ParentInform"))
+	UnsignedStudentAssertionError = errors.New(fmt.Sprintf(InterfaceAssertionErrorFormat, "*model.UnsignedStudent"))
+	ParentChildrenAssertionError = errors.New(fmt.Sprintf(InterfaceAssertionErrorFormat, "*model.ParentChildren"))
 )

@@ -118,6 +118,14 @@ func (ti *TeacherInform) BeforeCreate(tx *gorm.DB) (err error) {
 	if query.RowsAffected != 0 {
 		err = mysqlerr.DuplicateEntry(TeacherInformInstance.PhoneNumber.KeyName(), string(ti.PhoneNumber))
 	}
+
+	if ti.Grade != emptyInt && ti.Class != emptyInt  {
+		query = tx.Where("grade = ? AND class = ?", ti.Grade, ti.Class).Find(&TeacherInform{})
+		if query.RowsAffected != 0 {
+			err = mysqlerr.DuplicateEntry(ti.Class.KeyName(), fmt.Sprintf("%d%d", ti.Grade, ti.Class))
+			return
+		}
+	}
 	return
 }
 
@@ -153,4 +161,50 @@ func (pi *ParentInform) BeforeUpdate() (err error) {
 	if informForValidate.PhoneNumber == emptyString { informForValidate.PhoneNumber = validPhoneNumber }
 
 	return validate.DBValidator.Struct(informForValidate)
+}
+
+func (us *UnsignedStudent) BeforeCreate(tx *gorm.DB) (err error) {
+	if err = validate.DBValidator.Struct(us); err != nil {
+		return
+	}
+
+	query := tx.Where("auth_code = ?", us.AuthCode).Find(&UnsignedStudent{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(UnsignedStudentInstance.AuthCode.KeyName(), string(us.AuthCode))
+		return
+	}
+
+	query = tx.Where("phone_number = ?", us.PhoneNumber).Find(&UnsignedStudent{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(UnsignedStudentInstance.PhoneNumber.KeyName(), string(us.PhoneNumber))
+		return
+	}
+
+	query = tx.Where("pre_profile_uri = ?", us.PreProfileURI).Find(&UnsignedStudent{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(UnsignedStudentInstance.PreProfileURI.KeyName(), string(us.PreProfileURI))
+		return
+	}
+
+	query = tx.Where("grade = ? AND class = ? AND student_number = ?", us.Grade, us.Class, us.StudentNumber).Find(&UnsignedStudent{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(us.StudentNumber.KeyName(), fmt.Sprintf("%d%d%02d", us.Grade, us.Class, us.StudentNumber))
+		return
+	}
+
+	return
+}
+
+func (pc *ParentChildren) BeforeCreate(tx *gorm.DB) (err error) {
+	if err = validate.DBValidator.Struct(pc); err != nil {
+		return
+	}
+
+	query := tx.Where("grade = ? AND class = ? AND student_number = ? AND name = ?", pc.Grade, pc.Class, pc.StudentNumber, pc.Name).Find(&ParentChildren{})
+	if query.RowsAffected != 0 {
+		err = mysqlerr.DuplicateEntry(pc.StudentNumber.KeyName(), fmt.Sprintf("%d%d%02d %s", pc.Grade, pc.Class, pc.StudentNumber, pc.Name))
+		return
+	}
+
+	return
 }

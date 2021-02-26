@@ -10,6 +10,7 @@ type Accessor interface {
 	CreateStudentAuth(auth *model.StudentAuth) (resultAuth *model.StudentAuth, err error)
 	CreateTeacherAuth(auth *model.TeacherAuth) (resultAuth *model.TeacherAuth, err error)
 	CreateParentAuth(auth *model.ParentAuth) (resultAuth *model.ParentAuth, err error)
+	CreateParentChildren(auth *model.ParentChildren) (result *model.ParentChildren, err error)
 
 	// 계정 ID로 계정 정보 조회 메서드
 	GetStudentAuthWithID(studentID string) (*model.StudentAuth, error)
@@ -26,6 +27,7 @@ type Accessor interface {
 	ChangeStudentPW(uuid string, studentPW string) error
 	ChangeTeacherPW(uuid string, teacherPW string) error
 	ChangeParentPW(uuid string, parentPW string) error
+	ChangeParentUUID(studentUUID string, parentUUID string) error
 
 	// 계성 삭제 메서드 (Soft Delete)
 	DeleteStudentAuth(uuid string) error
@@ -60,6 +62,16 @@ type Accessor interface {
 	DeleteStudentInform(studentUUID string) error
 	DeleteTeacherInform(teacherUUID string) error
 	DeleteParentInform(parentUUID string) error
+
+	// ---
+
+	// 예비 계정 관련 메서드
+	AddUnsignedStudent(*model.UnsignedStudent) (result *model.UnsignedStudent, err error)
+	GetUnsignedStudents(targetGrade, targetGroup int64) ([]*model.UnsignedStudent, error)
+	GetUnsignedStudentWithAuthCode(authCode int64) (*model.UnsignedStudent, error)
+	GetParentChildWithInform(grade, group, number int64, name string) (*model.ParentChildren, error)
+	ModifyParentChildren(child *model.ParentChildren, revision *model.ParentChildren) error
+	DeleteUnsignedStudent(authCode int64) error
 
 	// ---
 

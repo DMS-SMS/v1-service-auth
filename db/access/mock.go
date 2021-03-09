@@ -205,7 +205,7 @@ func (m _mock) AddUnsignedStudent(student *model.UnsignedStudent) (*model.Unsign
 	return args.Get(0).(*model.UnsignedStudent), args.Error(1)
 }
 
-func (m _mock) GetUnsignedStudents(targetGrade, targetGroup int64) ([]*model.UnsignedStudent, error) {
+func (m _mock) 	GetUnsignedStudents(targetGrade, targetGroup, targetNumber int64) ([]*model.UnsignedStudent, error) {
 	args := m.mock.Called(targetGrade, targetGroup)
 	return args.Get(0).([]*model.UnsignedStudent), args.Error(1)
 }

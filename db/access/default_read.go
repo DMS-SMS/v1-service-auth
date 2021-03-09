@@ -172,11 +172,12 @@ func (d *_default) GetParentInformWithUUID(uuid string) (inform *model.ParentInf
 	return
 }
 
-func (d *_default) GetUnsignedStudents(targetGrade, targetGroup int64) (students []*model.UnsignedStudent, err error) {
+func (d *_default) GetUnsignedStudents(targetGrade, targetGroup, targetNumber int64) (students []*model.UnsignedStudent, err error) {
 	cascadeTx := d.tx.New()
 
 	if targetGrade != emptyInt  { cascadeTx = cascadeTx.Where("grade = ?", model.Grade(targetGrade)) }
 	if targetGroup != emptyInt  { cascadeTx = cascadeTx.Where("class = ?", model.Class(targetGroup)) }
+	if targetNumber != emptyInt { cascadeTx = cascadeTx.Where("student_number = ?", model.Class(targetNumber)) }
 
 	students = []*model.UnsignedStudent{}
 	err = cascadeTx.Find(&students).Error

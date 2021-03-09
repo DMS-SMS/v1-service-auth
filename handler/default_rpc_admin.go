@@ -666,7 +666,7 @@ func (h _default) SendJoinSMSToUnsignedStudents(ctx context.Context, req *proto.
 	}
 
 	spanForDB := h.tracer.StartSpan("GetUnsignedStudents", opentracing.ChildOf(parentSpan))
-	selectedStudents, err := access.GetUnsignedStudents(int64(req.TargetGrade), int64(req.TargetGroup))
+	selectedStudents, err := access.GetUnsignedStudents(int64(req.TargetGrade), int64(req.TargetGroup), int64(req.TargetNumber))
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedStudents", selectedStudents), log.Error(err))
 	spanForDB.Finish()
 
@@ -691,9 +691,11 @@ func (h _default) SendJoinSMSToUnsignedStudents(ctx context.Context, req *proto.
 [가입 대상: %d%d%02d %s]
 [인증 번호: %d]
 
-Play 스토어 또는 앱스토어에서 'SMS - 학교 지원 시스템' 앱 다운로드 후 진행해주세요.
+Play 스토어 또는 앱스토어에서 'SMS 학교 지원 시스템' 앱 다운로드 후 진행해주세요.
 
-모든 재학생분들(신입생 포함)은 3/5(금)까지 회원가입을 완료해주세요.
+참고로 iOS는 현재 앱 심사중이라 사용이 불가능합니다. 등록 되는대로 재안내 드리겠습니다.
+
+모든 재학생분들(신입생 포함)은 3/11(목)까지 회원가입을 완료해주세요.
 
 페이스북 'DSM 기숙사 지원 시스템' 페이지를 팔로우하여 여러 정보를 받아보세요!
 

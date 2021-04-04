@@ -683,3 +683,70 @@ func (h _default) GetTeacherUUIDsWithInform(ctx context.Context, req *proto.GetT
 	resp.Message = "get teacher uuids having that inform success"
 	return
 }
+
+func (h _default) ChangeTeacherInform(ctx context.Context, req *proto.ChangeTeacherInformRequest, resp *proto.ChangeTeacherInformResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	switch true {
+	case teacherUUIDRegex.MatchString(req.TeacherUUID) && req.UUID == req.TeacherUUID:
+		break
+	case adminUUIDRegex.MatchString(req.UUID):
+		break
+	default:
+		resp.Status = http.StatusForbidden
+		resp.Message = fmt.Sprintf(forbiddenMessageFormat, "not teacher or admin uuid OR not your student uuid")
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access, err := h.accessManage.BeginTx()
+	if err != nil {
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())
+		return
+	}
+
+	spanForDB := h.tracer.StartSpan("GetTeacherAuthWithUUID", opentracing.ChildOf(parentSpan))
+	selectedAuth, err := access.GetTeacherAuthWithUUID(req.TeacherUUID)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", selectedAuth), log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			resp.Status = http.StatusNotFound
+			resp.Message = fmt.Sprintf(notFoundMessageFormat, "not exist teacher, uuid: " + req.TeacherUUID)
+		default:
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " + err.Error())
+		}
+		return
+	}
+
+	spanForDB = h.tracer.StartSpan("ChangeTeacherPW", opentracing.ChildOf(parentSpan))
+	err = access.ModifyTeacherInform(string(selectedAuth.UUID), &model.TeacherInform{
+		PhoneNumber: model.PhoneNumber(req.PhoneNumber),
+	})
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+	spanForDB.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to update DB, err: " + err.Error())
+		return
+	}
+
+	access.Commit()
+	resp.Status = http.StatusOK
+	resp.Message = "succeed to change teacher inform"
+	return
+}

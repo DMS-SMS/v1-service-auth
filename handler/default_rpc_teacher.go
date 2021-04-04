@@ -8,6 +8,7 @@ import (
 	code "auth/utils/code/golang"
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	mysqlcode "github.com/VividCortex/mysqlerr"
 	"github.com/go-playground/validator/v10"
@@ -273,7 +274,7 @@ func (h _default) LoginTeacherAuthWithPICK(ctx context.Context, req *proto.Login
 	access, err := h.accessManage.BeginTx()
 	if err != nil {
 		resp.Status = http.StatusInternalServerError
-		resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: "+err.Error())
 		return
 	}
 
@@ -297,7 +298,7 @@ func (h _default) LoginTeacherAuthWithPICK(ctx context.Context, req *proto.Login
 				resp.Message = fmt.Sprintf(conflictErrorFormat, "mismatched hash and password")
 			default:
 				resp.Status = http.StatusInternalServerError
-				resp.Message = fmt.Sprintf(internalServerErrorFormat, "hash compare error, err: " + err.Error())
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "hash compare error, err: "+err.Error())
 			}
 			return
 		}
@@ -319,7 +320,7 @@ func (h _default) LoginTeacherAuthWithPICK(ctx context.Context, req *proto.Login
 	} else {
 		access.Rollback()
 		resp.Status = http.StatusInternalServerError
-		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " + err.Error())
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: "+err.Error())
 		return
 	}
 
@@ -355,6 +356,10 @@ func (h _default) LoginTeacherAuthWithPICK(ctx context.Context, req *proto.Login
 		return
 	}
 
+	type pickRespJSON struct { TeacherName string `json:"teacherName"` }
+	j := &pickRespJSON{}
+	_ = json.NewDecoder(pickResp.Body).Decode(j)
+
 	var tUUID string
 	for {
 		tUUID = fmt.Sprintf("teacher-%s", random.StringConsistOfIntWithLength(12))
@@ -368,7 +373,7 @@ func (h _default) LoginTeacherAuthWithPICK(ctx context.Context, req *proto.Login
 		if err != nil {
 			access.Rollback()
 			resp.Status = http.StatusInternalServerError
-			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " + err.Error())
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: "+err.Error())
 			return
 		}
 		continue
@@ -382,7 +387,7 @@ func (h _default) LoginTeacherAuthWithPICK(ctx context.Context, req *proto.Login
 	if err != nil {
 		access.Rollback()
 		resp.Status = http.StatusInternalServerError
-		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to hash pw, err: " + err.Error())
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to hash pw, err: "+err.Error())
 		return
 	}
 
@@ -402,31 +407,52 @@ func (h _default) LoginTeacherAuthWithPICK(ctx context.Context, req *proto.Login
 	case validator.ValidationErrors:
 		access.Rollback()
 		resp.Status = http.StatusProxyAuthRequired
-		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for teacher auth, err: " + err.Error())
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for teacher auth, err: "+err.Error())
 		return
 	case *mysql.MySQLError:
 		access.Rollback()
 		resp.Status = http.StatusInternalServerError
-		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected CreateTeacherAuth error, err: " + assertedError.Error())
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected CreateTeacherAuth error, err: "+assertedError.Error())
 		return
 	default:
 		access.Rollback()
 		resp.Status = http.StatusInternalServerError
-		resp.Message = fmt.Sprintf(internalServerErrorFormat, "CreateTeacherAuth returns unexpected type of error, err: " + assertedError.Error())
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "CreateTeacherAuth returns unexpected type of error, err: "+assertedError.Error())
 		return
 	}
 
-	//spanForDB = h.tracer.StartSpan("CreateTeacherInform", opentracing.ChildOf(parentSpan))
-	//resultInform, err := access.CreateTeacherInform(&model.TeacherInform{
-	//	TeacherUUID:   model.TeacherUUID(string(resultAuth.UUID)),
-	//	Name:          model.Name(req.Name),
-	//	PhoneNumber:   model.PhoneNumber(req.PhoneNumber),
-	//})
-	//spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedInform", resultInform), log.Error(err))
-	//spanForDB.Finish()
+	spanForDB = h.tracer.StartSpan("CreateTeacherInform", opentracing.ChildOf(parentSpan))
+	createdInform, err := access.CreateTeacherInform(&model.TeacherInform{
+		TeacherUUID: model.TeacherUUID(string(createdAuth.UUID)),
+		Name:        model.Name(j.TeacherName),
+	})
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedInform", createdInform), log.Error(err))
+	spanForDB.Finish()
+
+	switch assertedError := err.(type) {
+	case nil:
+		break
+	case validator.ValidationErrors:
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for teacher inform, err: "+err.Error())
+		return
+	case *mysql.MySQLError:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected CreateTeacherInform error, err: "+assertedError.Error())
+		return
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "CreateTeacherInform returns unexpected type of error, err: "+assertedError.Error())
+		return
+	}
 
 	access.Commit()
-	fmt.Println(pickResp, err)
+	resp.Status = http.StatusOK
+	resp.Message = "succeed to login teacher auth with PICK API"
+	resp.LoggedInTeacherUUID = string(createdAuth.UUID)
 	return
 }
 

@@ -6,6 +6,7 @@ import (
 	"auth/tool/mysqlerr"
 	"auth/tool/random"
 	code "auth/utils/code/golang"
+	"bytes"
 	"context"
 	"fmt"
 	mysqlcode "github.com/VividCortex/mysqlerr"
@@ -322,6 +323,39 @@ func (h _default) LoginTeacherAuthWithPICK(ctx context.Context, req *proto.Login
 		return
 	}
 
+	url := "https://api.dsm-pick.com/saturn/auth/login"
+	var jsonStr = []byte(fmt.Sprintf(`{"id":"%s", "pw":"%s"}`, req.TeacherID, req.TeacherPW))
+	pickReq, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	pickReq.Header.Set("Content-Type", "application/json")
+
+	spanForPICK := h.tracer.StartSpan("PICKTeacherLogin", opentracing.ChildOf(parentSpan))
+	pickResp, err := (&http.Client{}).Do(pickReq)
+	spanForPICK.SetTag("X-Request-Id", reqID).LogFields(log.Object("pickResp", pickResp), log.Error(err))
+	spanForPICK.Finish()
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusServiceUnavailable
+		resp.Message = fmt.Sprintf("failed to call PICK auth, err: %v", err)
+		return
+	}
+
+	switch pickResp.StatusCode {
+	case http.StatusOK:
+		// continue
+	case http.StatusBadRequest:
+		access.Rollback()
+		resp.Status = http.StatusConflict
+		resp.Code = code.TeacherAccountMismatch
+		resp.Message = fmt.Sprintf(conflictErrorFormat, "teacher account mismatch")
+		return
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf("PICK auth return unexptected status, code: %d", pickResp.StatusCode)
+		return
+	}
+
+	fmt.Println(pickResp, err)
 	return
 }
 

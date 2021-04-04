@@ -281,6 +281,47 @@ func (h _default) LoginTeacherAuthWithPICK(ctx context.Context, req *proto.Login
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", resultAuth), log.Error(err))
 	spanForDB.Finish()
 
+	if err == nil {
+		spanForHash := h.tracer.StartSpan("CompareHashAndPassword", opentracing.ChildOf(parentSpan))
+		err = bcrypt.CompareHashAndPassword([]byte(resultAuth.TeacherPW), []byte(req.TeacherPW))
+		spanForHash.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+		spanForHash.Finish()
+
+		if err != nil {
+			access.Rollback()
+			switch err {
+			case bcrypt.ErrMismatchedHashAndPassword:
+				resp.Status = http.StatusConflict
+				resp.Code = code.IncorrectTeacherPWForLogin
+				resp.Message = fmt.Sprintf(conflictErrorFormat, "mismatched hash and password")
+			default:
+				resp.Status = http.StatusInternalServerError
+				resp.Message = fmt.Sprintf(internalServerErrorFormat, "hash compare error, err: " + err.Error())
+			}
+			return
+		}
+
+		if !resultAuth.Certified {
+			access.Rollback()
+			resp.Status = http.StatusConflict
+			resp.Code = code.NotCertifiedTeacherAccount
+			resp.Message = fmt.Sprintf(conflictErrorFormat, "not certified annount")
+		} else {
+			access.Commit()
+			resp.Status = http.StatusOK
+			resp.Message = "succeed to login teacher auth"
+			resp.LoggedInTeacherUUID = string(resultAuth.UUID)
+		}
+		return
+	} else if err == gorm.ErrRecordNotFound {
+		// continue
+	} else {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " + err.Error())
+		return
+	}
+
 	return
 }
 

@@ -355,6 +355,77 @@ func (h _default) LoginTeacherAuthWithPICK(ctx context.Context, req *proto.Login
 		return
 	}
 
+	var tUUID string
+	for {
+		tUUID = fmt.Sprintf("teacher-%s", random.StringConsistOfIntWithLength(12))
+		spanForDB := h.tracer.StartSpan("GetTeacherAuthWithUUID", opentracing.ChildOf(parentSpan))
+		selectedAuth, err := access.GetTeacherAuthWithUUID(tUUID)
+		spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("selectedAuth", selectedAuth), log.Error(err))
+		spanForDB.Finish()
+		if err == gorm.ErrRecordNotFound {
+			break
+		}
+		if err != nil {
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to query DB, err: " + err.Error())
+			return
+		}
+		continue
+	}
+
+	spanForHash := h.tracer.StartSpan("GenerateFromPassword", opentracing.ChildOf(parentSpan))
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.TeacherPW), bcrypt.MinCost)
+	spanForHash.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+	spanForHash.Finish()
+
+	if err != nil {
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to hash pw, err: " + err.Error())
+		return
+	}
+
+	spanForDB = h.tracer.StartSpan("CreateTeacherAuth", opentracing.ChildOf(parentSpan))
+	createdAuth, err := access.CreateTeacherAuth(&model.TeacherAuth{
+		UUID:      model.UUID(tUUID),
+		TeacherID: model.TeacherID(req.TeacherID),
+		TeacherPW: model.TeacherPW(string(hashedBytes)),
+		Certified: true,
+	})
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedAuth", createdAuth), log.Error(err))
+	spanForDB.Finish()
+
+	switch assertedError := err.(type) {
+	case nil:
+		break
+	case validator.ValidationErrors:
+		access.Rollback()
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, "invalid data for teacher auth, err: " + err.Error())
+		return
+	case *mysql.MySQLError:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unexpected CreateTeacherAuth error, err: " + assertedError.Error())
+		return
+	default:
+		access.Rollback()
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "CreateTeacherAuth returns unexpected type of error, err: " + assertedError.Error())
+		return
+	}
+
+	//spanForDB = h.tracer.StartSpan("CreateTeacherInform", opentracing.ChildOf(parentSpan))
+	//resultInform, err := access.CreateTeacherInform(&model.TeacherInform{
+	//	TeacherUUID:   model.TeacherUUID(string(resultAuth.UUID)),
+	//	Name:          model.Name(req.Name),
+	//	PhoneNumber:   model.PhoneNumber(req.PhoneNumber),
+	//})
+	//spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreatedInform", resultInform), log.Error(err))
+	//spanForDB.Finish()
+
+	access.Commit()
 	fmt.Println(pickResp, err)
 	return
 }

@@ -258,6 +258,32 @@ func (h _default) LoginTeacherAuth(ctx context.Context, req *proto.LoginTeacherA
 	return
 }
 
+func (h _default) LoginTeacherAuthWithPICK(ctx context.Context, req *proto.LoginTeacherAuthWithPICKRequest, resp *proto.LoginTeacherAuthWithPICKResponse) (_ error) {
+	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
+	if !proxyAuthenticated {
+		resp.Status = http.StatusProxyAuthRequired
+		resp.Message = fmt.Sprintf(proxyAuthRequiredMessageFormat, reason)
+		return
+	}
+
+	reqID := ctx.Value("X-Request-Id").(string)
+	parentSpan := ctx.Value("Span-Context").(jaeger.SpanContext)
+
+	access, err := h.accessManage.BeginTx()
+	if err != nil {
+		resp.Status = http.StatusInternalServerError
+		resp.Message = fmt.Sprintf(internalServerErrorFormat, "tx begin fail, err: " + err.Error())
+		return
+	}
+
+	spanForDB := h.tracer.StartSpan("GetTeacherAuthWithID", opentracing.ChildOf(parentSpan))
+	resultAuth, err := access.GetTeacherAuthWithID(req.TeacherID)
+	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("SelectedAuth", resultAuth), log.Error(err))
+	spanForDB.Finish()
+
+	return
+}
+
 func (h _default) ChangeTeacherPW(ctx context.Context, req *proto.ChangeTeacherPWRequest, resp *proto.ChangeTeacherPWResponse) (_ error) {
 	ctx, proxyAuthenticated, reason := h.getContextFromMetadata(ctx)
 	if !proxyAuthenticated {

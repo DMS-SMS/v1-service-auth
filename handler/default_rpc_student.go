@@ -3,6 +3,7 @@ package handler
 import (
 	"auth/model"
 	proto "auth/proto/golang/auth"
+	"auth/tool/hash"
 	"auth/tool/message"
 	"auth/tool/mysqlerr"
 	"auth/tool/random"
@@ -24,6 +25,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"regexp"
 	"strconv"
 )
 
@@ -65,14 +67,14 @@ func (h _default) LoginStudentAuth(ctx context.Context, req *proto.LoginStudentA
 	}
 
 	spanForHash := h.tracer.StartSpan("CompareHashAndPassword", opentracing.ChildOf(parentSpan))
-	err = bcrypt.CompareHashAndPassword([]byte(resultAuth.StudentPW), []byte(req.StudentPW))
+	err = hash.CompareHashAndPassword(string(resultAuth.StudentPW), req.StudentPW)
 	spanForHash.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
 	spanForHash.Finish()
 
 	if err != nil {
 		access.Rollback()
 		switch err {
-		case bcrypt.ErrMismatchedHashAndPassword:
+		case hash.ErrMismatchedHashAndPassword:
 			resp.Status = http.StatusConflict
 			resp.Code = code.IncorrectStudentPWForLogin
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "mismatched hash and password")
@@ -139,14 +141,14 @@ func (h _default) ChangeStudentPW(ctx context.Context, req *proto.ChangeStudentP
 	}
 
 	spanForHash := h.tracer.StartSpan("CompareHashAndPassword", opentracing.ChildOf(parentSpan))
-	err = bcrypt.CompareHashAndPassword([]byte(selectedAuth.StudentPW), []byte(req.CurrentPW))
+	err = hash.CompareHashAndPassword(string(selectedAuth.StudentPW), req.CurrentPW)
 	spanForHash.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
 	spanForHash.Finish()
 
 	if err != nil {
 		access.Rollback()
 		switch err {
-		case bcrypt.ErrMismatchedHashAndPassword:
+		case hash.ErrMismatchedHashAndPassword:
 			resp.Status = http.StatusConflict
 			resp.Code = code.IncorrectStudentPWForChange
 			resp.Message = fmt.Sprintf(conflictErrorFormat, "mismatched hash and password")
@@ -612,23 +614,29 @@ func (h _default) CreateNewStudentWithAuthCode(ctx context.Context, req *proto.C
 		return
 	}
 
-	spanForHash := h.tracer.StartSpan("GenerateFromPassword", opentracing.ChildOf(parentSpan))
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.StudentPW), bcrypt.MinCost)
-	spanForHash.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
-	spanForHash.Finish()
+	var hashedPW string
+	if regexp.MustCompile("^pbkdf2:sha\\d+(:\\d+)?\\$.*\\$.*$").MatchString(req.StudentPW) {
+		hashedPW = req.StudentPW
+	} else {
+		spanForHash := h.tracer.StartSpan("GenerateFromPassword", opentracing.ChildOf(parentSpan))
+		hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.StudentPW), bcrypt.MinCost)
+		hashedPW = string(hashedBytes)
+		spanForHash.SetTag("X-Request-Id", reqID).LogFields(log.Error(err))
+		spanForHash.Finish()
 
-	if err != nil {
-		access.Rollback()
-		resp.Status = http.StatusInternalServerError
-		resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to hash pw, err: " + err.Error())
-		return
+		if err != nil {
+			access.Rollback()
+			resp.Status = http.StatusInternalServerError
+			resp.Message = fmt.Sprintf(internalServerErrorFormat, "unable to hash pw, err: " + err.Error())
+			return
+		}
 	}
 
 	spanForDB = h.tracer.StartSpan("CreateStudentAuth", opentracing.ChildOf(parentSpan))
 	resultAuth, err := access.CreateStudentAuth(&model.StudentAuth{
 		UUID:       model.UUID(sUUID),
 		StudentID:  model.StudentID(req.StudentID),
-		StudentPW:  model.StudentPW(string(hashedBytes)),
+		StudentPW:  model.StudentPW(hashedPW),
 		ParentUUID: model.ParentUUID(parentUUID),
 	})
 	spanForDB.SetTag("X-Request-Id", reqID).LogFields(log.Object("CreateStudentAuth", resultAuth), log.Error(err))

@@ -51,10 +51,10 @@ type TeacherAuth struct {
 type TeacherInform struct {
 	gorm.Model
 	TeacherUUID teacherUUID `gorm:"Type:char(20);UNIQUE;NOT NULL'" validate:"uuid=teacher,len=20"` // 형식 => 'teacher-' + 12자리 랜덤 수 (20자)
-	Name        name        `gorm:"Type:varchar(4);NOT NULL" validate:"min=2,max=4,korean"`        // 2~4자 사이 한글
+	Name        name        `gorm:"Type:varchar(4);NOT NULL" validate:"min=2,max=4"`               // 2~4자 사이 (원래 한글, PICK에서는 아니라서 지움)
 	Grade       grade       `gorm:"Type:tinyint(1);" validate:"range=0~3"`                         // in (1~3)
 	Class       class       `gorm:"Type:tinyint(1);" validate:"range=0~4"`                         // in (1~4)
-	PhoneNumber phoneNumber `gorm:"Type:char(11);NOT NULL" validate:"len=11,phone_number"`         // 11자
+	PhoneNumber phoneNumber `gorm:"Type:char(11)" validate:"phone_number"`                         // 휴대전화 형식
 }
 
 // 부모님 계정 테이블
